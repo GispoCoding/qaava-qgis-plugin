@@ -7,6 +7,7 @@ from qgis.PyQt.QtWidgets import QAction
 
 # Initialize Qt resources from file resources.py
 from .resources import *
+from .utils.utils import tr
 
 
 class Qaava:
@@ -38,27 +39,12 @@ class Qaava:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = self.tr(u'&Qaava')
+        self.menu = tr(u'&Qaava')
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.pluginIsActive = False
         self.dockwidget = None
-
-    # noinspection PyMethodMayBeStatic
-    def tr(self, message):
-        """Get the translation for a string using Qt translation API.
-
-        We implement this ourselves since we do not inherit QObject.
-
-        :param message: String for translation.
-        :type message: str, QString
-
-        :returns: Translated version of message.
-        :rtype: QString
-        """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-        return QCoreApplication.translate('Qaava', message)
 
     def add_action(
         self,
@@ -140,7 +126,7 @@ class Qaava:
         icon_path = ':/plugins/Qaava/icons/icon.png'
         self.add_action(
             icon_path,
-            text=self.tr(u'Qaava'),
+            text=tr(u'Qaava'),
             callback=self.run,
             parent=self.iface.mainWindow(),
             add_to_toolbar=False
@@ -169,7 +155,7 @@ class Qaava:
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
             self.iface.removePluginMenu(
-                self.tr(u'&Qaava'),
+                tr(u'&Qaava'),
                 action)
             self.iface.removeToolBarIcon(action)
 

@@ -8,16 +8,13 @@
         <source>Good morning</source>
         <translation>Hyvää huomenta</translation>
     </message>
-</context>
-<context>
-    <name>Qaava</name>
     <message>
-        <location filename="../plugin.py" line="169"/>
+        <location filename="../qaava.py" line="157"/>
         <source>&amp;Qaava</source>
         <translation>&amp;Qaava</translation>
     </message>
     <message>
-        <location filename="../plugin.py" line="141"/>
+        <location filename="../qaava.py" line="127"/>
         <source>Qaava</source>
         <translation>Qaava</translation>
     </message>
