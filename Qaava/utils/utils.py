@@ -1,5 +1,7 @@
 from PyQt5.QtCore import QCoreApplication
 
+from .constants import IDENTIFIER
+
 
 def tr(message: str) -> str:
     """Get the translation for a string using Qt translation API.
@@ -13,4 +15,4 @@ def tr(message: str) -> str:
     :rtype: QString
     """
     # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
-    return QCoreApplication.translate('Qaava', message)
+    return QCoreApplication.translate(IDENTIFIER, message)
