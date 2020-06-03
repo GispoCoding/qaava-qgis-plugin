@@ -51,7 +51,7 @@ UI_FILES := $(UI) metadata.txt # remove metadata.txt when actual ui files are pr
 
 EXTRAS = metadata.txt
 
-EXTRA_DIRS = icons
+EXTRA_DIRS = icons logs
 
 COMPILED_RESOURCE_FILES = resources.py
 

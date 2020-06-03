@@ -1,7 +1,7 @@
 from PyQt5.QtCore import QCoreApplication
 
 
-def tr(message):
+def tr(message: str) -> str:
     """Get the translation for a string using Qt translation API.
 
     We implement this ourselves since we do not inherit QObject.
