@@ -1,18 +1,43 @@
+"""
+This class contains fixtures and common helper function to keep the test files shorter
+"""
+
 import os
 
 import pytest
 
 import psycopg2
+from PyQt5.QtCore import QSettings
+from qgis.core import QgsProject
+
+from .utilities import get_qgis_app
+from ..model.land_use_plan import LandUsePlanEnum
+from ..utils.constants import PG_CONNECTIONS
+
+QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+QGIS_INSTANCE = QgsProject.instance()
+
+CONN_NAME = "test_qaava_conn"
 
 
-def is_responsive(url):
-    succeeds = False
-    try:
-        with(psycopg2.connect(url)) as conn:
-            succeeds = True
-    except psycopg2.OperationalError as e:
-        pass
-    return succeeds
+@pytest.fixture(scope='function')
+def new_project() -> None:
+    """Initializes new iface project"""
+    yield IFACE.newProject()
+
+
+@pytest.fixture(scope='function')
+def initialize_db_settings(database_params) -> str:
+    set_settings(database_params)
+    yield CONN_NAME
+    remove_db_settings()
+
+
+@pytest.fixture(scope='function')
+def initialize_db_settings2(database_params):
+    set_settings(database_params, has_pwd=False)
+    yield CONN_NAME
+    remove_db_settings()
 
 
 @pytest.fixture(scope="session")
@@ -28,22 +53,56 @@ def database_params() -> {str: str}:
 
 
 @pytest.fixture(scope='session')
-def docker_database(docker_ip, docker_services, database_params) -> {str: {str: str}}:
+def docker_database_params(docker_ip, docker_services, database_params) -> {str: {str: str}}:
     """
 
     :param docker_ip: pytest-docker fixture
     :param docker_services:  pytest-docker fixture
-    :return: db urls and params in a dict
+    :return: db params in a dict
     """
     port = docker_services.port_for("qaava-test-db", 5432)
     params = {**database_params, **{"port": port}}
-    url = "dbname={dbname} user={user} host={host} password={password} port={port}".format(**params)
     params2 = {**params, **{"dbname": "qaavadb2"}}
-    url2 = "dbname={dbname} user={user} host={host} password={password} port={port}".format(**params2)
     docker_services.wait_until_responsive(
-        timeout=10.0, pause=1, check=lambda: is_responsive(url)
+        timeout=10.0, pause=1, check=lambda: is_responsive(params)
     )
     return {
-        "db1": {"url": url, **params},
-        "db2": {"url": url2, **params2}
+        "db1": params,
+        "db2": params2
     }
+
+
+def is_responsive(params):
+    succeeds = False
+    try:
+        with(psycopg2.connect(**params)) as conn:
+            succeeds = True
+    except psycopg2.OperationalError as e:
+        pass
+    return succeeds
+
+
+def set_settings(prms, has_pwd=True):
+    s = QSettings()
+    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/host", prms["host"])
+    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/port", prms["port"])
+    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/database", prms["dbname"])
+    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/username", prms["user"])
+    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/password", prms["password"])
+    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/savePassword", "true" if has_pwd else "false")
+    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/saveUsername", "true" if has_pwd else "false")
+    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/authcfg", "NULL")
+
+
+def remove_db_settings():
+    s = QSettings()
+    s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/host")
+    s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/port")
+    s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/database")
+    s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/username")
+    s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/password")
+    s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/savePassword")
+    s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/saveUsername")
+    s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/authcfg")
+    s.remove(LandUsePlanEnum.detailed.value.key)
+    s.remove(LandUsePlanEnum.general.value.key)

@@ -9,6 +9,12 @@ from .utils import tr
 
 
 def fetch(url: str) -> str:
+    """
+    Fetch resource from the internet. Similar to requests.get(url) but is
+    recommended way of handling requests in QGIS plugin
+    :param url: address of the web resource
+    :return: encoded string of the content
+    """
     logger.debug(url)
     req = QNetworkRequest(QUrl(url))
 
