@@ -16,7 +16,7 @@ IFACE = None
 def get_qgis_app():
     """ Start one QGIS application to test against.
 
-    :returns: Handle to QGIS app, canvas, iface and parent. If there are any
+    :returns: Handle to QGIS app, canvas, new_project and parent. If there are any
         errors the tuple members will be returned as None.
     :rtype: (QgsApplication, CANVAS, IFACE, PARENT)
 

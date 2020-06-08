@@ -1,13 +1,14 @@
 # -*- coding: utf-8 -*-
 import os.path
 
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication, Qt
+from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
-# Initialize Qt resources from file resources.py
-from .resources import *
+from qgis.core import QgsApplication
+
 from .utils.utils import tr
+from .database_tools.db_initializer import DatabaseInitializer
 
 
 class Qaava:
@@ -45,6 +46,8 @@ class Qaava:
         # Must be set in initGui() to survive plugin reloads
         self.pluginIsActive = False
         self.dockwidget = None
+
+        self.database_initializer = None
 
     def add_action(
         self,
@@ -132,6 +135,14 @@ class Qaava:
             add_to_toolbar=False
         )
 
+        self.add_action(
+            icon_path,
+            text=tr(u'Initialize database'),
+            callback=self.run_initialize_database,
+            parent=self.iface.mainWindow(),
+            add_to_toolbar=False
+        )
+
         # will be set False in run()
         self.first_start = True
 
@@ -165,3 +176,21 @@ class Qaava:
             self.pluginIsActive = True
 
         print("Hello Qaava world")
+
+    def run_initialize_database(self):
+        if not self.database_initializer:
+            self.database_initializer = DatabaseInitializer(self.iface, QgsApplication.instance())
+        else:
+            self.database_initializer.dlg.activateWindow()
+
+        # Create the dialog with elements (after translation) and keep reference
+        if self.first_start:
+            self.first_start = False
+
+        # show the dialog
+        self.database_initializer.dlg.show()
+
+        result = self.database_initializer.dlg.exec_()
+
+        if result:
+            self.database_initializer.initialize_database()

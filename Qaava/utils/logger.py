@@ -37,8 +37,8 @@ def debug(msg: str, *args, **kwargs) -> None:
 
 
 def msg_info(iface: QgisInterface, msg: str, details="", duration=4) -> None:
-    iface.messageBar().pushMessage(msg, details, level=Qgis.Info, duration=duration)
     info(f"{msg}: {details}")
+    iface.messageBar().pushMessage(title=msg, text=details, level=Qgis.Info, duration=duration)
 
 
 def info(msg: str, *args, **kwargs) -> None:
@@ -47,8 +47,8 @@ def info(msg: str, *args, **kwargs) -> None:
 
 
 def msg_warn(iface: QgisInterface, msg: str, details="", duration=6) -> None:
-    iface.messageBar().pushMessage(msg, details, level=Qgis.Warning, duration=duration)
     warning(f"{msg}: {details}")
+    iface.messageBar().pushMessage(title=msg, text=details, level=Qgis.Warning, duration=duration)
 
 
 def warning(msg: str, *args, **kwargs) -> None:
@@ -57,8 +57,8 @@ def warning(msg: str, *args, **kwargs) -> None:
 
 
 def msg_error(iface: QgisInterface, msg: str, details="", duration=10) -> None:
-    iface.messageBar().pushMessage(msg, details, level=Qgis.Critical, duration=duration)
-    error(f"{msg}: {details}")
+    exception(f"{msg}: {details}")
+    iface.messageBar().pushMessage(title=msg, text=details, level=Qgis.Critical, duration=duration)
 
 
 def error(msg: str, *args, **kwargs) -> None:

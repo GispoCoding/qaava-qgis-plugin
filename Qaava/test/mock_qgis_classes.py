@@ -10,8 +10,9 @@ class MockMessageBar:
         """Used to test which messages have been logged"""
         return self.messages[level]
 
-    def pushMessage(self, text, level, duration):
-        self.messages[level].append(text)
+    def pushMessage(self, title, text, level, duration):
+        msg = f"{title}:{text}"
+        self.messages[level].append(msg)
 
 
 class MainWindow:
