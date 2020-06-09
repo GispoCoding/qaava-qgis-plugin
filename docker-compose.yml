@@ -6,7 +6,6 @@ services:
     container_name: qaava-db
     volumes:
       - qaava-postgis-data:/var/lib/postgresql
-      - ./tietokanta:/tietokanta
     environment:
       # If you need to create multiple database_url you can add coma separated databases eg gis,data
       - POSTGRES_DB=qaavadb1

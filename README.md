@@ -15,4 +15,4 @@ some cases it may have to be installed separately.
 
 ### Development
 
-Install Docker and docker-compose to run tests.
+Refer to [development](docs/development.md) to instructions for developing the plugin.
