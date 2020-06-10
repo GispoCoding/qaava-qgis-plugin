@@ -25,7 +25,8 @@ If you create or edit source files make sure that:
 
 ### Deployment
 
-Edit [build.py](../Qaava/build.py) to contain working values for PROFILE, LRELEASE and PYRCC.
+Edit [build.py](../Qaava/build.py) to contain working values for *PROFILE*, *LRELEASE* and *PYRCC*. 
+If you are running on Windows, make sure the value *QGIS_INSTALLATION_DIR* points to right folder
 
 Run the deployment with:
 ```shell script

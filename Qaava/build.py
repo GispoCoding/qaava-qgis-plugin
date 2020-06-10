@@ -36,6 +36,9 @@ Qaava
 
 PLUGINNAME = "Qaava"
 
+# This should be only edited for windows environment
+QGIS_INSTALLATION_DIR = os.path.join("C:", "OSGeo4W64", "bin")
+
 # Add files for any locales you want to support here
 LOCALES = ["Qaava_fi"]
 
@@ -78,6 +81,11 @@ COMPILED_RESOURCE_FILES = ["resources.py"]
 #################################################
 '''
 
+
+def is_windows():
+    return "win" in sys.platform
+
+
 # QGISDIR points to the location where your plugin should be installed.
 # This varies by platform, relative to your HOME directory:
 #	* Linux:
@@ -89,7 +97,7 @@ COMPILED_RESOURCE_FILES = ["resources.py"]
 
 if sys.platform == "linux":
     dr = os.path.join(".local", "share")
-elif "win" in sys.platform:
+elif is_windows():
     dr = os.path.join("AppData", "Roaming")
 else:
     dr = os.path.join("Library", "Application Support")
@@ -99,6 +107,12 @@ QGISDIR = os.path.join(dr, "QGIS", "QGIS3", "profiles", PROFILE)
 PLUGINDIR = os.path.join(str(Path.home()), QGISDIR, "python", "plugins", PLUGINNAME)
 
 I18N = "i18n"
+
+WINDOWS_ENV_BATS = [
+    'o4w_env.bat',
+    'qt5_env.bat',
+    'py3_env.bat'
+]
 
 
 class PluginMaker:
@@ -135,12 +149,19 @@ Put -h after command to see available optional arguments if any
                 os.remove(fil)
 
     def compile(self):
+        pre_args = self._get_platform_args()
         for fil in RESOURCES_SRC:
             if os.path.exists(fil):
-                args = [PYRCC, "-o", fil.replace(".qrc", ".py"), fil]
+                args = pre_args + [PYRCC, "-o", fil.replace(".qrc", ".py"), fil]
                 self.run_command(args)
             else:
                 raise ValueError(f"The expected resource file {fil} is missing!")
+
+    def _get_platform_args(self):
+        pre_args = []
+        if is_windows():
+            pre_args = [item for sublist in [f"call {bat} &&".split() for bat in WINDOWS_ENV_BATS] for item in sublist]
+        return pre_args
 
     def deploy(self):
         self.compile()
@@ -178,18 +199,20 @@ Put -h after command to see available optional arguments if any
         self.compile()
         os.environ["PYTHONPATH"] = f"{os.path.abspath(os.path.dirname(__file__))}"
         os.environ["QGIS_DEBUG"] = "0"
-        os.environ["QGIS_LOG_FILE"] = "/dev/null" if "win" not in sys.platform else "NUL"
+        os.environ["QGIS_LOG_FILE"] = "/dev/null" if not is_windows() else "NUL"
         pytest.main(["-v", "test", "--cov=.", "test"])
 
     def transup(self):
-        args = ["pylupdate5", f"{I18N}/translate.pro"]
+        args = self._get_platform_args() + ["pylupdate5", f"{I18N}/translate.pro"]
         self.run_command(args)
 
     def transcompile(self):
+        pre_args = self._get_platform_args()
         for locale in LOCALES:
             fil = os.path.join(I18N, f"{locale}.ts")
             print(f"Processing {fil}")
-            self.run_command([LRELEASE, "-qt=qt5", fil])
+            args = pre_args + [LRELEASE, "-qt=qt5", fil]
+            self.run_command(args)
 
     @staticmethod
     def run_command(args):
