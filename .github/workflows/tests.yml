@@ -25,4 +25,4 @@ jobs:
 
       # Runs all tests
       - name: Run tests
-        run: docker run --rm --volume `pwd`/Qaava:/app --volume /tmp/.X11-unix:/tmp/.X11-unix -w=/app -e DISPLAY=unix$DISPLAY qgis/qgis:final-3_12_3 sh -c "pip3 install pytest && pytest -v"
+        run: docker run --rm --volume `pwd`/Qaava:/app -w=/app qgis/qgis:final-3_12_3 sh -c "pwd && ls && pip3 install pytest && xvfb-run -s '+extension GLX -screen 0 1024x768x24' pytest -v"
