@@ -1,2 +1,4 @@
 Qaava/.coverage
 Qaava/test/db_fixtures/.*.lock
+*.qgs~
+
