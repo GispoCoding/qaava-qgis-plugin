@@ -5,12 +5,14 @@ from ..database_tools.db_initializer import DatabaseInitializer
 from .conftest import set_settings, CONN_NAME, IFACE, QGIS_APP
 
 
+@pytest.mark.skip("ci")
 def test_database_select(docker_database_params):
     db = Database(docker_database_params["db1"])
     rows = db.execute_select("SELECT * FROM test_table")
     assert rows == [(1,)]
 
 
+@pytest.mark.skip("ci")
 def test_db_initializer_with_detailed_plan(new_project, docker_database_params, monkeypatch):
     set_settings(docker_database_params["db2"])
     db = Database(docker_database_params["db2"])

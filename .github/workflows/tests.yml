@@ -23,6 +23,9 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
+      - name: Load image
+        run: docker pull qgis/qgis:final-3_12_3
+
       # Runs all tests
       - name: Run tests
-        run: docker run --rm --volume `pwd`/Qaava:/app -w=/app qgis/qgis:final-3_12_3 sh -c "pwd && ls && pip3 install pytest && xvfb-run -s '+extension GLX -screen 0 1024x768x24' pytest -v"
+        run: docker run --rm --volume `pwd`/Qaava:/app -w=/app qgis/qgis:final-3_12_3 sh -c "pip3 install pytest && xvfb-run -s '+extension GLX -screen 0 1024x768x24' pytest -v"
