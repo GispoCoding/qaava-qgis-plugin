@@ -1,0 +1,28 @@
+# workflow name
+name: Qaava QGIS plugin test Actions workflow
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the wanted branches
+on:
+  push:
+    branches:
+      - master
+      - 19_ci
+  pull_request:
+    branches:
+      - master
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  test:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+      # Runs all tests
+      - name: Run tests
+        run: docker run --rm --volume `pwd`/Qaava:/app --volume /tmp/.X11-unix:/tmp/.X11-unix -w=/app -e DISPLAY=unix$DISPLAY qgis/qgis:final-3_12_3 sh -c "pip3 install pytest && pytest -v"
