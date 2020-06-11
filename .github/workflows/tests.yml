@@ -7,7 +7,6 @@ on:
   push:
     branches:
       - master
-      - 19_ci
   pull_request:
     branches:
       - master
