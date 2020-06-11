@@ -44,6 +44,9 @@ class DbInitializerDialog(QtWidgets.QDialog, FORM_CLASS):
         for plan in [pl.name for pl in LandUsePlanEnum]:
             self.dmComboBox.addItem(plan)
 
+    def on_refreshPushButton_clicked(self):
+        self.populate_dbComboBox()
+
     def on_agreedCheckBox_stateChanged(self):
         self.buttonBox.setEnabled(self.agreedCheckBox.isChecked())
 
