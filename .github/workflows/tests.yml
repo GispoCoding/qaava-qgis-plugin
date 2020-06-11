@@ -23,9 +23,15 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
 
-      - name: Load image
+      - name: Pull qgis image
         run: docker pull qgis/qgis:final-3_12_3
+
+      - name: Pull PostGIS image
+        run: docker pull kartoza/postgis:12.0
+
+      - name: Set up PostGIS databases
+        run: docker-compose -f Qaava/test/docker-compose.yml up -d
 
       # Runs all tests
       - name: Run tests
-        run: docker run --rm --volume `pwd`/Qaava:/app -w=/app qgis/qgis:final-3_12_3 sh -c "pip3 install pytest && xvfb-run -s '+extension GLX -screen 0 1024x768x24' pytest -v"
+        run: docker run --rm --net=host --volume `pwd`/Qaava:/app -w=/app -e QAAVA_IN_CI=1 qgis/qgis:final-3_12_3 sh -c "pip3 install -q pytest && xvfb-run -s '+extension GLX -screen 0 1024x768x24' pytest -v"

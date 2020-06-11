@@ -2,6 +2,7 @@
 """Common functionality used by regression tests."""
 
 import logging
+import os
 import sys
 
 from .mock_qgis_classes import MockMessageBar, MainWindow
@@ -61,3 +62,7 @@ def get_qgis_app():
         IFACE = QgisInterface(CANVAS, MockMessageBar(), MainWindow())
 
     return QGIS_APP, CANVAS, IFACE, PARENT
+
+
+def is_running_inside_CI():
+    return int(os.environ.get("QAAVA_IN_CI", "0")) == 1

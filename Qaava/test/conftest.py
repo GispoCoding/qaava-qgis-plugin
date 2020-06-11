@@ -58,6 +58,7 @@ def docker_database_params(docker_ip, docker_services, database_params) -> {str:
 
     :param docker_ip: pytest-docker fixture
     :param docker_services:  pytest-docker fixture
+    :param database_params: fixture
     :return: db params in a dict
     """
     port = docker_services.port_for("qaava-test-db", 5432)
@@ -66,6 +67,22 @@ def docker_database_params(docker_ip, docker_services, database_params) -> {str:
     docker_services.wait_until_responsive(
         timeout=10.0, pause=1, check=lambda: is_responsive(params)
     )
+    return {
+        "db1": params,
+        "db2": params2
+    }
+
+
+@pytest.fixture(scope='session')
+def ci_database_params(database_params) -> {str: {str: str}}:
+    """
+    database paramse fixture using database running in CI environment
+    :param database_params: fixture
+    :return: db params in a dict
+    """
+    params = {**database_params}
+    params2 = {**params, **{"dbname": "qaavadb2"}}
+
     return {
         "db1": params,
         "db2": params2
