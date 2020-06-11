@@ -6,7 +6,6 @@ services:
     volumes:
       # Add more fixtures here
       - ./db_fixtures/simple_test.sql:/docker-entrypoint-initdb.d/simple_test.sql
-      - qaava-postgis-test-data:/var/lib/postgresql
     environment:
       # There are multiple databases, data will be populated to the first only
       - POSTGRES_DB=qaavadb1,qaavadb2
@@ -18,6 +17,3 @@ services:
     restart: "no"
     healthcheck:
       test: "exit 0"
-
-volumes:
-  qaava-postgis-test-data:

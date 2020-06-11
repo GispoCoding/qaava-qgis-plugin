@@ -3,6 +3,8 @@ This class contains fixtures and common helper function to keep the test files s
 """
 
 import os
+import timeit
+import time
 
 import pytest
 
@@ -58,18 +60,55 @@ def docker_database_params(docker_ip, docker_services, database_params) -> {str:
 
     :param docker_ip: pytest-docker fixture
     :param docker_services:  pytest-docker fixture
+    :param database_params: fixture
     :return: db params in a dict
     """
     port = docker_services.port_for("qaava-test-db", 5432)
     params = {**database_params, **{"port": port}}
     params2 = {**params, **{"dbname": "qaavadb2"}}
-    docker_services.wait_until_responsive(
+    wait_until_responsive(
         timeout=10.0, pause=1, check=lambda: is_responsive(params)
     )
     return {
         "db1": params,
         "db2": params2
     }
+
+
+@pytest.fixture(scope='session')
+def ci_database_params(database_params) -> {str: {str: str}}:
+    """
+    database paramse fixture using database running in CI environment
+    :param database_params: fixture
+    :return: db params in a dict
+    """
+    params = {**database_params}
+    params2 = {**params, **{"dbname": "qaavadb2"}}
+    wait_until_responsive(
+        timeout=10.0, pause=1, check=lambda: is_responsive(params)
+    )
+
+    return {
+        "db1": params,
+        "db2": params2
+    }
+
+
+def wait_until_responsive(check, timeout, pause, clock=timeit.default_timer):
+    """
+    Wait until a service is responsive.
+    Taken from docker_services.wait_until_responsive
+    """
+
+    ref = clock()
+    now = ref
+    while (now - ref) < timeout:
+        if check():
+            return
+        time.sleep(pause)
+        now = clock()
+
+    raise Exception("Timeout reached while waiting on service!")
 
 
 def is_responsive(params):

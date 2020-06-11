@@ -1,5 +1,6 @@
 QAAVA QGIS Plugin
 ================
+![](https://github.com/GispoCoding/qaava-qgis-plugin/workflows/Tests/badge.svg)
 
 QGIS plugin for project [QAAVA](https://github.com/GispoCoding/qaava)
 
