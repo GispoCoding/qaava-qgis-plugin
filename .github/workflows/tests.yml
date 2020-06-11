@@ -1,5 +1,5 @@
 # workflow name
-name: Qaava QGIS plugin test Actions workflow
+name: Tests
 
 # Controls when the action will run. Triggers the workflow on push or pull request
 # events but only for the wanted branches
