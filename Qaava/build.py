@@ -153,7 +153,7 @@ Put -h after command to see available optional arguments if any
         for fil in RESOURCES_SRC:
             if os.path.exists(fil):
                 args = pre_args + [PYRCC, "-o", fil.replace(".qrc", ".py"), fil]
-                self.run_command(args)
+                run_command(args)
             else:
                 raise ValueError(f"The expected resource file {fil} is missing!")
 
@@ -167,14 +167,14 @@ Put -h after command to see available optional arguments if any
         self.compile()
         dst_dir = f"{PLUGINDIR}/"
         os.makedirs(PLUGINDIR, exist_ok=True)
-        self.cp_parents(dst_dir, PY_FILES)
-        self.cp_parents(dst_dir, UI_FILES)
-        self.cp_parents(dst_dir, COMPILED_RESOURCE_FILES)
-        self.cp_parents(dst_dir, EXTRAS)
+        cp_parents(dst_dir, PY_FILES)
+        cp_parents(dst_dir, UI_FILES)
+        cp_parents(dst_dir, COMPILED_RESOURCE_FILES)
+        cp_parents(dst_dir, EXTRAS)
         dirs = [I18N] + EXTRA_DIRS
         for dr in dirs:
             print(f"cp -R --parents {dr} {dst_dir}")
-            shutil.copytree(dr, os.path.join(PLUGINDIR, dr))
+            copy_and_overwrite(dr, os.path.join(PLUGINDIR, dr))
 
     def package(self):
         parser = ArgumentParser()
@@ -189,10 +189,10 @@ Put -h after command to see available optional arguments if any
             exit(1)
 
         if args.tag:
-            self.run_command(["git", "tag", args.version])
+            run_command(["git", "tag", args.version])
 
         pkg_command = ["git", "archive", f"--prefix={PLUGINNAME}/", "-o", f"{PLUGINNAME}.zip", args.version]
-        self.run_command(pkg_command)
+        run_command(pkg_command)
         print(f"Created package: {PLUGINNAME}.zip")
 
     def test(self):
@@ -204,7 +204,7 @@ Put -h after command to see available optional arguments if any
 
     def transup(self):
         args = self._get_platform_args() + ["pylupdate5", f"{I18N}/translate.pro"]
-        self.run_command(args)
+        run_command(args)
 
     def transcompile(self):
         pre_args = self._get_platform_args()
@@ -212,33 +212,39 @@ Put -h after command to see available optional arguments if any
             fil = os.path.join(I18N, f"{locale}.ts")
             print(f"Processing {fil}")
             args = pre_args + [LRELEASE, "-qt=qt5", fil]
-            self.run_command(args)
+            run_command(args)
 
-    @staticmethod
-    def run_command(args):
-        print(" ".join(args))
-        pros = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        stdout, stderr = pros.communicate()
-        print(stdout)
-        if len(stderr):
-            raise ValueError("Stopping now due to error in stderr!")
 
-    @staticmethod
-    def cp_parents(target_dir, files):
-        """https://stackoverflow.com/a/15340518"""
-        dirs = []
-        for file in files:
-            dirs.append(os.path.dirname(file))
-        dirs.sort(reverse=True)
-        for i in range(len(dirs)):
-            if not dirs[i] in dirs[i - 1]:
-                need_dir = os.path.normpath(target_dir + dirs[i])
-                print("mkdir", need_dir)
-                os.makedirs(need_dir, exist_ok=True)
-        for file in files:
-            dest = os.path.normpath(target_dir + file)
-            print(f"cp {file} {dest}")
-            shutil.copy(file, dest)
+def copy_and_overwrite(dr, dst):
+    if os.path.exists(dst):
+        shutil.rmtree(dst)
+    shutil.copytree(dr, os.path.join(PLUGINDIR, dr))
+
+
+def run_command(args):
+    print(" ".join(args))
+    pros = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    stdout, stderr = pros.communicate()
+    print(stdout)
+    if len(stderr):
+        raise ValueError("Stopping now due to error in stderr!")
+
+
+def cp_parents(target_dir, files):
+    """https://stackoverflow.com/a/15340518"""
+    dirs = []
+    for file in files:
+        dirs.append(os.path.dirname(file))
+    dirs.sort(reverse=True)
+    for i in range(len(dirs)):
+        if not dirs[i] in dirs[i - 1]:
+            need_dir = os.path.normpath(target_dir + dirs[i])
+            print("mkdir", need_dir)
+            os.makedirs(need_dir, exist_ok=True)
+    for file in files:
+        dest = os.path.normpath(target_dir + file)
+        print(f"cp {file} {dest}")
+        shutil.copy(file, dest)
 
 
 if __name__ == '__main__':
