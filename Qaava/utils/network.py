@@ -1,11 +1,15 @@
+import logging
+
 from PyQt5.QtCore import QSettings, QUrl
 from PyQt5.QtNetwork import QNetworkRequest, QNetworkReply
 from qgis.core import Qgis, QgsBlockingNetworkRequest
 
-from . import logger
 from .constants import IDENTIFIER, ENCODING
 from .exceptions import QaavaNetworkException
-from .utils import tr
+from ..qgis_plugin_tools.tools.i18n import tr
+from ..qgis_plugin_tools.tools.resources import plugin_name
+
+LOGGER = logging.getLogger(plugin_name())
 
 
 def fetch(url: str) -> str:
@@ -15,12 +19,13 @@ def fetch(url: str) -> str:
     :param url: address of the web resource
     :return: encoded string of the content
     """
-    logger.debug(url)
+    LOGGER.debug(url)
     req = QNetworkRequest(QUrl(url))
 
     # http://osgeo-org.1560.x6.nabble.com/QGIS-Developer-Do-we-have-a-User-Agent-string-for-QGIS-td5360740.html
     user_agent = QSettings().value("/qgis/networkAndProxy/userAgent", "Mozilla/5.0")
     user_agent += " " if len(user_agent) else ""
+    # noinspection PyUnresolvedReferences
     user_agent += f"QGIS/{Qgis.QGIS_VERSION_INT}"
     user_agent += f" {IDENTIFIER}"
     # https://www.riverbankcomputing.com/pipermail/pyqt/2016-May/037514.html

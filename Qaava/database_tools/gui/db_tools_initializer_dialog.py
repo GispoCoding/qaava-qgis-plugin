@@ -8,7 +8,7 @@ from qgis.gui import QgisInterface
 
 from ..db_utils import get_existing_database_connections
 from ...model.land_use_plan import LandUsePlanEnum
-from ...utils.utils import tr
+from ...qgis_plugin_tools.tools.i18n import tr
 
 FORM_CLASS, _ = uic.loadUiType(os.path.join(
     os.path.dirname(__file__), 'db_tools_initializer_dialog.ui'))

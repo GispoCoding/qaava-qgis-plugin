@@ -8,10 +8,6 @@ DETAILED_PLAN_DATA_MODEL_URL = f"{QAAVA_GITHUB_URL}/master/asemakaavan-tietomall
 
 ENCODING = "utf-8"
 
-# Logging
-DEFAULT_LOGGING_LEVEL = "DEBUG"
-DEFAULT_LOGGING_FILE_LEVEL = "INFO"
-
 # Database
 PG_CONNECTIONS = "PostgreSQL/connections"
 QAAVA_DB_NAME = f"{QAAVA}/postgresqlConnectionName"
