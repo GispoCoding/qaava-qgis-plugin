@@ -1,28 +1,28 @@
 import pytest
 
 from .conftest import set_settings, CONN_NAME, IFACE, QGIS_APP
-from .utilities import is_running_inside_CI
+from ..qgis_plugin_tools.testing.utilities import is_running_inside_ci
 from ..database_tools.database import Database
 from ..database_tools.db_initializer import DatabaseInitializer
 
 
-@pytest.mark.skipif(is_running_inside_CI(), reason="CI")
+@pytest.mark.skipif(is_running_inside_ci(), reason="CI")
 def test_database_select(docker_database_params):
     content_of_test_database_select(docker_database_params["db1"])
 
 
-@pytest.mark.skipif(is_running_inside_CI(), reason="CI")
+@pytest.mark.skipif(is_running_inside_ci(), reason="CI")
 def test_db_initializer_with_detailed_plan(new_project, docker_database_params, monkeypatch):
     content_of_test_db_initializer_with_detailed_plan(docker_database_params["db2"], monkeypatch)
 
 
 # CI tests
-@pytest.mark.skipif(not is_running_inside_CI(), reason="Not in CI")
+@pytest.mark.skipif(not is_running_inside_ci(), reason="Not in CI")
 def test_database_select_ci(ci_database_params):
     content_of_test_database_select(ci_database_params["db1"])
 
 
-@pytest.mark.skipif(not is_running_inside_CI(), reason="Not in CI")
+@pytest.mark.skipif(not is_running_inside_ci(), reason="Not in CI")
 def test_db_initializer_with_detailed_plan_ci(new_project, ci_database_params, monkeypatch):
     content_of_test_db_initializer_with_detailed_plan(ci_database_params["db2"], monkeypatch)
 
