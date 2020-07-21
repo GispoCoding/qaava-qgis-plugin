@@ -1,17 +1,10 @@
 # Add application specific exception classes here
+from ..qgis_plugin_tools.tools.exceptions import QgsPluginException
 
 
-class QaavaDatabaseNotSetException(Exception):
+class QaavaDatabaseNotSetException(QgsPluginException):
     pass
 
 
-class QaavaAuthConfigException(Exception):
-    pass
-
-
-class QaavaNetworkException(Exception):
-    pass
-
-
-class QaavaNotImplementedException(Exception):
+class QaavaAuthConfigException(QgsPluginException):
     pass

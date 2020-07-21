@@ -1,10 +1,9 @@
 import pytest
 
 from ..model.land_use_plan import DetailedLandUsePlan
-from ..qgis_plugin_tools.tools.resources import plugin_name, plugin_path
-from ..utils.constants import DETAILED_PLAN_DATA_MODEL_URL
-from ..utils.exceptions import QaavaNetworkException
-from ..utils.network import fetch
+from ..definitions.constants import DETAILED_PLAN_DATA_MODEL_URL
+from ..qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException
+from ..qgis_plugin_tools.tools.network import fetch
 
 
 def test_fetch(new_project):
@@ -13,7 +12,7 @@ def test_fetch(new_project):
 
 
 def test_fetch_invalid_url(new_project):
-    with pytest.raises(QaavaNetworkException):
+    with pytest.raises(QgsPluginNetworkException):
         fetch("invalidurl")
 
 

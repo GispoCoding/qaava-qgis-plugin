@@ -12,7 +12,8 @@ from ..model.land_use_plan import LandUsePlanEnum, LandUsePlan
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
 from ..qgis_plugin_tools.tools.i18n import tr
 from ..qgis_plugin_tools.tools.resources import plugin_name
-from ..utils.exceptions import QaavaAuthConfigException, QaavaNetworkException, QaavaNotImplementedException
+from ..utils.exceptions import QaavaAuthConfigException
+from ..qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException, QgsPluginNotImplementedException
 
 LOGGER = logging.getLogger(plugin_name())
 
@@ -66,13 +67,13 @@ class DatabaseInitializer:
 
         try:
             schema_query = plan.fetch_schema()
-        except QaavaNetworkException as e:
+        except QgsPluginNetworkException as e:
             LOGGER.error(tr(u"Network error:"),
                          extra=bar_msg(
                              tr(u"Could not load schema for the plan. Check your internet connection. Details: ") + str(
                                  e)))
             return
-        except QaavaNotImplementedException:
+        except QgsPluginNotImplementedException:
             LOGGER.warning(tr(u"Not implemented:"),
                            extra=bar_msg(tr(u"Schema for the selected plan is not implemented yet")))
             return

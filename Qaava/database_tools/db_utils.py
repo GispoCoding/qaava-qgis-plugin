@@ -5,7 +5,7 @@ from qgis.core import QgsAuthMethodConfig, QgsApplication
 
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.tools.resources import plugin_name
-from ..utils.constants import (PG_CONNECTIONS, QGS_SETTINGS_PSYCOPG2_PARAM_MAP)
+from ..definitions.constants import (PG_CONNECTIONS, QGS_SETTINGS_PSYCOPG2_PARAM_MAP)
 from ..utils.exceptions import QaavaDatabaseNotSetException, QaavaAuthConfigException
 from ..utils.utils import parse_value
 
