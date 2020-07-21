@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-import os
 
 from PyQt5.QtWidgets import QDialogButtonBox
 from qgis.PyQt import QtWidgets
-from qgis.PyQt import uic
 from qgis.gui import QgisInterface
 
 from ..db_utils import get_existing_database_connections
 from ...model.land_use_plan import LandUsePlanEnum
 from ...qgis_plugin_tools.tools.i18n import tr
+from ...qgis_plugin_tools.tools.resources import load_ui
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'db_tools_initializer_dialog.ui'))
+FORM_CLASS = load_ui('db_tools_initializer_dialog.ui')
 
 
 class DbInitializerDialog(QtWidgets.QDialog, FORM_CLASS):

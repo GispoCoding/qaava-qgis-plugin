@@ -1,6 +1,7 @@
 import pytest
 
 from ..model.land_use_plan import DetailedLandUsePlan
+from ..qgis_plugin_tools.tools.resources import plugin_name, plugin_path
 from ..utils.constants import DETAILED_PLAN_DATA_MODEL_URL
 from ..utils.exceptions import QaavaNetworkException
 from ..utils.network import fetch

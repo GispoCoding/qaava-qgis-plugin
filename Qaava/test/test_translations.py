@@ -7,6 +7,7 @@
      (at your option) any later version.
 
 """
+from ..qgis_plugin_tools.tools.resources import resources_path
 from ..qgis_plugin_tools.testing.utilities import get_qgis_app
 
 __author__ = 'ismailsunni@yahoo.co.id'
@@ -38,8 +39,7 @@ class SafeTranslationsTest(unittest.TestCase):
         """Test that translations work."""
         parent_path = os.path.join(__file__, os.path.pardir, os.path.pardir)
         dir_path = os.path.abspath(parent_path)
-        file_path = os.path.join(
-            dir_path, 'i18n', 'Qaava_fi.qm')
+        file_path = resources_path("i18n", 'fi.qm')
         translator = QTranslator()
         translator.load(file_path)
         QCoreApplication.installTranslator(translator)
