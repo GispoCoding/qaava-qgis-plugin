@@ -5,9 +5,7 @@ The code for the plugin is in the [Qaava](../Qaava) folder. Make sure you have r
 Qt with Qt Editor and Qt Linquist installed by following this 
 [tutorial](https://www.qgistutorials.com/en/docs/3/building_a_python_plugin.html#get-the-tools). 
 
-For building the plugin there are two options: using [Makefile](../Qaava/Makefile) or to use 
-platform independent [build.py](../Qaava/build.py) script. 
-These instructions are for the build script.
+For building the plugin use platform independent [build.py](../Qaava/build.py) script. 
 
 ### Adding or editing  source files
 If you create or edit source files make sure that:
@@ -15,17 +13,16 @@ If you create or edit source files make sure that:
     ```python
     '''file Qaava/database_tools/db_initializer.py'''
     
-    from ..utils import logger # Good
+    from ..utils.exceptions import QaavaAuthConfigException # Good
     
-    from Qaava.utils import logger # Bad
+    from Qaava.utils.exceptions import QaavaAuthConfigException # Bad
     ```
-* they will be found by [build.py](../Qaava/build.py) script (UI and QAAVA values)
-* if they contain translatable content, they will be added to [translate.pro](../Qaava/i18n/translate.pro)
+* they will be found by [build.py](../Qaava/build.py) script (`py_files` and `ui_files` values)
 * you consider adding test files for the new functionality
 
 ### Deployment
 
-Edit [build.py](../Qaava/build.py) to contain working values for *PROFILE*, *LRELEASE* and *PYRCC*. 
+Edit [build.py](../Qaava/build.py) to contain working values for *profile*, *lrelease* and *pyrcc*. 
 If you are running on Windows, make sure the value *QGIS_INSTALLATION_DIR* points to right folder
 
 Run the deployment with:
@@ -46,8 +43,7 @@ python build.py test
 
 #### Translating
 
-The translation files are in [i18n](../Qaava/i18n) folder. [translate.pro](../Qaava/i18n/translate.pro) 
-contains the lists of source files to have translatable content.
+The translation files are in [i18n](../Qaava/resources/i18n) folder.
 Translatable content in python files is code such as `tr(u"Hello World")`. 
 
 To update language *.ts* files to contain newest lines to translate, run
