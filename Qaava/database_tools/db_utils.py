@@ -6,8 +6,8 @@ from qgis.core import QgsAuthMethodConfig, QgsApplication
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.tools.resources import plugin_name
 from ..definitions.constants import (PG_CONNECTIONS, QGS_SETTINGS_PSYCOPG2_PARAM_MAP)
-from ..utils.exceptions import QaavaDatabaseNotSetException, QaavaAuthConfigException
-from ..utils.utils import parse_value
+from ..core.exceptions import QaavaDatabaseNotSetException, QaavaAuthConfigException
+from ..qgis_plugin_tools.tools.settings import parse_value, set_setting, get_setting
 
 LOGGER = logging.getLogger(plugin_name())
 
@@ -31,14 +31,14 @@ def set_qaava_connection(plan: LandUsePlanEnum, conn_name: str) -> None:
     :param plan:
     :param conn_name:
     """
-    QSettings().setValue(plan.value.key, conn_name)
+    set_setting(plan.value.key, conn_name, internal=False)
 
 
 def get_qaava_connection_name(plan: LandUsePlanEnum) -> str:
     """
     :return: Name of the PostGIS connection that will be used by the plugin
     """
-    value = QSettings().value(plan.value.key, "", str)
+    value = get_setting(plan.value.key, "", str)
     if value == "":
         raise QaavaDatabaseNotSetException()
     return value

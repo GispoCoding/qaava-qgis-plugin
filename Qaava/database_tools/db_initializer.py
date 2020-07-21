@@ -12,7 +12,7 @@ from ..model.land_use_plan import LandUsePlanEnum, LandUsePlan
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
 from ..qgis_plugin_tools.tools.i18n import tr
 from ..qgis_plugin_tools.tools.resources import plugin_name
-from ..utils.exceptions import QaavaAuthConfigException
+from ..core.exceptions import QaavaAuthConfigException
 from ..qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException, QgsPluginNotImplementedException
 
 LOGGER = logging.getLogger(plugin_name())

@@ -1,4 +1,4 @@
-from ..qgis_plugin_tools.tools.resources import setting_key
+from ..qgis_plugin_tools.tools.settings import setting_key
 
 # Urls
 QAAVA_GITHUB_URL = "https://raw.githubusercontent.com/GispoCoding/qaava"
