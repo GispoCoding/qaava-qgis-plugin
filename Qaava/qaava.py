@@ -1,18 +1,15 @@
 # -*- coding: utf-8 -*-
-import logging
-import os.path
-from typing import Optional
 
-from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
+from qgis.PyQt.QtCore import QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
-
 from qgis.core import QgsApplication
 
+from Qaava.ui.db_tools_initializer_dialog import DbInitializerDialog
+from .core.db.db_initializer import DatabaseInitializer
 from .qgis_plugin_tools.tools.custom_logging import setup_logger
 from .qgis_plugin_tools.tools.i18n import setup_translation, tr
 from .qgis_plugin_tools.tools.resources import plugin_name
-from .database_tools.db_initializer import DatabaseInitializer
 
 
 class Qaava:
@@ -36,6 +33,7 @@ class Qaava:
         if file_path:
             self.translator = QTranslator()
             self.translator.load(file_path)
+            # noinspection PyCallByClass
             QCoreApplication.installTranslator(self.translator)
         else:
             pass
@@ -103,6 +101,7 @@ class Qaava:
 
         icon = QIcon(icon_path)
         action = QAction(icon, text, parent)
+        # noinspection PyUnresolvedReferences
         action.triggered.connect(callback)
         action.setEnabled(enabled_flag)
 
@@ -176,23 +175,27 @@ class Qaava:
         """Run method that performs all the real work"""
         if not self.pluginIsActive:
             self.pluginIsActive = True
-
         print("Hello Qaava world")
+        from .ui.dialog import Dialog
+        dialog = Dialog(self.iface)
+        dialog.exec_()
 
     def run_initialize_database(self):
         if not self.database_initializer:
-            self.database_initializer = DatabaseInitializer(self.iface, QgsApplication.instance())
+            # noinspection PyArgumentList
+            self.database_initializer = DatabaseInitializer(DbInitializerDialog(), QgsApplication.instance())
         else:
             self.database_initializer.dlg.activateWindow()
 
-        # Create the dialog with elements (after translation) and keep reference
+        # Create the dlg with elements (after translation) and keep reference
         if self.first_start:
             self.first_start = False
 
-        # show the dialog
+        # show the dlg
         self.database_initializer.dlg.show()
 
         result = self.database_initializer.dlg.exec_()
 
         if result:
-            self.database_initializer.initialize_database()
+            self.database_initializer.initialize_database(self.database_initializer.dlg.get_db(),
+                                                          self.database_initializer.dlg.get_plan())

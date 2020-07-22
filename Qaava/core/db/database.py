@@ -1,5 +1,6 @@
-import psycopg2
 from typing import Tuple
+
+import psycopg2
 
 
 class Database:

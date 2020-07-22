@@ -2,12 +2,11 @@
 
 from PyQt5.QtWidgets import QDialogButtonBox
 from qgis.PyQt import QtWidgets
-from qgis.gui import QgisInterface
 
-from ..db_utils import get_existing_database_connections
-from ...model.land_use_plan import LandUsePlanEnum
-from ...qgis_plugin_tools.tools.i18n import tr
-from ...qgis_plugin_tools.tools.resources import load_ui
+from ..core.db.db_utils import get_existing_database_connections
+from ..model.land_use_plan import LandUsePlanEnum
+from ..qgis_plugin_tools.tools.i18n import tr
+from ..qgis_plugin_tools.tools.resources import load_ui
 
 FORM_CLASS = load_ui('db_tools_initializer_dialog.ui')
 
@@ -15,13 +14,12 @@ FORM_CLASS = load_ui('db_tools_initializer_dialog.ui')
 class DbInitializerDialog(QtWidgets.QDialog, FORM_CLASS):
     onCloseHandler = None
 
-    def __init__(self, iface: QgisInterface, parent=None):
+    def __init__(self, parent=None):
         """Constructor."""
 
+        # noinspection PyArgumentList
         super(DbInitializerDialog, self).__init__(parent)
         self.setupUi(self)
-
-        self.iface = iface
 
         self.populate_dbComboBox()
         self.populate_dmComboBox()

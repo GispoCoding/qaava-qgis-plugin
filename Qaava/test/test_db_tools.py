@@ -1,10 +1,10 @@
 import pytest
 
 from .conftest import (remove_db_settings, CONN_NAME, QGIS_APP)
-from ..database_tools.db_utils import (get_existing_database_connections, set_qaava_connection,
-                                       get_db_connection_params)
-from ..model.land_use_plan import LandUsePlanEnum
+from ..core.db.db_utils import (get_existing_database_connections, set_qaava_connection,
+                                get_db_connection_params)
 from ..core.exceptions import QaavaDatabaseNotSetException
+from ..model.land_use_plan import LandUsePlanEnum
 
 
 # DB utils tests
