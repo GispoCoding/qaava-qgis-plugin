@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import glob
-import os
 
 from qgis_plugin_tools.infrastructure.plugin_maker import PluginMaker
 
@@ -16,7 +15,7 @@ py_files = (
     ["test/test_translations.py"]
 )
 locales = ['fi']
-profile = 'qaava'
+profile = 'default'
 ui_files = list(glob.glob("**/*.ui", recursive=True))
 resources = list(glob.glob("**/*.qrc", recursive=True))
 extra_dirs = ["resources", "logs"]
