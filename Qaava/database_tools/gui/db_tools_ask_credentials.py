@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
-import os
 
 from qgis.PyQt import QtWidgets
-from qgis.PyQt import uic
 
-FORM_CLASS, _ = uic.loadUiType(os.path.join(
-    os.path.dirname(__file__), 'db_tools_ask_credentials_dialog.ui'))
+from ...qgis_plugin_tools.tools.resources import load_ui
+
+FORM_CLASS = load_ui('db_tools_ask_credentials_dialog.ui')
 
 
 class DbAskCredentialsDialog(QtWidgets.QDialog, FORM_CLASS):

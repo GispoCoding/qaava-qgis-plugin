@@ -12,9 +12,9 @@ import psycopg2
 from PyQt5.QtCore import QSettings
 from qgis.core import QgsProject
 
-from .utilities import get_qgis_app
+from ..qgis_plugin_tools.testing.utilities import get_qgis_app
 from ..model.land_use_plan import LandUsePlanEnum
-from ..utils.constants import PG_CONNECTIONS
+from ..definitions.constants import PG_CONNECTIONS
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 QGIS_INSTANCE = QgsProject.instance()

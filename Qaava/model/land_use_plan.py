@@ -1,9 +1,9 @@
 import enum
 from typing import Union
 
-from ..utils.constants import DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME
-from ..utils.exceptions import QaavaNotImplementedException
-from ..utils.network import fetch
+from ..definitions.constants import DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME
+from ..qgis_plugin_tools.tools.exceptions import QgsPluginNotImplementedException
+from ..qgis_plugin_tools.tools.network import fetch
 
 
 class LandUsePlan:
@@ -53,7 +53,7 @@ class GeneralLandUsePlan(LandUsePlan):
     schema_url = None  # TODO: fill schema url when in use
 
     def fetch_schema(self) -> str:
-        raise QaavaNotImplementedException()
+        raise QgsPluginNotImplementedException()
 
 
 class LandUsePlanEnum(enum.Enum):

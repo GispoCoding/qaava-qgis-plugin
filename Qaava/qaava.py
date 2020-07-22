@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+import logging
 import os.path
+from typing import Optional
 
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
@@ -7,7 +9,9 @@ from qgis.PyQt.QtWidgets import QAction
 
 from qgis.core import QgsApplication
 
-from .utils.utils import tr
+from .qgis_plugin_tools.tools.custom_logging import setup_logger
+from .qgis_plugin_tools.tools.i18n import setup_translation, tr
+from .qgis_plugin_tools.tools.resources import plugin_name
 from .database_tools.db_initializer import DatabaseInitializer
 
 
@@ -24,19 +28,17 @@ class Qaava:
         """
         # Save reference to the QGIS interface
         self.iface = iface
-        # initialize plugin directory
-        self.plugin_dir = os.path.dirname(__file__)
-        # initialize locale
-        locale = QSettings().value('locale/userLocale')[0:2]
-        locale_path = os.path.join(
-            self.plugin_dir,
-            'i18n',
-            'Qaava_{}.qm'.format(locale))
 
-        if os.path.exists(locale_path):
+        setup_logger(plugin_name(), iface)
+
+        # initialize locale
+        locale, file_path = setup_translation()
+        if file_path:
             self.translator = QTranslator()
-            self.translator.load(locale_path)
+            self.translator.load(file_path)
             QCoreApplication.installTranslator(self.translator)
+        else:
+            pass
 
         # Declare instance attributes
         self.actions = []
