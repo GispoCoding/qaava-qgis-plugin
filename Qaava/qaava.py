@@ -3,13 +3,11 @@
 from qgis.PyQt.QtCore import QTranslator, QCoreApplication
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
-from qgis.core import QgsApplication
 
-from Qaava.ui.db_tools_initializer_dialog import DbInitializerDialog
-from .core.db.db_initializer import DatabaseInitializer
 from .qgis_plugin_tools.tools.custom_logging import setup_logger
 from .qgis_plugin_tools.tools.i18n import setup_translation, tr
 from .qgis_plugin_tools.tools.resources import plugin_name
+from .ui.dialog import Dialog
 
 
 class Qaava:
@@ -136,14 +134,6 @@ class Qaava:
             add_to_toolbar=False
         )
 
-        self.add_action(
-            icon_path,
-            text=tr(u'Initialize database'),
-            callback=self.run_initialize_database,
-            parent=self.iface.mainWindow(),
-            add_to_toolbar=False
-        )
-
         # will be set False in run()
         self.first_start = True
 
@@ -175,27 +165,5 @@ class Qaava:
         """Run method that performs all the real work"""
         if not self.pluginIsActive:
             self.pluginIsActive = True
-        print("Hello Qaava world")
-        from .ui.dialog import Dialog
         dialog = Dialog(self.iface)
         dialog.exec_()
-
-    def run_initialize_database(self):
-        if not self.database_initializer:
-            # noinspection PyArgumentList
-            self.database_initializer = DatabaseInitializer(DbInitializerDialog(), QgsApplication.instance())
-        else:
-            self.database_initializer.dlg.activateWindow()
-
-        # Create the dlg with elements (after translation) and keep reference
-        if self.first_start:
-            self.first_start = False
-
-        # show the dlg
-        self.database_initializer.dlg.show()
-
-        result = self.database_initializer.dlg.exec_()
-
-        if result:
-            self.database_initializer.initialize_database(self.database_initializer.dlg.get_db(),
-                                                          self.database_initializer.dlg.get_plan())
