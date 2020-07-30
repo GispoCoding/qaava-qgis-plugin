@@ -1,13 +1,13 @@
 import logging
 
-from PyQt5.QtCore import QSettings
-from qgis.core import QgsAuthMethodConfig, QgsApplication
+from PyQt5.QtCore import QSettings, QCoreApplication
+from qgis.core import QgsAuthMethodConfig
 
-from ..model.land_use_plan import LandUsePlanEnum
-from ..qgis_plugin_tools.tools.resources import plugin_name
-from ..definitions.constants import (PG_CONNECTIONS, QGS_SETTINGS_PSYCOPG2_PARAM_MAP)
-from ..core.exceptions import QaavaDatabaseNotSetException, QaavaAuthConfigException
-from ..qgis_plugin_tools.tools.settings import parse_value, set_setting, get_setting
+from ...core.exceptions import QaavaDatabaseNotSetException, QaavaAuthConfigException
+from ...definitions.constants import (PG_CONNECTIONS, QGS_SETTINGS_PSYCOPG2_PARAM_MAP)
+from ...model.land_use_plan import LandUsePlanEnum
+from ...qgis_plugin_tools.tools.resources import plugin_name
+from ...qgis_plugin_tools.tools.settings import parse_value, set_setting, get_setting
 
 LOGGER = logging.getLogger(plugin_name())
 
@@ -44,7 +44,7 @@ def get_qaava_connection_name(plan: LandUsePlanEnum) -> str:
     return value
 
 
-def get_db_connection_params(plan: LandUsePlanEnum, qgs_app: QgsApplication) -> {str: str}:
+def get_db_connection_params(plan: LandUsePlanEnum, qgs_app: QCoreApplication) -> {str: str}:
     """
     :return: Psycopg2 connection params for Qaava database
     """

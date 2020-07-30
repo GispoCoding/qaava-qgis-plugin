@@ -1,37 +1,34 @@
 import logging
 
 import psycopg2
-from qgis.core import QgsApplication
-from qgis.gui import QgisInterface
+from PyQt5.QtCore import QCoreApplication
+from PyQt5.QtWidgets import QDialog
 
 from .database import Database
 from .db_utils import (set_qaava_connection, get_db_connection_params)
-from .gui.db_tools_ask_credentials import DbAskCredentialsDialog
-from .gui.db_tools_initializer_dialog import DbInitializerDialog
-from ..model.land_use_plan import LandUsePlanEnum, LandUsePlan
-from ..qgis_plugin_tools.tools.custom_logging import bar_msg
-from ..qgis_plugin_tools.tools.i18n import tr
-from ..qgis_plugin_tools.tools.resources import plugin_name
-from ..core.exceptions import QaavaAuthConfigException
-from ..qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException, QgsPluginNotImplementedException
+from ...core.exceptions import QaavaAuthConfigException
+from ...model.land_use_plan import LandUsePlanEnum, LandUsePlan
+from ...qgis_plugin_tools.tools.custom_logging import bar_msg
+from ...qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException, QgsPluginNotImplementedException
+from ...qgis_plugin_tools.tools.i18n import tr
+from ...qgis_plugin_tools.tools.resources import plugin_name
+from ...ui.db_tools_ask_credentials import DbAskCredentialsDialog
 
 LOGGER = logging.getLogger(plugin_name())
 
 
 class DatabaseInitializer:
 
-    def __init__(self, iface: QgisInterface, qgs_app: QgsApplication) -> None:
-        self.iface = iface
-        self.dlg = DbInitializerDialog(iface)
+    def __init__(self, dialog: QDialog, qgs_app: QCoreApplication) -> None:
+        self.dlg = dialog
         self.qgs_app = qgs_app
 
-    def initialize_database(self) -> None:
+    def initialize_database(self, db_conn_name: str, plan_sting: str) -> None:
         """
         Initialize database for the land use planning
         :return:
         """
-        db_conn_name = self.dlg.get_db()
-        plan_enum = LandUsePlanEnum[self.dlg.get_plan()]
+        plan_enum = LandUsePlanEnum[plan_sting]
         plan: LandUsePlan = plan_enum.value()  # intance of plan class because of ()
 
         try:

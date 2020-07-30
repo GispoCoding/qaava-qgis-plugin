@@ -25,7 +25,7 @@ jobs:
           submodules: true
 
       - name: Pull qgis image
-        run: docker pull qgis/qgis:final-3_12_3
+        run: docker pull qgis/qgis:final-3_14_1_focal
 
       - name: Pull PostGIS image
         run: docker pull kartoza/postgis:12.0
@@ -35,4 +35,4 @@ jobs:
 
       # Runs all tests
       - name: Run tests
-        run: docker run --rm --net=host --volume `pwd`/Qaava:/app -w=/app -e QGIS_PLUGIN_IN_CI=1 qgis/qgis:final-3_12_3 sh -c "pip3 install -q pytest && xvfb-run -s '+extension GLX -screen 0 1024x768x24' pytest -v"
+        run: docker run --rm --net=host --volume `pwd`/Qaava:/app -w=/app -e QGIS_PLUGIN_IN_CI=1 qgis/qgis:final-3_14_1_focal sh -c "pip3 install -q pytest && xvfb-run -s '+extension GLX -screen 0 1024x768x24' pytest -v"
