@@ -1,7 +1,7 @@
 import pytest
 
-from ..model.land_use_plan import DetailedLandUsePlan
 from ..definitions.constants import DETAILED_PLAN_DATA_MODEL_URL
+from ..model.land_use_plan import DetailedLandUsePlan, GeneralLandUsePlan
 from ..qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException
 from ..qgis_plugin_tools.tools.network import fetch
 
@@ -18,5 +18,11 @@ def test_fetch_invalid_url(new_project):
 
 def test_detailed_plan_schema_fetch(new_project):
     plan = DetailedLandUsePlan()
+    schema = plan.fetch_schema()
+    assert len(schema) > 1000
+
+
+def test_general_plan_schema_fetch(new_project):
+    plan = GeneralLandUsePlan()
     schema = plan.fetch_schema()
     assert len(schema) > 1000

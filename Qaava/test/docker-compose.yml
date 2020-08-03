@@ -8,7 +8,7 @@ services:
       - ./db_fixtures/simple_test.sql:/docker-entrypoint-initdb.d/simple_test.sql
     environment:
       # There are multiple databases, data will be populated to the first only
-      - POSTGRES_DB=qaavadb1,qaavadb2
+      - POSTGRES_DB=qaavadb1,qaava-general,qaava-detailed
       - POSTGRES_USER=postgres
       - POSTGRES_PASS=postgres
       - ALLOW_IP_RANGE=0.0.0.0/0

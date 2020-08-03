@@ -3,20 +3,20 @@ This class contains fixtures and common helper function to keep the test files s
 """
 
 import os
-import timeit
 import time
-
-import pytest
+import timeit
 
 import psycopg2
+import pytest
 from PyQt5.QtCore import QSettings
 from qgis.core import QgsProject
 
-from ..qgis_plugin_tools.testing.utilities import get_qgis_app
-from ..model.land_use_plan import LandUsePlanEnum
 from ..definitions.constants import PG_CONNECTIONS
+from ..model.land_use_plan import LandUsePlanEnum
+from ..qgis_plugin_tools.testing.utilities import get_qgis_app
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
+# noinspection PyArgumentList
 QGIS_INSTANCE = QgsProject.instance()
 
 CONN_NAME = "test_qaava_conn"
@@ -65,13 +65,15 @@ def docker_database_params(docker_ip, docker_services, database_params) -> {str:
     """
     port = docker_services.port_for("qaava-test-db", 5432)
     params = {**database_params, **{"port": port}}
-    params2 = {**params, **{"dbname": "qaavadb2"}}
+    params_for_detailed = {**params, **{"dbname": "qaava-detailed"}}
+    params_for_general = {**params, **{"dbname": "qaava-general"}}
     wait_until_responsive(
         timeout=10.0, pause=1, check=lambda: is_responsive(params)
     )
     return {
         "db1": params,
-        "db2": params2
+        "detailed": params_for_detailed,
+        "general": params_for_general
     }
 
 
@@ -83,14 +85,16 @@ def ci_database_params(database_params) -> {str: {str: str}}:
     :return: db params in a dict
     """
     params = {**database_params}
-    params2 = {**params, **{"dbname": "qaavadb2"}}
+    params_for_detailed = {**params, **{"dbname": "qaava-detailed"}}
+    params_for_general = {**params, **{"dbname": "qaava-general"}}
     wait_until_responsive(
         timeout=10.0, pause=1, check=lambda: is_responsive(params)
     )
 
     return {
         "db1": params,
-        "db2": params2
+        "detailed": params_for_detailed,
+        "general": params_for_general
     }
 
 

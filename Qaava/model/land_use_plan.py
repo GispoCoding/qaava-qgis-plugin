@@ -1,8 +1,7 @@
 import enum
 from typing import Union
 
-from ..definitions.constants import DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME
-from ..qgis_plugin_tools.tools.exceptions import QgsPluginNotImplementedException
+from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME, GENERAL_PLAN_DATA_MODEL_URL)
 from ..qgis_plugin_tools.tools.network import fetch
 
 
@@ -50,10 +49,7 @@ class DetailedLandUsePlan(LandUsePlan):
 
 class GeneralLandUsePlan(LandUsePlan):
     key = f"{QAAVA_DB_NAME}/general"
-    schema_url = None  # TODO: fill schema url when in use
-
-    def fetch_schema(self) -> str:
-        raise QgsPluginNotImplementedException()
+    schema_url = GENERAL_PLAN_DATA_MODEL_URL
 
 
 class LandUsePlanEnum(enum.Enum):
