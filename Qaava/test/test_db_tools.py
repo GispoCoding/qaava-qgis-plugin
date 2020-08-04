@@ -26,8 +26,8 @@ def test_qaava_connection_url_exception():
 
 
 def test_qaava_connection_params(initialize_db_settings, database_params):
-    set_qaava_connection(LandUsePlanEnum.detailed, CONN_NAME)
-    params = get_db_connection_params(LandUsePlanEnum.detailed, QGIS_APP)
+    set_qaava_connection(LandUsePlanEnum.general, CONN_NAME)
+    params = get_db_connection_params(LandUsePlanEnum.general, QGIS_APP)
     assert params == database_params
 
 
