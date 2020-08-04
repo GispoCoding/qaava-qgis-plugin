@@ -7,10 +7,10 @@ qgisMinimumVersion=3.0
 author=Gispo Ltd.
 email=joona@gispo.fi
 changelog=
-    Version 0.0.1
-    * Database initialization features
-    * Possibility to change log levels
-    * Initial tests
+ Version 0.0.1
+ * Database initialization features
+ * Possibility to change log levels
+ * Initial tests
 tags=python, Qaava, planning
 repository=https://github.com/GispoCoding/qaava-qgis-plugin
 homepage=https://github.com/GispoCoding/qaava

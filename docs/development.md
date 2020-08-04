@@ -59,14 +59,11 @@ python build.py transcompile
 ```
 
 ### Creating a release
-Follow these steps to create a release zip file and tag
-* Increment version number in [metadata.txt](../Qaava/metadata.txt) (for example 0.0.1 -> 0.1.0).
+Follow these steps to create a release
+* Add changelog information to [CHANGELOG.md](../CHANGELOG.md) using this
+[format](https://github.com/opengisch/qgis-plugin-ci/blob/1.8.2/CHANGELOG.md) 
 * Make a new commit. (`git add -A && git commit -m "Release v0.1.0"`)
-* Create new tag for it (`git tag -a v0.1.0 -m "Version 0.1.0"`). You can also use --tag flag in next command to skip this step
-* Create zipped plugin package:
-    ```shell script
-    python build.py package --version v0.1.0
-    ``` 
-* File **Qaava.zip** should appear in the [Qaava](../Qaava) folder
+* Create new tag for it (`git tag -a v0.1.0 -m "Version 0.1.0"`)
 * Push tag to Github using `git push --follow-tags`
-* Create Github release and add the **Qaava.zip** as an asset
+* Create Github release
+* [qgis-plugin-ci](https://github.com/opengisch/qgis-plugin-ci) adds release zip automatically as an asset
