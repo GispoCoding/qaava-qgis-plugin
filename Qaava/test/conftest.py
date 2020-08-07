@@ -13,7 +13,7 @@ from qgis.core import QgsProject
 
 from ..definitions.constants import PG_CONNECTIONS
 from ..model.land_use_plan import LandUsePlanEnum
-from ..qgis_plugin_tools.testing.utilities import get_qgis_app
+from ..qgis_plugin_tools.testing.utilities import get_qgis_app, is_running_inside_ci
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 # noinspection PyArgumentList
@@ -54,48 +54,48 @@ def database_params() -> {str: str}:
     return params
 
 
-@pytest.fixture(scope='session')
-def docker_database_params(docker_ip, docker_services, database_params) -> {str: {str: str}}:
-    """
+if not is_running_inside_ci():
+    @pytest.fixture(scope='session')
+    def db(docker_ip, docker_services, database_params) -> {str: {str: str}}:
+        """
 
-    :param docker_ip: pytest-docker fixture
-    :param docker_services:  pytest-docker fixture
-    :param database_params: fixture
-    :return: db params in a dict
-    """
-    port = docker_services.port_for("qaava-test-db", 5432)
-    params = {**database_params, **{"port": port}}
-    params_for_detailed = {**params, **{"dbname": "qaava-detailed"}}
-    params_for_general = {**params, **{"dbname": "qaava-general"}}
-    wait_until_responsive(
-        timeout=10.0, pause=1, check=lambda: is_responsive(params)
-    )
-    return {
-        "db1": params,
-        "detailed": params_for_detailed,
-        "general": params_for_general
-    }
+        :param docker_ip: pytest-docker fixture
+        :param docker_services:  pytest-docker fixture
+        :param database_params: fixture
+        :return: db params in a dict
+        """
+        port = docker_services.port_for("qaava-test-db", 5432)
+        params = {**database_params, **{"port": port}}
+        params_for_detailed = {**params, **{"dbname": "qaava-detailed"}}
+        params_for_general = {**params, **{"dbname": "qaava-general"}}
+        wait_until_responsive(
+            timeout=10.0, pause=1, check=lambda: is_responsive(params)
+        )
+        return {
+            "db1": params,
+            "detailed": params_for_detailed,
+            "general": params_for_general
+        }
+else:
+    @pytest.fixture(scope='session')
+    def db(database_params) -> {str: {str: str}}:
+        """
+        database paramse fixture using database running in CI environment
+        :param database_params: fixture
+        :return: db params in a dict
+        """
+        params = {**database_params}
+        params_for_detailed = {**params, **{"dbname": "qaava-detailed"}}
+        params_for_general = {**params, **{"dbname": "qaava-general"}}
+        wait_until_responsive(
+            timeout=10.0, pause=1, check=lambda: is_responsive(params)
+        )
 
-
-@pytest.fixture(scope='session')
-def ci_database_params(database_params) -> {str: {str: str}}:
-    """
-    database paramse fixture using database running in CI environment
-    :param database_params: fixture
-    :return: db params in a dict
-    """
-    params = {**database_params}
-    params_for_detailed = {**params, **{"dbname": "qaava-detailed"}}
-    params_for_general = {**params, **{"dbname": "qaava-general"}}
-    wait_until_responsive(
-        timeout=10.0, pause=1, check=lambda: is_responsive(params)
-    )
-
-    return {
-        "db1": params,
-        "detailed": params_for_detailed,
-        "general": params_for_general
-    }
+        return {
+            "db1": params,
+            "detailed": params_for_detailed,
+            "general": params_for_general
+        }
 
 
 def wait_until_responsive(check, timeout, pause, clock=timeit.default_timer):
