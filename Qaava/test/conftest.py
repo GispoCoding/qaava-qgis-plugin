@@ -46,9 +46,11 @@ import pytest
 from PyQt5.QtCore import QSettings
 from qgis.core import QgsProject
 
+from ..core.db.database import Database
 from ..definitions.constants import PG_CONNECTIONS
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.testing.utilities import get_qgis_app, is_running_inside_ci
+from ..qgis_plugin_tools.tools.resources import plugin_path
 
 QGIS_APP, CANVAS, IFACE, PARENT = get_qgis_app()
 # noinspection PyArgumentList
@@ -146,6 +148,30 @@ else:
         }
 
 
+@pytest.fixture(scope='session')
+def general_db(db):
+    params = db['general']
+    db = Database(params)
+    with open(get_test_resource('db_fixtures', '01_general_plan_0.1.0.sql')) as f:
+        sql = f.read()
+        db.execute_insert(clean_schema(sql))
+    return params
+
+
+def clean_schema(raw_schema: str) -> str:
+    schema_lines = []
+    for line in raw_schema.split("\n"):
+        if (line.startswith("-- DROP ") or line.startswith("-- ALTER")) and "EXTENSION" not in line:
+            line = line.replace("-- ", "")
+        if "OWNER TO postgres" in line:
+            line = "-- " + line
+        if line.startswith("CREATE EXTENSION"):
+            line = line.replace("CREATE EXTENSION", "CREATE EXTENSION IF NOT EXISTS")
+
+        schema_lines.append(line)
+    return "\n".join(schema_lines)
+
+
 def wait_until_responsive(check, timeout, pause, clock=timeit.default_timer):
     """
     Wait until a service is responsive.
@@ -197,3 +223,7 @@ def remove_db_settings():
     s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/authcfg")
     s.remove(LandUsePlanEnum.detailed.value.key)
     s.remove(LandUsePlanEnum.general.value.key)
+
+
+def get_test_resource(*args: str) -> str:
+    return plugin_path('test', *args)

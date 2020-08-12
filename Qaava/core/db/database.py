@@ -33,9 +33,11 @@
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
-from typing import Tuple
+from typing import Union, List, Optional, Dict
 
 import psycopg2
+from psycopg2.extras import RealDictCursor
+from psycopg2.sql import Composed
 
 
 class Database:
@@ -66,14 +68,18 @@ class Database:
             with conn.cursor() as cur:
                 cur.execute(query)
 
-    def execute_select(self, query: str) -> [Tuple]:
+    def execute_select(self, query: Union[str, Composed], vars: Optional[Dict] = None,
+                       ret_dict: object = False) -> List[object]:
         """
         Execute select query and return fetched results
-        :param query: query string
+
+        :param query: query string or psycopg2 Composed
+        :param vars: query variables
+        :param ret_dict: Whether to return list of dicts or
         :return: rows
         """
 
         with psycopg2.connect(**self.conn_params) as conn:
-            with conn.cursor() as cur:
-                cur.execute(query)
+            with conn.cursor(cursor_factory=RealDictCursor if ret_dict else None) as cur:
+                cur.execute(query, vars=vars)
                 return cur.fetchall()

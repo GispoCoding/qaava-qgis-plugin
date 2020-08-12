@@ -44,6 +44,8 @@ def test_database_select(db):
     db1 = Database(params)
     rows = db1.execute_select("SELECT * FROM test_table")
     assert rows == [(1,)]
+    rows = db1.execute_select("SELECT * FROM test_table", ret_dict=True)
+    assert rows[0] == {'?column?': 1}
 
 
 # noinspection SqlNoDataSourceInspection
