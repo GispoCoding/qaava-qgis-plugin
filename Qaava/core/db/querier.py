@@ -4,7 +4,7 @@
 import logging
 from typing import Optional, Dict, List, Tuple
 
-from qgis.core import QgsApplication
+from qgis.core import QgsApplication, QgsRectangle
 
 from .db_utils import get_db_connection_params
 from .query_repository import QueryRepository
@@ -84,3 +84,18 @@ class Querier:
         if val is None:
             operation = Operation.IS
         return self.qr.add_and_condition(field, operation, val)
+
+    def add_extent(self, extent: QgsRectangle, precision=4):
+        """
+        Add extent for the query
+
+        :param extent: QgsRectangle expected to be in the right extent
+        :return:
+        """
+        rnd = lambda c: round(c, precision)
+        self.qr.add_extent(
+            rnd(extent.xMinimum()),
+            rnd(extent.yMinimum()),
+            rnd(extent.xMaximum()),
+            rnd(extent.yMaximum())
+        )

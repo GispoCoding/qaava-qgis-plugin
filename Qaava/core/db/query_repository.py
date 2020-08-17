@@ -24,6 +24,8 @@ class QueryRepository(Database):
         self.from_parts: List[Composable] = []
         self.where_parts: List[Composable] = []
         self.vars: Dict[str, any] = {}
+        self.table = ZoningPlan if self.plan_enum == LandUsePlanEnum.general else DetailedPlan
+
         self._set_initial_parts()
 
     @property
@@ -58,7 +60,7 @@ class QueryRepository(Database):
     def set_status(self, status_gid: int, operation: Operation):
         self.from_parts.append(
             SQL('LEFT JOIN {processInfo} p ON {rel}=p.{p_gid}')
-                .format(processInfo=ProcessInfo.table(), rel=ZoningPlan.process_info.field, p_gid=ProcessInfo.gid)
+                .format(processInfo=ProcessInfo.table(), rel=table.process_info.field, p_gid=ProcessInfo.gid)
         )
         self.where_parts.append(
             SQL('p.{p_gid}' + operation.value + '%(status)s').format(p_gid=ProcessInfo.gid)
@@ -75,6 +77,13 @@ class QueryRepository(Database):
 
             self.vars[str(field)] = value
 
+    def add_extent(self, xmin: float, ymin: float, xmax: float, ymax: float):
+        self.where_parts.append(
+            SQL('pl.{geom} && ST_MakeEnvelope(%(xmin)s, %(ymin)s, %(xmax)s, %(ymax)s, 3877)').format(
+                geom=self.table.geom.field)
+        )
+        self.vars.update({'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax})
+
     def run_query(self) -> List[int]:
         return [row[0] for row in self.execute_select(self.query, self.vars)]
 
@@ -82,6 +91,5 @@ class QueryRepository(Database):
         return self.mogrify_query(self.query, self.vars)
 
     def _set_initial_parts(self):
-        table = ZoningPlan if self.plan_enum == LandUsePlanEnum.general else DetailedPlan
-        self.select_parts.append(SQL('SELECT pl.{gid}').format(gid=table.gid))
-        self.from_parts.append(SQL('FROM {plan} pl').format(plan=table.table()))
+        self.select_parts.append(SQL('SELECT pl.{gid}').format(gid=self.table.gid))
+        self.from_parts.append(SQL('FROM {plan} pl').format(plan=self.table.table()))

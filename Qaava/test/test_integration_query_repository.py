@@ -1,3 +1,5 @@
+from qgis._core import QgsRectangle
+
 from ..core.db.querier import Querier
 from ..core.db.query_repository import QueryRepository
 from ..definitions.db import Operation
@@ -17,6 +19,17 @@ def test_querier_fields():
     querier = Querier(LandUsePlanEnum.general.name)
     assert querier.fields == {'laatija': ZoningPlan.editor, 'nimi': ZoningPlan.name,
                               'voimaantulopvm': ZoningPlan.start_date, 'vaihetieto.nimi': ProcessInfo.name}
+
+
+def test_querier_extent(general_db):
+    extent = QgsRectangle().fromWkt(
+        'POLYGON((23840873.5152964 6952581.91716873,23840873.5152964 6981622.5665375,23875214.1013225 6981622.5665375,23875214.1013225 6952581.91716873,23840873.5152964 6952581.91716873))')
+    querier = Querier(LandUsePlanEnum.general.name)
+    querier.add_extent(extent)
+    query = querier.show_query()
+    assert query == ('SELECT pl."gid" FROM "yleiskaava"."yleiskaava" pl WHERE pl."geom" && '
+                     'ST_MakeEnvelope(23840873.5153, 6952581.9172, 23875214.1013, 6981622.5665, '
+                     '3877)')
 
 
 def test_fetch_land_use_with_status(general_db):

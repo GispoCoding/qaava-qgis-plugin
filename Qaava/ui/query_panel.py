@@ -5,6 +5,7 @@ import uuid
 from PyQt5.QtCore import QVariant
 from PyQt5.QtWidgets import QGridLayout, QComboBox, QPushButton, QWidget
 from qgis.core import QgsApplication
+from qgis.gui import QgsMapCanvas
 
 from .base_panel import BasePanel
 from ..core.db.querier import Querier
@@ -53,6 +54,14 @@ class QueryPanel(BasePanel):
         self._populate_data_plans()
 
     def _initialize(self):
+        # this is also called upon self.setup_panel by self._change_db_plan
+
+        canvas: QgsMapCanvas = self.dlg.iface.mapCanvas()
+        crs = canvas.mapSettings().destinationCrs()
+        self.dlg.q_extent.setOriginalExtent(canvas.extent(), crs)
+        self.dlg.q_extent.setCurrentExtent(canvas.extent(), crs)
+        self.dlg.q_extent.setOutputCrs(crs)
+
         for row_id in list(self.rows.keys()):
             self._remove_row(row_id)
         self._add_row(1)
@@ -84,6 +93,9 @@ class QueryPanel(BasePanel):
             value = string_value_for_widget(row['value'])
 
             self.querier.add_condition(field, operation, value)
+
+        if self.dlg.q_extent.isChecked():
+            self.querier.add_extent(self.dlg.q_extent.outputExtent())
 
     # noinspection PyCallByClass,PyArgumentList,PyUnresolvedReferences
     def _add_row(self, row_index: int):
