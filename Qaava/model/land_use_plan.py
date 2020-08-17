@@ -24,10 +24,7 @@ from typing import Union, Dict, Tuple, Optional, List
 from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME, GENERAL_PLAN_URL,
                                      GENERAL_PLAN_MODEL_FILE_NAME, GENERAL_PLAN_PROJECT_FILE_NAME)
 from ..qgis_plugin_tools.tools.exceptions import QgsPluginNotImplementedException
-from .general_plan import GeneralLandUsePlan
-from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME)
 from . import common, general_plan
-from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME, GENERAL_PLAN_DATA_MODEL_URL)
 from ..qgis_plugin_tools.tools.network import fetch
 from ..qgis_plugin_tools.tools.resources import plugin_name
 from ..qgis_plugin_tools.tools.version import version_from_string, string_from_version
