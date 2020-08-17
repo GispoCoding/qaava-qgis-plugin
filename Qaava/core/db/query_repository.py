@@ -60,7 +60,7 @@ class QueryRepository(Database):
     def set_status(self, status_gid: int, operation: Operation):
         self.from_parts.append(
             SQL('LEFT JOIN {processInfo} p ON {rel}=p.{p_gid}')
-                .format(processInfo=ProcessInfo.table(), rel=table.process_info.field, p_gid=ProcessInfo.gid)
+                .format(processInfo=ProcessInfo.table(), rel=self.table.process_info.field, p_gid=ProcessInfo.gid)
         )
         self.where_parts.append(
             SQL('p.{p_gid}' + operation.value + '%(status)s').format(p_gid=ProcessInfo.gid)

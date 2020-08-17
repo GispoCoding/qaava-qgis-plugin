@@ -30,7 +30,7 @@ def test_fetch_available_status_codes(detailed_db):
     repository = QueryRepository(detailed_db, LandUsePlanEnum.detailed)
     codes = repository.fetch_available_status_codes()
     assert len(codes) == 8
-    assert {'gid': 1, 'name': 'aloitusvaihe'} in codes
+    assert {'gid': 1, 'name': 'valmisteluvaihe'} in codes
 
 
 def test_fetch_land_use_with_status(detailed_db):
