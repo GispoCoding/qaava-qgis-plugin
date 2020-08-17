@@ -39,6 +39,7 @@ from PyQt5.QtWidgets import QDialog
 
 from .about_panel import AboutPanel
 from .db_panel import DbPanel
+from .query_panel import QueryPanel
 from .settings_panel import SettingsPanel
 from ..definitions.qui import Panels
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
@@ -62,12 +63,15 @@ class Dialog(QDialog, FORM_CLASS):
         self.iface = iface
 
         self.panels = {
+            Panels.Query: QueryPanel(self),
             Panels.Database: DbPanel(self),
             Panels.Settings: SettingsPanel(self),
             Panels.About: AboutPanel(self)
         }
 
         self.responsive_elements = {
+            Panels.Query: [self.q_push_button_reset, self.query_grid, self.q_push_button_add_row,
+                           self.q_push_button_show_query, self.q_push_button_run_query],
             Panels.Database: {self.dbComboBox, self.dmComboBox, self.refreshPushButton, self.agreedCheckBox,
                               self.btn_db_initialize},
             Panels.Settings: [],
@@ -88,4 +92,5 @@ class Dialog(QDialog, FORM_CLASS):
         except Exception as e:
             LOGGER.exception(tr(u"Unhandled exception occurred during UI initialization."), bar_msg(e))
 
+        # The first panel is shown initially
         self.menu_widget.setCurrentRow(0)

@@ -45,6 +45,7 @@ from ..qgis_plugin_tools.tools.resources import resources_path
 
 class Panels(Enum):
     """Panels in the Dialog"""
+    Query = {'icon': '/search.svg'}
     Database = {'icon': '/dbmanager.svg'}
     Settings = {'icon': '/mActionMapSettings.svg'}
     About = {'icon': '/mActionHelpContents.svg'}
