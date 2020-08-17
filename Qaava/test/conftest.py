@@ -158,6 +158,16 @@ def general_db(db):
     return params
 
 
+@pytest.fixture(scope='session')
+def detailed_db(db):
+    params = db['detailed']
+    db = Database(params)
+    with open(get_test_resource('db_fixtures', '01_detailed_plan_0.0.0.sql')) as f:
+        sql = f.read()
+        db.execute_insert(clean_schema(sql))
+    return params
+
+
 def clean_schema(raw_schema: str) -> str:
     schema_lines = []
     for line in raw_schema.split("\n"):

@@ -26,6 +26,8 @@ from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME
 from ..qgis_plugin_tools.tools.exceptions import QgsPluginNotImplementedException
 from .general_plan import GeneralLandUsePlan
 from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME)
+from . import common, general_plan
+from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME, GENERAL_PLAN_DATA_MODEL_URL)
 from ..qgis_plugin_tools.tools.network import fetch
 from ..qgis_plugin_tools.tools.resources import plugin_name
 from ..qgis_plugin_tools.tools.version import version_from_string, string_from_version
@@ -38,6 +40,7 @@ class LandUsePlan:
     auth_cfg_id = ""
     schema_url = ""
     versions_file = 'versions.txt'
+    query_fields: Dict[str, common.DatabaseField] = {}
 
     def __init__(self):
         self.raw_schema: Optional[str] = None
@@ -98,7 +101,12 @@ class DetailedLandUsePlan(LandUsePlan):
     key = f"{QAAVA_DB_NAME}/detailed"
     auth_cfg_key = f"{key}/auth_cfg"
     schema_url = DETAILED_PLAN_DATA_MODEL_URL
-
+    query_fields: Dict[str, common.DatabaseField] = {
+        str(field): field
+        for field in [
+            common.ProcessInfo.name
+        ]
+    }
 
 class GeneralLandUsePlan(LandUsePlan):
     key = f"{QAAVA_DB_NAME}/general"
@@ -107,6 +115,15 @@ class GeneralLandUsePlan(LandUsePlan):
     schema_url = GENERAL_PLAN_URL
     file_name = GENERAL_PLAN_MODEL_FILE_NAME
     project_file = GENERAL_PLAN_PROJECT_FILE_NAME
+    query_fields: Dict[str, common.DatabaseField] = {
+        str(field): field
+        for field in [
+            general_plan.ZoningPlan.name,
+            general_plan.ZoningPlan.editor,
+            general_plan.ZoningPlan.start_date,
+            common.ProcessInfo.name
+        ]
+    }
 
     def __init__(self):
         super().__init__()

@@ -6,12 +6,12 @@ from .common import DatabaseTable, DbRelation, ProcessInfo, DatabaseField
 
 
 class Schema(enum.Enum):
-    ZONING_PLAN = 'yleiskaava'
+    PLAN = 'asemakaavat'
 
 
-class ZoningPlan(DatabaseTable):
-    schema = Schema.ZONING_PLAN.value
-    _table = 'yleiskaava'
+class DetailedPlan(DatabaseTable):
+    schema = Schema.PLAN.value
+    _table = 'asemakaava'
     geom = DatabaseField('geom')
     name = DatabaseField('nimi')
     editor = DatabaseField('laatija')
