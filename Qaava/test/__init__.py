@@ -32,5 +32,3 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-
-# import qgis libs so that ve set the correct sip api version

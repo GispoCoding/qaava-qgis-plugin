@@ -17,3 +17,9 @@ some cases it may have to be installed separately.
 ### Development
 
 Refer to [development](docs/development.md) to instructions for developing the plugin.
+
+
+## License
+This plugin is licenced with 
+[GNU Genereal Public License, version 2](https://www.gnu.org/licenses/old-licenses/gpl-2.0.en.html). 
+See [LICENSE](LICENSE) for more information.
