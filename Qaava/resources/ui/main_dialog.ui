@@ -126,112 +126,216 @@
             <number>0</number>
            </property>
            <widget class="QWidget" name="database">
-            <layout class="QVBoxLayout" name="verticalLayout_12">
+            <layout class="QVBoxLayout" name="verticalLayout_13">
              <item>
-              <layout class="QVBoxLayout" name="verticalLayout_10">
-               <item>
-                <widget class="QGroupBox" name="groupBox_6">
-                 <property name="title">
-                  <string>Database initialization</string>
-                 </property>
-                 <layout class="QVBoxLayout" name="verticalLayout_11">
-                  <item>
-                   <widget class="QLabel" name="label_3">
-                    <property name="text">
-                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This utility will turn PostgreSQL/PostGIS
-                      database into
-                      a Qaava land use planning database. &lt;/p&gt;&lt;p&gt;At the moment there are 2 possible database
-                      models to
-                      choose from: &lt;a href=&quot;https://github.com/GispoCoding/qaava/tree/master/asemakaavan-tietomalli&quot;&gt;&lt;span
-                      style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;a detailed land use plan database
-                      model&lt;/span&gt;&lt;/a&gt;
-                      and a general plan database model.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
-                     </string>
-                    </property>
-                    <property name="wordWrap">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
+              <widget class="QGroupBox" name="groupBox_6">
+               <property name="title">
+                <string>Database configuration</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_12">
+                <item>
+                 <widget class="QLabel" name="label_3">
+                  <property name="text">
+                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;At the moment there are 2 possible database
+                    models to choose from: &lt;a href=&quot;https://github.com/GispoCoding/qaava/tree/master/asemakaavan-tietomalli&quot;&gt;&lt;span
+                    style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;a detailed land use plan database
+                    model&lt;/span&gt;&lt;/a&gt; and a general plan database model. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                   </string>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <layout class="QGridLayout" name="gridLayout_6">
+                  <item row="1" column="1" colspan="2">
+                   <widget class="QComboBox" name="dmComboBox"/>
                   </item>
-                  <item>
-                   <layout class="QGridLayout" name="gridLayout_6">
-                    <item row="0" column="0">
-                     <widget class="QLabel" name="dbLabel">
-                      <property name="text">
-                       <string>Available PostGIS databases</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="0" column="1">
-                     <widget class="QComboBox" name="dbComboBox">
-                      <property name="currentText">
-                       <string/>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="0">
-                     <widget class="QLabel" name="dmLabel">
-                      <property name="text">
-                       <string>Data Model for the database</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item row="1" column="1" colspan="2">
-                     <widget class="QComboBox" name="dmComboBox"/>
-                    </item>
-                    <item row="0" column="2">
-                     <widget class="QPushButton" name="refreshPushButton">
-                      <property name="sizePolicy">
-                       <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                        <horstretch>0</horstretch>
-                        <verstretch>0</verstretch>
-                       </sizepolicy>
-                      </property>
-                      <property name="text">
-                       <string>Refresh</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="agreedCheckBox">
-                    <property name="text">
-                     <string>I understand that this action might erase all content in the database</string>
+                  <item row="0" column="1">
+                   <widget class="QComboBox" name="dbComboBox">
+                    <property name="currentText">
+                     <string/>
                     </property>
                    </widget>
                   </item>
-                  <item>
-                   <layout class="QHBoxLayout" name="horizontalLayout_4">
-                    <item>
-                     <spacer name="horizontalSpacer_2">
-                      <property name="orientation">
-                       <enum>Qt::Horizontal</enum>
-                      </property>
-                      <property name="sizeHint" stdset="0">
-                       <size>
-                        <width>40</width>
-                        <height>20</height>
-                       </size>
-                      </property>
-                     </spacer>
-                    </item>
-                    <item>
-                     <widget class="QPushButton" name="btn_db_initialize">
-                      <property name="text">
-                       <string>Initialize</string>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="dbLabel">
+                    <property name="text">
+                     <string>Available PostGIS databases</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="2">
+                   <widget class="QPushButton" name="refreshPushButton">
+                    <property name="sizePolicy">
+                     <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                      <horstretch>0</horstretch>
+                      <verstretch>0</verstretch>
+                     </sizepolicy>
+                    </property>
+                    <property name="text">
+                     <string>Refresh</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="1" column="0">
+                   <widget class="QLabel" name="dmLabel">
+                    <property name="text">
+                     <string>Data Model for the database</string>
+                    </property>
+                   </widget>
                   </item>
                  </layout>
-                </widget>
-               </item>
-               <item>
-                <layout class="QHBoxLayout" name="horizontalLayout_3"/>
-               </item>
-              </layout>
+                </item>
+                <item>
+                 <widget class="QgsCollapsibleGroupBox" name="mGroupBox">
+                  <property name="title">
+                   <string>Initialization</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_10">
+                   <item>
+                    <widget class="QLabel" name="label_4">
+                     <property name="text">
+                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This utility will turn existing
+                       PostgreSQL/PostGIS database into a Qaava land use planning database. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                      </string>
+                     </property>
+                     <property name="wordWrap">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="agreedCheckBox">
+                     <property name="text">
+                      <string>I understand that this action might erase all content in the database</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_4">
+                     <item>
+                      <spacer name="horizontalSpacer_2">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_db_initialize">
+                       <property name="text">
+                        <string>Initialize</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <widget class="Line" name="line">
+                     <property name="orientation">
+                      <enum>Qt::Horizontal</enum>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QLabel" name="label_6">
+                     <property name="text">
+                      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;This utility will use existing
+                       PostgreSQL/PostGIS database as a Qaava land use planning database. Make sure to use a correct
+                       model.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                      </string>
+                     </property>
+                     <property name="wordWrap">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_6">
+                     <item>
+                      <spacer name="horizontalSpacer_4">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_db_register">
+                       <property name="text">
+                        <string>Register as a land use model default connection</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QgsCollapsibleGroupBox" name="mGroupBox_2">
+                  <property name="title">
+                   <string>QGIS projects</string>
+                  </property>
+                  <layout class="QVBoxLayout" name="verticalLayout_11">
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_5">
+                     <item>
+                      <widget class="QLabel" name="label_2">
+                       <property name="text">
+                        <string>Available Projects:</string>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <spacer name="horizontalSpacer_3">
+                       <property name="orientation">
+                        <enum>Qt::Horizontal</enum>
+                       </property>
+                       <property name="sizeHint" stdset="0">
+                        <size>
+                         <width>40</width>
+                         <height>20</height>
+                        </size>
+                       </property>
+                      </spacer>
+                     </item>
+                     <item>
+                      <widget class="QComboBox" name="cb_projects">
+                       <property name="minimumSize">
+                        <size>
+                         <width>200</width>
+                         <height>0</height>
+                        </size>
+                       </property>
+                      </widget>
+                     </item>
+                     <item>
+                      <widget class="QPushButton" name="btn_db_open_project">
+                       <property name="text">
+                        <string>Open</string>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </widget>
+                </item>
+               </layout>
+              </widget>
              </item>
              <item>
               <spacer name="verticalSpacer_3">
@@ -489,6 +593,14 @@
    </item>
   </layout>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QgsCollapsibleGroupBox</class>
+   <extends>QGroupBox</extends>
+   <header>qgscollapsiblegroupbox.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>
