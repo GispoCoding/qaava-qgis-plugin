@@ -47,7 +47,6 @@ def load_project(project_name: str, plan: LandUsePlanEnum) -> None:
     if not succeeded:
         raise QaavaProjectNotLoadedException()
 
-
 def fix_data_sources_from_binary_projects(conn_params: Dict[str, str], auth_cfg_id: str, contents: List[bytes]):
     """
     Fix data sources from binary representation of zipped QGIS project

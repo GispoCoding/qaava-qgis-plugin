@@ -41,6 +41,8 @@ from qgis.core import QgsAuthMethodConfig, QgsApplication, QgsAuthManager, QgsDa
 from ...core.exceptions import QaavaDatabaseNotSetException, QaavaAuthConfigException
 from ...definitions.constants import (PG_CONNECTIONS, QGS_SETTINGS_PSYCOPG2_PARAM_MAP)
 from ...model.land_use_plan import LandUsePlanEnum
+from ...qgis_plugin_tools.tools.custom_logging import bar_msg
+from ...qgis_plugin_tools.tools.i18n import tr
 from ...qgis_plugin_tools.tools.resources import plugin_name
 from ...qgis_plugin_tools.tools.settings import parse_value, set_setting, get_setting
 
@@ -88,6 +90,7 @@ def set_auth_cfg(plan: LandUsePlanEnum, auth_cfg_id: str, username: str, passwor
     :param username:
     :param password:
     """
+    # noinspection PyArgumentList
     auth_mgr: QgsAuthManager = QgsApplication.authManager()
     if auth_cfg_id in auth_mgr.availableAuthMethodConfigs().keys():
         config = QgsAuthMethodConfig()
@@ -171,12 +174,15 @@ def get_db_connection_params(plan: LandUsePlanEnum) -> {str: str}:
         LOGGER.debug(f"Auth cfg: {auth_cfg_id}")
         # Auth config is being used to store the username and password
         auth_config = QgsAuthMethodConfig()
+        # noinspection PyArgumentList
         QgsApplication.authManager().loadAuthenticationConfig(auth_cfg_id, auth_config, True)
 
         if auth_config.isValid():
             params["user"] = auth_config.configMap().get("username")
             params["password"] = auth_config.configMap().get("password")
         else:
-            raise QaavaAuthConfigException()
+            raise QaavaAuthConfigException(
+                tr("Auth config error occurred while fetching database connection parameters"),
+                bar_msg=bar_msg(tr(f"Check auth config with id: {auth_cfg_id}")))
 
     return params

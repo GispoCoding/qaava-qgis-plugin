@@ -18,47 +18,52 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import enum
-from typing import Union, Dict
+import logging
+from typing import Union, Dict, Tuple, Optional, List
 
-from ..core.db.qgis_project_utils import fix_data_sources_from_binary_projects
-from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME, GENERAL_PLAN_DATA_MODEL_URL)
+from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME, GENERAL_PLAN_URL,
+                                     GENERAL_PLAN_MODEL_FILE_NAME, GENERAL_PLAN_PROJECT_FILE_NAME)
+from ..qgis_plugin_tools.tools.exceptions import QgsPluginNotImplementedException
 from ..qgis_plugin_tools.tools.network import fetch
-from ..qgis_plugin_tools.tools.resources import resources_path
+from ..qgis_plugin_tools.tools.resources import plugin_name
+from ..qgis_plugin_tools.tools.version import version_from_string, string_from_version
+
+LOGGER = logging.getLogger(plugin_name())
 
 
 class LandUsePlan:
     key = ""
     auth_cfg_id = ""
     schema_url = ""
-    newest_version = None
-    enum = None
+    versions_file = 'versions.txt'
 
     def __init__(self):
         self.raw_schema: Union[str, None] = None
         self.schema: Union[str, None] = None
+        self.available_versions: Optional[List[Tuple[int, int, int]]] = None
+        self.newest_version: Optional[Tuple[int, int, int]] = None
 
-    def fetch_schema(self) -> str:
+    def fetch_schema(self, current_version: Optional[Tuple[int, int, int]] = None) -> str:
         """
         Fetch schema from the schema_url
+        :param current_version: current version of the schema
         :return: schema sql
         """
         self.raw_schema = fetch(self.schema_url)
-        self._alter_schema()  # TODO: This is just temporary solution, remove when this is not needed anymore
+        self.alter_schema()  # TODO: This is just temporary solution, remove when this is not needed anymore
         return self.schema
 
     def fetch_project(self, conn_params: Dict[str, str], auth_cfg_id: str) -> str:
         """
-        :return: project sql
+        Fetch QGIS project sql string. Might contain multiple projects
+        :return: project sql string
         """
-        # TODO: fetch from github
-
-        with open(resources_path('qgis_projects.sql')) as f:
-            content = f.read()
-        content = self.fix_project(auth_cfg_id, conn_params, content)
-
-        return content
+        raise QgsPluginNotImplementedException()
 
     def fix_project(self, auth_cfg_id, conn_params, content):
+        # Import here in order to avoid circular import problem in tests
+        from ..core.db.qgis_project_utils import fix_data_sources_from_binary_projects
+
         proj_bytes = [line.split(',')[5][4:-3] for line in content.split('\n') if
                       line.startswith('INSERT INTO public.qgis_projects')]
         byts = [bytes.fromhex(b) for b in proj_bytes]
@@ -67,7 +72,7 @@ class LandUsePlan:
             content = content.replace(proj_bytes[i], ret_vals[i].decode('utf-8'))
         return content
 
-    def _alter_schema(self):
+    def alter_schema(self):
         """
         Alters raw schemas so that it will work even in populated databases and with any owner
         :return:
@@ -94,7 +99,41 @@ class DetailedLandUsePlan(LandUsePlan):
 class GeneralLandUsePlan(LandUsePlan):
     key = f"{QAAVA_DB_NAME}/general"
     auth_cfg_key = f"{key}/auth_cfg"
-    schema_url = GENERAL_PLAN_DATA_MODEL_URL
+    url = GENERAL_PLAN_URL
+    schema_url = GENERAL_PLAN_URL
+    file_name = GENERAL_PLAN_MODEL_FILE_NAME
+    project_file = GENERAL_PLAN_PROJECT_FILE_NAME
+
+    def __init__(self):
+        super().__init__()
+        self.fetch_versions()
+
+    def fetch_schema(self, current_version: Optional[Tuple[int, int, int]] = None) -> str:
+        # TODO: add migration support here in some point
+        self.raw_schema = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.file_name}")
+        self.alter_schema()
+        return self.schema
+
+    def fetch_versions(self):
+        """
+        Fetch version information of the model
+        """
+        # TODO: move to super class when implemented in Detailed plan as well
+        self.available_versions = [version_from_string(v) for v in
+                                   fetch(f"{self.url}/{self.versions_file}").strip().split('\n')]
+        self.newest_version = max(self.available_versions)
+        LOGGER.debug(
+            f'Newest version {self.newest_version}, available versions {self.available_versions}')
+
+    def fetch_project(self, conn_params: Dict[str, str], auth_cfg_id: str) -> str:
+        """
+        Fetch QGIS project sql string. Might contain multiple projects
+        :return: project sql string
+        """
+        # TODO: move to super class when implemented in Detailed plan as well
+        content = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.project_file}")
+        content = self.fix_project(auth_cfg_id, conn_params, content)
+        return content
 
 
 class LandUsePlanEnum(enum.Enum):

@@ -51,3 +51,11 @@ class QaavaProjectNotLoadedException(QgsPluginException):
 
 class QaavaProjectInInvalidFormat(QgsPluginException):
     pass
+
+
+class QaavaInitializationCancelled(QgsPluginException):
+    pass
+
+
+class QaavaDatabaseError(QgsPluginException):
+    pass

@@ -55,7 +55,7 @@ def test_get_existing_database_connections_1(initialize_db_settings):
     assert connections == {CONN_NAME}
 
 
-def test_qaava_connection_url_exception():
+def test_qaava_connection_url_exception(new_project):
     with pytest.raises(QaavaDatabaseNotSetException):
         assert get_db_connection_params(LandUsePlanEnum.detailed)
 

@@ -34,6 +34,7 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
+from typing import Optional
 
 import psycopg2
 from PyQt5.QtCore import QCoreApplication
@@ -41,7 +42,7 @@ from PyQt5.QtWidgets import QDialog
 
 from .database import Database
 from .db_utils import (set_qaava_connection, get_db_connection_params, set_auth_cfg)
-from ...core.exceptions import QaavaAuthConfigException
+from ...core.exceptions import QaavaInitializationCancelled, QaavaDatabaseError
 from ...model.land_use_plan import LandUsePlanEnum, LandUsePlan
 from ...qgis_plugin_tools.tools.custom_logging import bar_msg
 from ...qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException, QgsPluginNotImplementedException
@@ -58,73 +59,87 @@ class DatabaseInitializer:
         self.dlg = dialog
         self.qgs_app = qgs_app
 
+        self.database: Optional[Database] = None
+        self.conn_params = None
+        self.plan_enum = None
+        self.plan = None
+
     def initialize_database(self, db_conn_name: str, plan_sting: str) -> None:
         """
         Initialize database for the land use planning
         :return:
         """
-        plan_enum = LandUsePlanEnum[plan_sting]
-        plan: LandUsePlan = plan_enum.value()  # intance of plan class because of ()
+        self.register_database(db_conn_name, plan_sting)
 
         try:
-            set_qaava_connection(plan_enum, db_conn_name)
-            conn_params = get_db_connection_params(plan_enum)
-        except QaavaAuthConfigException as e:
-            LOGGER.error(tr(u"Auth config error occurred while fetching database connection parameters:"),
-                         extra=bar_msg(e))
-            return
-        except Exception as e:
-            LOGGER.error(tr(u"Error occurred while fetching database connection parameters:"), extra=bar_msg(e))
-            return
+            schema_query = self.plan.fetch_schema()
 
-        # Ask username and password if needed
-        if conn_params["user"] is None or conn_params["password"] is None:
-            ask_credentials_dlg = DbAskCredentialsDialog(conn_params["user"], conn_params["password"])
-            result = ask_credentials_dlg.exec_()
-            if result:
-                conn_params["user"] = ask_credentials_dlg.userLineEdit.text()
-                conn_params["password"] = ask_credentials_dlg.pwdLineEdit.text()
-            else:
-                LOGGER.warning(tr(u"Canceling"),
-                               extra=bar_msg(tr(u"Could not continue initializing without username and password")))
-                return
+            try:
+                project_query = self.plan.fetch_project(self.conn_params, db_conn_name)
+            except QgsPluginNotImplementedException:
+                LOGGER.warning(tr("Not implemented:"), extra=bar_msg(tr(u"Project SQL is not implemented yet")))
+                project_query = 'SELECT 1'
 
-        # Save credentials to auth config
-        set_auth_cfg(plan_enum, db_conn_name, conn_params["user"], conn_params["password"])
-        database = Database(conn_params)
-
-        if not database.is_valid():
-            LOGGER.warning(tr(u"Database connection error"),
-                           extra=bar_msg(tr(u"Could not access the database.")))
-            return
-
-        try:
-            schema_query = plan.fetch_schema()
-            project_query = plan.fetch_project(conn_params, db_conn_name)
         except QgsPluginNetworkException as e:
-            LOGGER.error(tr(u"Network error:"),
-                         extra=bar_msg(
-                             tr(u"Could not load schema for the plan. Check your internet connection. Details: ") + str(
-                                 e)))
-            return
-        except QgsPluginNotImplementedException:
-            LOGGER.warning(tr(u"Not implemented:"),
-                           extra=bar_msg(tr(u"Schema for the selected plan is not implemented yet")))
-            return
+            raise QgsPluginNetworkException(tr(u"Network error"), bar_msg=bar_msg(
+                tr(u"Could not load schema for the plan. Check your internet connection. Details: ") + str(
+                    e)))
 
         try:
             # Actual insertion of the schema and project
-            database.execute_insert(schema_query)
-            database.execute_insert(project_query)
+            self.database.execute_insert(schema_query)
+            self.database.execute_insert(project_query)
         except psycopg2.OperationalError:
-            LOGGER.error(tr(u"Connection error:"),
-                         extra=bar_msg(tr(u"Could not connect to the database: ") + db_conn_name))
-            return
+            raise QaavaDatabaseError(tr("Connection error"),
+                                     bar_msg(tr(u"Could not connect to the database: ") + db_conn_name))
         except (Exception, psycopg2.DatabaseError) as e:
-            LOGGER.error(tr(u"Error occurred while injecting schema:"),
-                         extra=bar_msg(e))
-            return
+            raise QaavaDatabaseError(tr("Error occured while injecting schema"),
+                                     bar_msg(tr(u"Could not connect to the database: ") + db_conn_name))
 
         LOGGER.info(tr(u"Success"),
-                    extra=bar_msg(tr(u"Database initialized succesfully with land use plan ") + plan_enum.name,
+                    extra=bar_msg(tr(u"Database initialized succesfully with land use plan ") + self.plan_enum.name,
                                   success=True))
+
+    def register_database(self, db_conn_name: str, plan_sting: str) -> None:
+        """
+        Register database for the land use planning
+        """
+        self.plan_enum = LandUsePlanEnum[plan_sting]
+        self.plan: LandUsePlan = self.plan_enum.value()  # intance of plan class because of ()
+
+        set_qaava_connection(self.plan_enum, db_conn_name)
+        self.conn_params = get_db_connection_params(self.plan_enum)
+
+        # Ask username and password if needed
+        if self.conn_params["user"] is None or self.conn_params["password"] is None:
+            ask_credentials_dlg = DbAskCredentialsDialog(self.conn_params["user"], self.conn_params["password"])
+            result = ask_credentials_dlg.exec_()
+            if result:
+                self.conn_params["user"] = ask_credentials_dlg.userLineEdit.text()
+                self.conn_params["password"] = ask_credentials_dlg.pwdLineEdit.text()
+            else:
+                raise QaavaInitializationCancelled(tr(u"Canceling"), bar_msg=bar_msg(
+                    tr(u"Could not continue initializing without username and password")))
+        # Save credentials to auth config
+        set_auth_cfg(self.plan_enum, db_conn_name, self.conn_params["user"], self.conn_params["password"])
+        self.database = Database(self.conn_params)
+
+        if not self.database.is_valid():
+            raise QaavaDatabaseError(tr(u"Database connection error"),
+                                     bar_msg=bar_msg(tr(u"Could not access the database.")))
+
+    def get_available_projects(self):
+        """
+        Get available projects from the database
+        :return:
+        """
+        # TODO: Move to more appropriate place?
+        try:
+            # noinspection SqlResolve
+            query = 'SELECT name FROM qgis_projects'
+            available_projects = self.database.execute_select(query)
+        except psycopg2.DatabaseError:
+            LOGGER.warning(tr(u"No projects available:"),
+                           extra=bar_msg(tr(u"No projects found from the database")))
+            available_projects = []
+        return [proj[0] for proj in available_projects]
