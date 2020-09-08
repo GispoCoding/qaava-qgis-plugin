@@ -78,14 +78,19 @@ class BasePanel:
         """Setup the UI for the panel."""
         raise QgsPluginNotImplementedException
 
-    def run(self):
+    def run(self, method='_run'):
+        if not method:
+            method = '_run'
         self._start_process()
         try:
-            self._run()
+            # use dispatch pattern to invoke method with same name
+            if not hasattr(self, method):
+                raise QgsPluginException(f'Class does not have a method {method}')
+            getattr(self, method)()
         except QgsPluginException as e:
-            LOGGER.exception(tr(u"Unhandled plugin exception occurred. Details: "), bar_msg(e))
+            LOGGER.exception(str(e), extra=e.bar_msg)
         except Exception as e:
-            LOGGER.exception(tr(u"Unhandled exception occurred. Details: "), bar_msg(e))
+            LOGGER.exception(tr('Unhandled exception occurred'), extra=bar_msg(e))
         finally:
             self._end_process()
 

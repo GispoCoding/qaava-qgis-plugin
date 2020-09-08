@@ -60,6 +60,7 @@ CONN_NAME = "test_qaava_conn"
 @pytest.fixture(scope='function')
 def new_project() -> None:
     """Initializes new iface project"""
+    remove_db_settings()
     yield IFACE.newProject()
 
 
@@ -73,6 +74,18 @@ def initialize_db_settings(database_params) -> str:
 @pytest.fixture(scope='function')
 def initialize_db_settings2(database_params):
     set_settings(database_params, has_pwd=False)
+    yield CONN_NAME
+    remove_db_settings()
+
+
+@pytest.fixture(scope='function')
+def auth_cfg(database_params):
+    prms = database_params.copy()
+    prms.pop('user')
+    prms.pop('password')
+    set_settings(prms, has_pwd=False, auth_cfg='test_config')
+    QGIS_APP.authManager()
+    # TODO: continue
     yield CONN_NAME
     remove_db_settings()
 
@@ -160,7 +173,7 @@ def is_responsive(params):
     return succeeds
 
 
-def set_settings(prms, has_pwd=True):
+def set_settings(prms, has_pwd=True, auth_cfg="NULL"):
     s = QSettings()
     s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/host", prms["host"])
     s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/port", prms["port"])
@@ -169,7 +182,7 @@ def set_settings(prms, has_pwd=True):
     s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/password", prms["password"])
     s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/savePassword", "true" if has_pwd else "false")
     s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/saveUsername", "true" if has_pwd else "false")
-    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/authcfg", "NULL")
+    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/authcfg", auth_cfg)
 
 
 def remove_db_settings():

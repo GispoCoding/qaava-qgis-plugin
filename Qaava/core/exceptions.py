@@ -43,3 +43,19 @@ class QaavaDatabaseNotSetException(QgsPluginException):
 
 class QaavaAuthConfigException(QgsPluginException):
     pass
+
+
+class QaavaProjectNotLoadedException(QgsPluginException):
+    pass
+
+
+class QaavaProjectInInvalidFormat(QgsPluginException):
+    pass
+
+
+class QaavaInitializationCancelled(QgsPluginException):
+    pass
+
+
+class QaavaDatabaseError(QgsPluginException):
+    pass
