@@ -68,3 +68,5 @@ def test_db_initializer_with_general_plan(new_project, db):
     rows = db1.execute_select("SELECT nspname FROM pg_catalog.pg_namespace;")
     expected_schemas = {('yleiskaava',), ('koodistot',), ('kaavan_lisatiedot',)}
     assert set(rows).intersection(expected_schemas) == expected_schemas
+    rows = db1.execute_select("SELECT name FROM qgis_projects")
+    assert rows == [('qaava-yleiskaava',)]

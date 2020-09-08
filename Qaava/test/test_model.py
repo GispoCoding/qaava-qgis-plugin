@@ -61,3 +61,9 @@ def test_general_plan_schema_fetch(new_project):
     plan = GeneralLandUsePlan()
     schema = plan.fetch_schema()
     assert len(schema) > 1000
+
+
+def test_project_fetch(new_project, database_params):
+    plan = GeneralLandUsePlan()
+    project_sql = plan.fetch_project(conn_params=database_params, auth_cfg_id='test-auth-cfg')
+    print(project_sql)

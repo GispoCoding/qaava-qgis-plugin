@@ -40,7 +40,7 @@ from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtWidgets import QDialog
 
 from .database import Database
-from .db_utils import (set_qaava_connection, get_db_connection_params)
+from .db_utils import (set_qaava_connection, get_db_connection_params, set_auth_cfg)
 from ...core.exceptions import QaavaAuthConfigException
 from ...model.land_use_plan import LandUsePlanEnum, LandUsePlan
 from ...qgis_plugin_tools.tools.custom_logging import bar_msg
@@ -68,7 +68,7 @@ class DatabaseInitializer:
 
         try:
             set_qaava_connection(plan_enum, db_conn_name)
-            conn_params = get_db_connection_params(plan_enum, self.qgs_app)
+            conn_params = get_db_connection_params(plan_enum)
         except QaavaAuthConfigException as e:
             LOGGER.error(tr(u"Auth config error occurred while fetching database connection parameters:"),
                          extra=bar_msg(e))
@@ -78,7 +78,6 @@ class DatabaseInitializer:
             return
 
         # Ask username and password if needed
-        # TODO: should these be saved using auth config?
         if conn_params["user"] is None or conn_params["password"] is None:
             ask_credentials_dlg = DbAskCredentialsDialog(conn_params["user"], conn_params["password"])
             result = ask_credentials_dlg.exec_()
@@ -90,6 +89,8 @@ class DatabaseInitializer:
                                extra=bar_msg(tr(u"Could not continue initializing without username and password")))
                 return
 
+        # Save credentials to auth config
+        set_auth_cfg(plan_enum, db_conn_name, conn_params["user"], conn_params["password"])
         database = Database(conn_params)
 
         if not database.is_valid():
@@ -99,6 +100,7 @@ class DatabaseInitializer:
 
         try:
             schema_query = plan.fetch_schema()
+            project_query = plan.fetch_project(conn_params, db_conn_name)
         except QgsPluginNetworkException as e:
             LOGGER.error(tr(u"Network error:"),
                          extra=bar_msg(
@@ -111,14 +113,17 @@ class DatabaseInitializer:
             return
 
         try:
-            # Actual insertion of the schema
+            # Actual insertion of the schema and project
             database.execute_insert(schema_query)
+            database.execute_insert(project_query)
         except psycopg2.OperationalError:
             LOGGER.error(tr(u"Connection error:"),
                          extra=bar_msg(tr(u"Could not connect to the database: ") + db_conn_name))
+            return
         except (Exception, psycopg2.DatabaseError) as e:
             LOGGER.error(tr(u"Error occurred while injecting schema:"),
                          extra=bar_msg(e))
+            return
 
         LOGGER.info(tr(u"Success"),
                     extra=bar_msg(tr(u"Database initialized succesfully with land use plan ") + plan_enum.name,
