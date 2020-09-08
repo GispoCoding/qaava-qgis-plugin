@@ -32,7 +32,6 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-
 from ..core.db.querier import Querier
 from ..core.db.query_repository import QueryRepository
 from ..definitions.db import Operation
@@ -47,7 +46,7 @@ def test_query_repository_initialization(detailed_db):
     assert query == 'SELECT pl."gid" FROM "asemakaavat"."asemakaava" pl '
 
 
-def test_querier_fields():
+def test_querier_fields(detailed_connection_set):
     querier = Querier(LandUsePlanEnum.detailed.name)
     assert querier.fields == {'vaihetieto.nimi': ProcessInfo.name}
 

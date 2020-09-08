@@ -35,6 +35,8 @@
 
 from qgis._core import QgsRectangle
 
+from .conftest import CONN_NAME
+from ..core.db.db_utils import set_qaava_connection
 from ..core.db.querier import Querier
 from ..core.db.query_repository import QueryRepository
 from ..definitions.db import Operation
@@ -50,13 +52,14 @@ def test_fetch_available_status_codes(general_db):
     assert {'gid': 1, 'name': 'aloitusvaihe'} in codes
 
 
-def test_querier_fields():
+def test_querier_fields(general_connection_set):
     querier = Querier(LandUsePlanEnum.general.name)
     assert querier.fields == {'laatija': ZoningPlan.editor, 'nimi': ZoningPlan.name,
                               'voimaantulopvm': ZoningPlan.start_date, 'vaihetieto.nimi': ProcessInfo.name}
 
 
-def test_querier_extent(general_db):
+def test_querier_extent(general_db, general_connection_set):
+    set_qaava_connection(LandUsePlanEnum.general, CONN_NAME)
     extent = QgsRectangle().fromWkt(
         'POLYGON((23840873.5152964 6952581.91716873,23840873.5152964 6981622.5665375,23875214.1013225 6981622.5665375,23875214.1013225 6952581.91716873,23840873.5152964 6952581.91716873))')
     querier = Querier(LandUsePlanEnum.general.name)

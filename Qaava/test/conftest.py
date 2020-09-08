@@ -20,22 +20,6 @@ This class contains fixtures and common helper function to keep the test files s
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-#
-#
-#  This file is part of Qaava-qgis-plugin.
-#
-#  Qaava-qgis-plugin is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  Qaava-qgis-plugin is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import os
 import time
@@ -47,6 +31,7 @@ from PyQt5.QtCore import QSettings
 from qgis.core import QgsProject
 
 from ..core.db.database import Database
+from ..core.db.db_utils import set_qaava_connection
 from ..definitions.constants import PG_CONNECTIONS
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.testing.utilities import get_qgis_app, is_running_inside_ci
@@ -71,6 +56,16 @@ def initialize_db_settings(database_params) -> str:
     set_settings(database_params)
     yield CONN_NAME
     remove_db_settings()
+
+
+@pytest.fixture(scope='function')
+def general_connection_set(initialize_db_settings):
+    set_qaava_connection(LandUsePlanEnum.general, CONN_NAME)
+
+
+@pytest.fixture(scope='function')
+def detailed_connection_set(initialize_db_settings):
+    set_qaava_connection(LandUsePlanEnum.detailed, CONN_NAME)
 
 
 @pytest.fixture(scope='function')

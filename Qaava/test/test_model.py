@@ -65,8 +65,8 @@ def test_general_plan_schema_fetch(new_project):
 
 def test_general_plan_fetch_versions(new_project):
     plan = GeneralLandUsePlan()
-    assert plan.newest_version == (0, 1, 0)
-    assert plan.available_versions == [(0, 1, 0)]
+    assert plan.newest_version >= (0, 0, 0)
+    assert (0, 1, 0) in plan.available_versions
 
 
 def test_project_fetch(new_project, database_params):

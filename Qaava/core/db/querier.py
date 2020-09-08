@@ -19,27 +19,11 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-#
-#
-#  This file is part of Qaava-qgis-plugin.
-#
-#  Qaava-qgis-plugin is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  Qaava-qgis-plugin is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 from typing import Optional, Dict, List, Tuple
 
-from qgis.core import QgsApplication, QgsRectangle
+from qgis.core import QgsRectangle
 
 from .db_utils import get_db_connection_params
 from .query_repository import QueryRepository
@@ -65,7 +49,7 @@ class Querier:
 
     def _initialize(self):
         self.plan: LandUsePlan.__class__ = self.plan_enum.value
-        conn_params = get_db_connection_params(self.plan_enum, QgsApplication.instance())
+        conn_params = get_db_connection_params(self.plan_enum)
         self.qr = QueryRepository(conn_params, self.plan_enum)
         self._fields = self.plan.query_fields
 
