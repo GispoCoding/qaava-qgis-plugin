@@ -16,15 +16,16 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-from Qaava.core.wrappers.layer_wrapper import LayerWrapper
+
+from ...core.wrappers.layer_wrapper import LayerWrapper
 
 
-def test_simple_wrapper(general_db_with_data_and_layers):
+def test_simple_wrapper(general_db):
     lw = LayerWrapper('Yleiskaava', 'gid')
     assert lw.get_layer().isValid()
 
 
-def test_get_fields(general_db_with_data_and_layers):
+def test_get_fields(general_db):
     lw = LayerWrapper('Yleiskaava', 'gid')
     fields = lw.get_fields(3, False)
     field_names = [f.name for f in fields]
@@ -35,7 +36,7 @@ def test_get_fields(general_db_with_data_and_layers):
     assert 'sanna_gispo' in fields[5].unique_values
 
 
-def test_get_child_fields(general_db_with_data_and_layers):
+def test_get_child_fields(general_db):
     lw = LayerWrapper('Yleiskaava', 'gid')
     fields = lw.get_fields(10, True)
     field_names = [f.alias for f in fields]

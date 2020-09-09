@@ -16,8 +16,9 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
+
 import logging
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from psycopg2 import sql
 from psycopg2.sql import Composable
@@ -69,6 +70,9 @@ class LayerWrapper:
         return sql.Identifier(uri.schema(), uri.table())
 
     def get_layer(self) -> QgsVectorLayer:
+        """
+        Get QgsVectorLayer from wrapper
+        """
         layers = list(
             filter(lambda l: isinstance(l, QgsVectorLayer),
                    QgsProject.instance().mapLayersByName(self.layer_name)))
@@ -77,7 +81,12 @@ class LayerWrapper:
                 tr("{} layers by the name of {}, expecting 1", len(layers), self.layer_name)))
         return layers[0]
 
-    def get_fields(self, limit: int, fetch_child_fields: bool = True) -> List[FieldWrapper]:
+    def get_fields(self, limit: int, related_fields: bool = True) -> List[FieldWrapper]:
+        """
+        Get fields as list of FieldWrappers
+        :param limit: How many unique values are fetched
+        :param related_fields: Whether to list also fields from relations
+        """
         layer = self.get_layer()
         relation_manager: QgsRelationManager = QgsProject.instance().relationManager()
 
@@ -88,11 +97,11 @@ class LayerWrapper:
             field_name = field.name()
             if not field_name.startswith('gid_') and not (
                 field_name == self.pk_field and self.parent_layer is not None):
-                unique_values = layer.uniqueValues(idx, limit=limit)
+                unique_values = layer.uniqueValues(idx, limit=limit) if limit > 0 else set()
                 wrapper = FieldWrapper.from_layer_wrapper(self, field, idx, unique_values, self.pk_field)
                 fields.append(wrapper)
 
-            elif fetch_child_fields:
+            elif related_fields:
                 relations: List[QgsRelation] = relation_manager.referencingRelations(layer, idx)
                 if len(relations) >= 1:
                     relation = relations[0]
@@ -105,14 +114,22 @@ class LayerWrapper:
 
         return fields
 
-    def set_filter(self, ids: List[int]) -> bool:
+    def set_filter(self, ids: List[Union[int, str]]) -> bool:
         if self.pk_field is None:
             LOGGER.warning(f"Primary field is not set for the layer {self.layer_name}")
             return False
-
-        ids_str = ','.join(map(str, ids))
-        layer = self.get_layer()
-        return layer.setSubsetString(f'{self.pk_field} IN ({ids_str})')
+        if len(ids):
+            layer = self.get_layer()
+            if isinstance(ids[0], str):
+                ids_str = '\',\''.join(ids)
+                ids_str = f'\'{ids_str}\''
+            else:
+                ids_str = ','.join(map(str, ids))
+            query = f'{self.pk_field} IN ({ids_str})'
+            LOGGER.debug(query)
+            return layer.setSubsetString(query)
+        else:
+            self.clear_filter()
 
     def clear_filter(self) -> bool:
         layer = self.get_layer()

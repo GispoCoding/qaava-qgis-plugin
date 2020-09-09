@@ -18,7 +18,7 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from typing import List, Dict
+from typing import List, Dict, Optional, Union
 
 from psycopg2.sql import SQL, Composable
 
@@ -35,14 +35,15 @@ LOGGER = logging.getLogger(plugin_name())
 # noinspection PyUnresolvedReferences
 class QueryRepository(Database):
 
-    def __init__(self, conn_params: Dict[str, str], plan_enum: LandUsePlanEnum):
+    def __init__(self, conn_params: Dict[str, str], plan_enum: LandUsePlanEnum,
+                 layer_wrapper: Optional[LayerWrapper] = None):
         super().__init__(conn_params)
         self.plan_enum = plan_enum
         self.select_parts: List[Composable] = []
         self.from_parts: List[Composable] = []
         self.where_parts: List[Composable] = []
         self.vars: Dict[str, any] = {}
-        self.layer_wrapper: LayerWrapper = self.plan_enum.value.layer
+        self.layer_wrapper = layer_wrapper if layer_wrapper is not None else self.plan_enum.value.layer
 
         self._set_initial_parts()
 
@@ -69,19 +70,19 @@ class QueryRepository(Database):
 
         self.vars[field.field_with_table] = value
 
-    def add_extent(self, xmin: float, ymin: float, xmax: float, ymax: float) -> None:
+    def add_extent(self, xmin: float, ymin: float, xmax: float, ymax: float, srid=3877) -> None:
         self.where_parts.append(
-            SQL('pl.{geom} && ST_MakeEnvelope(%(xmin)s, %(ymin)s, %(xmax)s, %(ymax)s, 3877)').format(
+            SQL('{geom} && ST_MakeEnvelope(%(xmin)s, %(ymin)s, %(xmax)s, %(ymax)s, %(srid)s)').format(
                 geom=self.layer_wrapper.geom_field)
         )
-        self.vars.update({'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax})
+        self.vars.update({'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax, 'srid': srid})
 
-    def run_query(self) -> List[int]:
+    def run_query(self) -> List[Union[int, str]]:
         return [row[0] for row in self.execute_select(self.query, self.vars)]
 
     def show_query(self) -> str:
         return self.mogrify_query(self.query, self.vars)
 
     def _set_initial_parts(self):
-        self.select_parts.append(SQL('SELECT pl.{pk}').format(pk=self.layer_wrapper.pk))
-        self.from_parts.append(SQL('FROM {table} pl').format(table=self.layer_wrapper.table))
+        self.select_parts.append(SQL('SELECT {pk}').format(pk=self.layer_wrapper.pk))
+        self.from_parts.append(SQL('FROM {table}').format(table=self.layer_wrapper.table))

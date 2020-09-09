@@ -16,26 +16,10 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-#
-#
-#  This file is part of Qaava-qgis-plugin.
-#
-#  Qaava-qgis-plugin is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  Qaava-qgis-plugin is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
-from .conftest import set_settings, CONN_NAME, IFACE, QGIS_APP
-from ..core.db.database import Database
-from ..core.db.db_initializer import DatabaseInitializer
+from ..conftest import set_settings, CONN_NAME, IFACE, QGIS_APP
+from ...core.db.database import Database
+from ...core.db.db_initializer import DatabaseInitializer
 
 
 # noinspection SqlNoDataSourceInspection
@@ -74,13 +58,13 @@ def test_db_initializer_with_general_plan(new_project, db):
     assert available_projects == ['qaava-yleiskaava']
 
 
-def test_fixture_order_1(general_db_schema_and_codes):
-    db1 = Database(general_db_schema_and_codes)
+def test_fixture_order_1(db):
+    db1 = Database(db['general'])
     rows = db1.execute_select("SELECT count(*) FROM yleiskaava.yleiskaava")
     assert rows == [(0,)]
 
 
-def test_fixture_order_2(general_db_with_data):
-    db1 = Database(general_db_with_data)
+def test_fixture_order_2(general_db):
+    db1 = Database(general_db)
     rows = db1.execute_select("SELECT count(*) FROM yleiskaava.yleiskaava")
     assert rows == [(4,)]

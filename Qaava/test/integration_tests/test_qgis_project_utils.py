@@ -16,12 +16,13 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
+
 import pytest
 from qgis.core import QgsProject
 
-from .conftest import get_test_resource, IFACE
-from ..core.db.qgis_project_utils import fix_project, load_project
-from ..model.land_use_plan import LandUsePlanEnum
+from ..conftest import get_test_resource, IFACE
+from ...core.db.qgis_project_utils import fix_project, load_project
+from ...model.land_use_plan import LandUsePlanEnum
 
 
 def test_fix_project(database_params):
@@ -32,7 +33,7 @@ def test_fix_project(database_params):
 
 
 @pytest.mark.skip('opening any project fails in test environment... Is there a solution for this?')
-def test_loading_project(general_db_with_data_and_project):
+def test_loading_project(general_db):
     IFACE.newProject()
     load_project('qaava-yleiskaava', LandUsePlanEnum.general)
     layers = QgsProject.instance().mapLayers()

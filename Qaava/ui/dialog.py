@@ -19,6 +19,7 @@
 
 import logging
 
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QDialog
 
 from .about_panel import AboutPanel
@@ -56,7 +57,7 @@ class Dialog(QDialog, FORM_CLASS):
         self.responsive_elements = {
             Panels.Query: [self.q_push_button_reset, self.q_push_button_refresh, self.query_grid,
                            self.q_push_button_add_row, self.q_push_button_show_query,
-                           self.q_push_button_run_query],
+                           self.q_push_button_run_query, self.q_push_button_clear_filter],
             Panels.Database: {self.dbComboBox, self.dmComboBox, self.refreshPushButton, self.agreedCheckBox,
                               self.btn_db_initialize, self.btn_db_register, self.btn_db_open_project, self.cb_projects},
             Panels.Settings: [],
@@ -75,7 +76,15 @@ class Dialog(QDialog, FORM_CLASS):
             for panel in self.panels.values():
                 panel.setup_panel()
         except Exception as e:
-            LOGGER.exception(tr(u"Unhandled exception occurred during UI initialization."), bar_msg(e))
+            LOGGER.exception(tr(u'Unhandled exception occurred during UI initialization.'), bar_msg(e))
 
         # The first panel is shown initially
         self.menu_widget.setCurrentRow(0)
+
+    def closeEvent(self, evt: QtGui.QCloseEvent) -> None:
+        LOGGER.debug('Closing dialog')
+        try:
+            for panel in self.panels.values():
+                panel.teardown_panel()
+        except Exception as e:
+            LOGGER.exception(tr(u'Unhandled exception occurred during UI closing.'), bar_msg(e))

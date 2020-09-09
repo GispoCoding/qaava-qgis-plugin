@@ -60,7 +60,10 @@ class BasePanel:
 
     def setup_panel(self):
         """Setup the UI for the panel."""
-        raise QgsPluginNotImplementedException
+        raise QgsPluginNotImplementedException()
+
+    def teardown_panel(self):
+        """Teardown for the panels"""
 
     def run(self, method='_run'):
         if not method:
@@ -90,3 +93,20 @@ class BasePanel:
         """Make some stuff after the process."""
         for elem in self.dlg.responsive_elements[self.panel]:
             elem.setEnabled(True)
+
+
+def log_if_fails(fn):
+    """
+    Use this as a decorator with methods that might throw uncaught exceptions
+    """
+    from functools import wraps
+    @wraps(fn)
+    def wrapper(self, *args, **kwargs):
+        try:
+            return fn(self, *args, **kwargs)
+        except QgsPluginException as e:
+            LOGGER.exception(str(e), extra=e.bar_msg)
+        except Exception as e:
+            LOGGER.exception(tr('Unhandled exception occurred'), extra=bar_msg(e))
+
+    return wrapper

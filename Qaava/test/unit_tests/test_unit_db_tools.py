@@ -19,11 +19,11 @@
 
 import pytest
 
-from .conftest import (remove_db_settings, CONN_NAME)
-from ..core.db.db_utils import (get_existing_database_connections, set_qaava_connection,
-                                get_db_connection_params, get_qaava_connection_name)
-from ..core.exceptions import QaavaDatabaseNotSetException
-from ..model.land_use_plan import LandUsePlanEnum
+from ..conftest import (remove_db_settings, CONN_NAME)
+from ...core.db.db_utils import (get_existing_database_connections, set_qaava_connection,
+                                 get_db_connection_params, get_qaava_connection_name)
+from ...core.exceptions import QaavaDatabaseNotSetException
+from ...model.land_use_plan import LandUsePlanEnum
 
 
 def test_get_existing_database_connections_empty():

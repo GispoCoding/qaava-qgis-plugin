@@ -22,11 +22,11 @@ import uuid
 from typing import Dict, Optional
 
 from PyQt5.QtCore import QVariant
-from PyQt5.QtWidgets import QGridLayout, QComboBox, QPushButton
-from qgis.core import QgsApplication
-from qgis.gui import QgsMapCanvas
+from PyQt5.QtWidgets import QGridLayout, QComboBox, QPushButton, QCheckBox
+from qgis.core import QgsApplication, QgsVectorLayer, QgsMapLayerProxyModel, QgsCoordinateReferenceSystem
+from qgis.gui import QgsMapCanvas, QgsExtentGroupBox
 
-from .base_panel import BasePanel
+from .base_panel import BasePanel, log_if_fails
 from ..core.db.querier import Querier
 from ..core.exceptions import QaavaLayerError
 from ..core.wrappers.field_wrapper import FieldWrapper
@@ -35,7 +35,7 @@ from ..definitions.db import Operation
 from ..definitions.qui import Panels
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
-from ..qgis_plugin_tools.tools.fields import widget_for_field, string_value_for_widget
+from ..qgis_plugin_tools.tools.fields import widget_for_field, value_for_widget
 from ..qgis_plugin_tools.tools.i18n import tr
 from ..qgis_plugin_tools.tools.resources import plugin_name
 from ..qgis_plugin_tools.tools.settings import get_setting
@@ -54,66 +54,94 @@ class QueryPanel(BasePanel):
 
     def setup_panel(self):
         # noinspection PyArgumentList
+        change_layer = lambda _=None: self._change_layer(self.dlg.q_combo_box_layer.currentLayer())
+
         self.dlg.q_push_button_add_row.setIcon(QgsApplication.getThemeIcon('/mActionAdd.svg'))
         self.dlg.q_push_button_add_row.clicked.connect(lambda _: self._add_row(len(self.rows) + 1))
-        self.dlg.q_push_button_reset.clicked.connect(self._initialize)
         self.dlg.q_push_button_show_query.clicked.connect(lambda _: self.run('_show_query'))
         self.dlg.q_push_button_run_query.clicked.connect(self.run)
-        self.dlg.q_push_button_refresh.clicked.connect(
-            lambda _: self._change_db_plan(self.dlg.q_combo_box_dm.currentText()))
+        self.dlg.q_push_button_clear_filter.clicked.connect(self._clear_filter)
 
-        # TODO: remove combobox if/when the plan is given elsewhere
-        self.dlg.q_combo_box_dm.currentTextChanged.connect(self._change_db_plan)
-        self._populate_data_plans()
+        self.dlg.q_combo_box_layer.setFilters(QgsMapLayerProxyModel.Filters(QgsMapLayerProxyModel.Filter.PointLayer |
+                                                                            QgsMapLayerProxyModel.Filter.PolygonLayer |
+                                                                            QgsMapLayerProxyModel.Filter.LineLayer))
 
-    def _initialize(self):
-        # this is also called upon self.setup_panel by self._change_db_plan
+        self.dlg.q_push_button_reset.clicked.connect(change_layer)
+        self.dlg.q_push_button_refresh.clicked.connect(change_layer)
+        self.dlg.q_combo_box_layer.layerChanged.connect(change_layer)
 
+        if self.dlg.q_combo_box_layer.currentLayer() is not None:
+            change_layer()
+
+    def teardown_panel(self):
+        self._clear_filter()
+
+    @log_if_fails
+    def _initialize(self, crs: Optional[QgsCoordinateReferenceSystem] = None):
+        # this is also called upon self.setup_panel by self._change_layer
         canvas: QgsMapCanvas = self.dlg.iface.mapCanvas()
-        crs = canvas.mapSettings().destinationCrs()
-        self.dlg.q_extent.setOriginalExtent(canvas.extent(), crs)
-        self.dlg.q_extent.setCurrentExtent(canvas.extent(), crs)
-        self.dlg.q_extent.setOutputCrs(crs)
+        crs = crs if crs is not None else canvas.mapSettings().destinationCrs()
+        extent_gb: QgsExtentGroupBox = self.dlg.q_extent
+        extent_gb.setOriginalExtent(canvas.extent(), crs)
+        extent_gb.setCurrentExtent(canvas.extent(), crs)
+        extent_gb.setOutputCrs(crs)
+        extent_gb.setMapCanvas(canvas)
 
         for row_id in list(self.rows.keys()):
             self._remove_row(row_id)
-        self._add_row(1)
 
-    def _populate_data_plans(self):
-        self.dlg.q_combo_box_dm.clear()
-        for plan in [pl.name for pl in LandUsePlanEnum]:
-            self.dlg.q_combo_box_dm.addItem(plan)
-
-    def _change_db_plan(self, db_plan_str: str):
-        try:
-            self.querier = Querier(db_plan_str, int(
-                get_setting(KEY_FOR_NUMBER_OF_QUERY_CHOICES, DEFAULT_NUMBER_OF_QUERY_CHOICES, int)))
-        except QaavaLayerError as e:
-            LOGGER.error(str(e), extra=e.bar_msg)
-        self._initialize()
+    def _change_layer(self, layer: Optional[QgsVectorLayer]):
+        self.dlg.q_text_browser_sql.setText('')
+        self.dlg.q_gb_sql.setCollapsed(True)
+        self._clear_filter()
+        if layer is not None:
+            try:
+                # TODO: get the plan from elsewhere
+                self.querier = Querier(LandUsePlanEnum.general.name, layer,
+                                       limit_for_unique=int(
+                                           get_setting(KEY_FOR_NUMBER_OF_QUERY_CHOICES, DEFAULT_NUMBER_OF_QUERY_CHOICES,
+                                                       int)))
+            except QaavaLayerError as e:
+                LOGGER.error(str(e), extra=e.bar_msg)
+            self._initialize(crs=layer.crs())
 
     def _run(self):
         self._generate_query()
-        # TODO: clone layer etc. from results
         relevant_ids = self.querier.run()
-        LOGGER.info(tr('Ids that match the query'), extra=bar_msg(details=str(relevant_ids), duration=15))
+        if len(relevant_ids):
+            LOGGER.info(tr('Filtering layer {}', self.querier.layer_wrapper.layer_name),
+                        extra=bar_msg(tr(
+                            'Showing {} features. Keep this window open to see filtered, close the dialog '
+                            'of press Clear to clear filter.',
+                            len(relevant_ids)), duration=8, success=True))
+            self.querier.set_filter(relevant_ids)
+        else:
+            LOGGER.info(tr('The query did not result any features'), extra=bar_msg())
 
     def _show_query(self):
         self._generate_query()
-        LOGGER.info(tr('Generated SQL'), extra=bar_msg(details=self.querier.show_query(), duration=15))
+        query = str(self.querier.show_query())
+        self.dlg.q_gb_sql.setCollapsed(False)
+        self.dlg.q_text_browser_sql.setText(query)
+
+    def _clear_filter(self):
+        if self.querier is not None:
+            LOGGER.debug('Clearing filter')
+            self.querier.clear_filter()
 
     def _generate_query(self):
         self.querier.clear()
         for row in self.rows.values():
             field = self.querier.fields[row['field'].currentText()]
             operation = Operation(row['operation'].currentText())
-            value = string_value_for_widget(row['value'])
+            value = value_for_widget(row['value'])
 
             self.querier.add_condition(field, operation, value)
 
         if self.dlg.q_extent.isChecked():
             self.querier.add_extent(self.dlg.q_extent.outputExtent())
 
+    @log_if_fails
     # noinspection PyCallByClass,PyArgumentList,PyUnresolvedReferences
     def _add_row(self, row_index: int):
         if self.querier is None:
@@ -142,12 +170,11 @@ class QueryPanel(BasePanel):
         bx_field.addItems(list(self.querier.fields.keys()))
         bx_field.setCurrentText(list(self.querier.fields.keys())[0])
 
-        if row_index != 1:
-            b_rm = QPushButton(text='', icon=QgsApplication.getThemeIcon('/mActionRemove.svg'))
-            b_rm.setToolTip(tr('Remove row'))
-            b_rm.clicked.connect(lambda _: self._remove_row(row_uuid))
-            self.rows[row_uuid]['rm'] = b_rm
-            self.grid.addWidget(b_rm, row_index, 0)
+        b_rm = QPushButton(text='', icon=QgsApplication.getThemeIcon('/mActionRemove.svg'))
+        b_rm.setToolTip(tr('Remove row'))
+        b_rm.clicked.connect(lambda _: self._remove_row(row_uuid))
+        self.rows[row_uuid]['rm'] = b_rm
+        self.grid.addWidget(b_rm, row_index, 0)
 
     def _field_changed(self, field: FieldWrapper, row_uuid: str):
         row = self.rows.get(row_uuid, None)
@@ -157,7 +184,8 @@ class QueryPanel(BasePanel):
         self._replace_value_widget(row_uuid, field.type)
         w_value = row['value']
         bx_operation = row['operation']
-        w_value.clear()
+        if not isinstance(w_value, QCheckBox):
+            w_value.clear()
 
         choices, string = self.querier.fetch_choices(field)
 

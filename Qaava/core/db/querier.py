@@ -21,14 +21,15 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from typing import Optional, Dict, List, Tuple
+from typing import Optional, Dict, List, Tuple, Union
 
 from PyQt5.QtCore import QVariant
-from qgis.core import QgsRectangle
+from qgis.core import QgsRectangle, QgsVectorLayer
 
 from .db_utils import get_db_connection_params
 from .query_repository import QueryRepository
 from ..wrappers.field_wrapper import FieldWrapper
+from ..wrappers.layer_wrapper import LayerWrapper
 from ...definitions.db import Operation
 from ...model.land_use_plan import LandUsePlanEnum, LandUsePlan
 from ...qgis_plugin_tools.tools.resources import plugin_name
@@ -41,20 +42,20 @@ class Querier:
     Abstraction of query_repository for query_panel
     """
 
-    def __init__(self, plan_enum_str: str, limit_for_unique: int = 0):
+    def __init__(self, plan_enum_str: str, layer: Optional[QgsVectorLayer] = None, limit_for_unique: int = 0):
         self.plan_enum = LandUsePlanEnum[plan_enum_str]
-        self.plan: Optional[LandUsePlan] = None
+        self.plan: LandUsePlan = self.plan_enum.value
+        self.layer_wrapper = LayerWrapper.from_qgs_layer(layer) if layer is not None else self.plan.layer
         self.limit_for_unique = limit_for_unique
         self.qr: Optional[QueryRepository] = None
         self._fields: Dict[str, FieldWrapper] = {}
         self._initialize()
 
     def _initialize(self):
-        self.plan: LandUsePlan = self.plan_enum.value
         conn_params = get_db_connection_params(self.plan_enum)
-        self.qr = QueryRepository(conn_params, self.plan_enum)
+        self.qr = QueryRepository(conn_params, self.plan_enum, self.layer_wrapper)
 
-        fields = self.plan.layer.get_fields(self.limit_for_unique)
+        fields = self.layer_wrapper.get_fields(self.limit_for_unique)
         self._fields = {f.alias: f for f in fields}
 
     @property
@@ -71,12 +72,27 @@ class Querier:
         """
         self.qr.clear()
 
-    def run(self) -> List[int]:
+    def run(self) -> List[Union[int, str]]:
         """
         Run the current query
         :return: Gid numbers of matching rows
         """
         return self.qr.run_query()
+
+    def set_filter(self, ids: List[int]) -> bool:
+        """
+        Set filter for the layer
+        :param ids: ids that will are shown
+        :return: Whether filtering was successful
+        """
+        return self.layer_wrapper.set_filter(ids)
+
+    def clear_filter(self) -> bool:
+        """
+        Clear filter from the layer
+        :return: Whether clearing was successful
+        """
+        return self.layer_wrapper.clear_filter()
 
     def show_query(self) -> str:
         """
@@ -96,18 +112,31 @@ class Querier:
         unique_values = [val for val in field.unique_values if val != null]
         return unique_values, field.type == QVariant.String
 
-    def add_condition(self, field: FieldWrapper, operation: Operation, value: str):
+    def add_condition(self, field: FieldWrapper, operation: Operation, value: Union[str, bool]):
         """
         Add condition for the query
 
-        :param field: Database field
+        :param field: FieldWrapper
         :param operation: Operation
-        :param value: value as string
+        :param value: value as string or boolean
         :return:
         """
-        val = None if not len(value) or value.lower() in ['null', 'none', 'tyhjä'] else value
-        if val is None:
-            operation = Operation.IS
+        val = value
+        if isinstance(value, str):
+            val = None if not len(value) or value.lower() in ['null', 'none', 'tyhjä'] else value
+            if val is None:
+                operation = Operation.IS
+            else:
+                if field.type in [
+                    QVariant.Int,
+                    QVariant.UInt,
+                    QVariant.LongLong,
+                    QVariant.ULongLong
+                ]:
+                    val = int(val)
+                elif field.type == QVariant.Double:
+                    val = float(val)
+
         return self.qr.add_and_condition(field, operation, val)
 
     def add_extent(self, extent: QgsRectangle, precision=4):
@@ -123,5 +152,6 @@ class Querier:
             rnd(extent.xMinimum()),
             rnd(extent.yMinimum()),
             rnd(extent.xMaximum()),
-            rnd(extent.yMaximum())
+            rnd(extent.yMaximum()),
+            srid=self.layer_wrapper.get_layer().crs().srsid()
         )

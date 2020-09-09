@@ -32,7 +32,6 @@ from qgis.core import (QgsProject, QgsApplication, QgsVectorLayer, QgsDataSource
 
 from ..core.db.database import Database
 from ..core.db.db_utils import set_qaava_connection, set_auth_cfg
-from ..core.db.qgis_project_utils import fix_project
 from ..definitions.constants import PG_CONNECTIONS
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.testing.utilities import get_qgis_app, is_running_inside_ci
@@ -65,33 +64,36 @@ def general_connection_set(initialize_db_settings):
 
 
 @pytest.fixture(scope='function')
-def detailed_connection_set(initialize_db_settings):
-    set_qaava_connection(LandUsePlanEnum.detailed, CONN_NAME)
-
-
-@pytest.fixture(scope='function')
 def initialize_db_settings2(database_params):
     set_settings(database_params, has_pwd=False)
     yield CONN_NAME
     remove_db_settings()
 
 
-@pytest.fixture(scope='session')
-def auth_cfg(database_params):
-    set_settings(database_params, has_pwd=False, auth_cfg=CONN_NAME)
-    set_qaava_connection(LandUsePlanEnum.general, CONN_NAME)
-    set_auth_cfg(LandUsePlanEnum.general, CONN_NAME, database_params['user'], database_params['password'])
-    yield CONN_NAME
-    remove_db_settings()
+'''
+For integration tests
 
+Database remains the same during tests, use db fixture in tests that run before general_db.
 
-@pytest.fixture(scope='session')
-def auth_cfg_detailed(database_params):
-    set_settings(database_params, has_pwd=False, auth_cfg=CONN_NAME)
-    set_qaava_connection(LandUsePlanEnum.detailed, CONN_NAME)
-    set_auth_cfg(LandUsePlanEnum.detailed, CONN_NAME, database_params['user'], database_params['password'])
-    yield CONN_NAME
-    remove_db_settings()
+TEST FILE NAMING IS IMPORTANT! Tests are run in alphabetical order!
+
+For example:
+# Good
+test_a.py
+    def test_1(db):
+        ...
+test_b.py
+    def test_1(general_db):
+        ...
+
+# Bad
+test_a.py
+    def test_1(general_db):
+        ...
+test_b.py
+    def test_1(db):
+        ...
+'''
 
 
 @pytest.fixture(scope="session")
@@ -151,24 +153,28 @@ else:
 
 
 @pytest.fixture(scope='session')
-def general_db_schema_and_codes(db):
+def general_db(db):
     params = db['general']
     insert_sql(params, 'general_plan_0.2.0.sql')
-    return params
+    insert_sql(params, 'general_data_0.2.0.sql')
 
+    # Set settings and auth config
+    set_settings(params, has_pwd=False, auth_cfg=CONN_NAME)
+    set_qaava_connection(LandUsePlanEnum.general, CONN_NAME)
 
-@pytest.fixture(scope='session')
-def general_db_with_data(general_db_schema_and_codes):
-    prms = general_db_schema_and_codes
-    insert_sql(prms, 'general_data_0.2.0.sql')
-    return prms
+    initialize_auth_manager()
+    set_auth_cfg(LandUsePlanEnum.general, CONN_NAME, params['user'], params['password'])
 
+    # Add project to db
+    # # Commented out because tests can not use it at the moment
+    # with open(get_test_resource('db_fixtures', 'general_plan_project_0.2.0.sql')) as f:
+    #     content = fix_project(auth_cfg_id=CONN_NAME, conn_params=params, content=f.read())
+    # insert_sql(params, sql_content=content)
 
-@pytest.fixture(scope='session')
-def general_db_with_data_and_layers(general_db_with_data, auth_cfg):
-    prms = general_db_with_data
-    common_uri = f'dbname=\'{prms["dbname"]}\' host={prms["host"]} port={prms["port"]} sslmode=disable authcfg={auth_cfg}'
+    # Add layers and relations
+    common_uri = f'dbname=\'{params["dbname"]}\' host={params["host"]} port={params["port"]} sslmode=disable authcfg={CONN_NAME}'
 
+    # Feel free to add more layers and relations. Easiest way to get the source string is QgsVectorLayer.source()
     layers = {
         'Yleiskaava': f'{common_uri} key=\'uuid\' srid=3877 type=MultiPolygonZ checkPrimaryKeyUnicity=\'1\' table="yleiskaava"."yleiskaava" (geom)',
         'Vaihetieto': f'{common_uri} key=\'gid\' checkPrimaryKeyUnicity=\'1\' table="koodistot"."vaihetieto"'
@@ -186,6 +192,7 @@ def general_db_with_data_and_layers(general_db_with_data, auth_cfg):
         inserted_ids[name] = layer.id()
         QGIS_INSTANCE.addMapLayer(layer)
 
+    # noinspection PyArgumentList
     relation_manager: QgsRelationManager = QgsProject.instance().relationManager()
     for name, rel_params in relations.items():
         rel = QgsRelation()
@@ -195,24 +202,12 @@ def general_db_with_data_and_layers(general_db_with_data, auth_cfg):
         rel.setName(name)
         relation_manager.addRelation(rel)
 
-    return prms
+    yield params
+    remove_db_settings()
 
 
 @pytest.fixture(scope='session')
-def general_db_with_data_and_project(general_db_with_data, auth_cfg):
-    '''
-    This fixture assumes that fix_project is working properly
-    '''
-    params = general_db_with_data
-    with open(get_test_resource('db_fixtures', 'general_plan_project_0.2.0.sql')) as f:
-        content = fix_project(auth_cfg_id=auth_cfg, conn_params=general_db_with_data, content=f.read())
-    insert_sql(params, sql_content=content)
-
-    return params
-
-
-@pytest.fixture(scope='session')
-def detailed_db_schema_and_codes(db):
+def detailed_db(db):
     params = db['detailed']
     insert_sql(params, 'detailed_plan_0.0.0.sql')
     return params
@@ -278,6 +273,40 @@ def set_settings(prms, has_pwd=True, auth_cfg="NULL"):
     s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/authcfg", auth_cfg)
 
 
+def initialize_auth_manager():
+    """
+    From https://docs.qgis.org/testing/en/docs/pyqgis_developer_cookbook/authentication.html#init-the-manager-and-set-the-master-password
+    """
+    # check if QgsAuthManager has already been initialized... a side effect
+    # of the QgsAuthManager.init() is that AuthDbPath is set.
+    # QgsAuthManager.init() is executed during QGIS application init and hence
+    # you do not normally need to call it directly.
+
+    authMgr = QgsApplication.authManager()
+
+    if authMgr.authenticationDatabasePath():
+        # already initilised => we are inside a QGIS app.
+        if authMgr.masterPasswordIsSet():
+            msg = 'Authentication master password not recognized'
+            assert authMgr.masterPasswordSame("salasana"), msg
+        else:
+            msg = 'Master password could not be set'
+            # The verify parameter check if the hash of the password was
+            # already saved in the authentication db
+            assert authMgr.setMasterPassword("salasana", verify=True), msg
+    else:
+        # outside qgis, e.g. in a testing environment => setup env var before
+        # db init
+        os.environ['QGIS_AUTH_DB_DIR_PATH'] = get_test_resource('test_data', 'qgis-auth.db')
+        if not authMgr.masterPasswordIsSet():
+            msg = 'Master password could not be set'
+            assert authMgr.setMasterPassword("salasana", True), msg
+        else:
+            msg = 'Authentication master password not recognized'
+            assert authMgr.masterPasswordSame("salasana"), msg
+        authMgr.init(get_test_resource('test_data', 'qgis-auth.db'))
+
+
 def remove_db_settings():
     s = QSettings()
     s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/host")
@@ -292,6 +321,7 @@ def remove_db_settings():
     s.remove(LandUsePlanEnum.general.value.key)
     s.remove(LandUsePlanEnum.detailed.value.auth_cfg_key)
     s.remove(LandUsePlanEnum.general.value.auth_cfg_key)
+    # noinspection PyArgumentList
     QgsApplication.authManager().removeAuthSetting(CONN_NAME)
 
 

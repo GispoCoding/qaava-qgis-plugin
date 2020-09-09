@@ -86,7 +86,7 @@ class DetailedLandUsePlan(LandUsePlan):
     key = f"{QAAVA_DB_NAME}/detailed"
     auth_cfg_key = f"{key}/auth_cfg"
     schema_url = DETAILED_PLAN_DATA_MODEL_URL
-    layer = LayerWrapper('Yleiskaava', 'gid')  # TODO: fix this when qgis project is ready
+    layer = LayerWrapper('Yleiskaava', 'uuid')  # TODO: fix this when qgis project is ready
 
 
 class GeneralLandUsePlan(LandUsePlan):
@@ -96,7 +96,7 @@ class GeneralLandUsePlan(LandUsePlan):
     schema_url = GENERAL_PLAN_URL
     file_name = GENERAL_PLAN_MODEL_FILE_NAME
     project_file = GENERAL_PLAN_PROJECT_FILE_NAME
-    layer = LayerWrapper('Yleiskaava', 'gid')
+    layer = LayerWrapper('Yleiskaava', 'uuid')
 
     def __init__(self):
         super().__init__()
