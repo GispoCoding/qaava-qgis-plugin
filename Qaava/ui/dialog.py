@@ -16,22 +16,6 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-#
-#
-#  This file is part of Qaava-qgis-plugin.
-#
-#  Qaava-qgis-plugin is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  Qaava-qgis-plugin is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 
@@ -70,10 +54,11 @@ class Dialog(QDialog, FORM_CLASS):
         }
 
         self.responsive_elements = {
-            Panels.Query: [self.q_push_button_reset, self.query_grid, self.q_push_button_add_row,
-                           self.q_push_button_show_query, self.q_push_button_run_query],
+            Panels.Query: [self.q_push_button_reset, self.q_push_button_refresh, self.query_grid,
+                           self.q_push_button_add_row, self.q_push_button_show_query,
+                           self.q_push_button_run_query],
             Panels.Database: {self.dbComboBox, self.dmComboBox, self.refreshPushButton, self.agreedCheckBox,
-                              self.btn_db_initialize},
+                              self.btn_db_initialize, self.btn_db_register, self.btn_db_open_project, self.cb_projects},
             Panels.Settings: [],
             Panels.About: []
         }

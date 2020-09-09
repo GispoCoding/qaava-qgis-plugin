@@ -16,31 +16,16 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-#
-#
-#  This file is part of Qaava-qgis-plugin.
-#
-#  Qaava-qgis-plugin is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  Qaava-qgis-plugin is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 import webbrowser
 
 from .base_panel import BasePanel
+from ..definitions.constants import KEY_FOR_NUMBER_OF_QUERY_CHOICES, DEFAULT_NUMBER_OF_QUERY_CHOICES
 from ..definitions.qui import Panels
 from ..qgis_plugin_tools.tools.custom_logging import get_log_level_key, LogTarget, get_log_level_name
 from ..qgis_plugin_tools.tools.resources import plugin_name, plugin_path
-from ..qgis_plugin_tools.tools.settings import set_setting
+from ..qgis_plugin_tools.tools.settings import set_setting, get_setting
 
 LOGGER = logging.getLogger(plugin_name())
 
@@ -56,6 +41,10 @@ class SettingsPanel(BasePanel):
     def setup_panel(self):
         self.dlg.combo_box_log_level_file.clear()
         self.dlg.combo_box_log_level_console.clear()
+        self.dlg.s_sb_choices.setValue(
+            int(get_setting(KEY_FOR_NUMBER_OF_QUERY_CHOICES, DEFAULT_NUMBER_OF_QUERY_CHOICES, int)))
+        self.dlg.s_sb_choices.valueChanged.connect(lambda v: set_setting(KEY_FOR_NUMBER_OF_QUERY_CHOICES, v))
+
         self.dlg.combo_box_log_level_file.addItems(LOGGING_LEVELS)
         self.dlg.combo_box_log_level_console.addItems(LOGGING_LEVELS)
         self.dlg.combo_box_log_level_file.setCurrentText(get_log_level_name(LogTarget.FILE))

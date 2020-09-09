@@ -47,6 +47,24 @@ def load_project(project_name: str, plan: LandUsePlanEnum) -> None:
     if not succeeded:
         raise QaavaProjectNotLoadedException()
 
+
+def fix_project(auth_cfg_id, conn_params, content):
+    """
+    Fix data sources from binary representation of zipped QGIS project
+    :param conn_params: connection parameters of the db connection
+    :param auth_cfg_id: auth config id of the connection
+    :param content: SQL file of containing the project(s)
+    :return: list of binary QGIS project zip files with correct data sources
+    """
+    proj_bytes = [line.split(',')[5][4:-3] for line in content.split('\n') if
+                  line.startswith('INSERT INTO public.qgis_projects')]
+    byts = [bytes.fromhex(b) for b in proj_bytes]
+    ret_vals = fix_data_sources_from_binary_projects(conn_params, auth_cfg_id=auth_cfg_id, contents=byts)
+    for i in range(len(proj_bytes)):
+        content = content.replace(proj_bytes[i], ret_vals[i].decode('utf-8'))
+    return content
+
+
 def fix_data_sources_from_binary_projects(conn_params: Dict[str, str], auth_cfg_id: str, contents: List[bytes]):
     """
     Fix data sources from binary representation of zipped QGIS project

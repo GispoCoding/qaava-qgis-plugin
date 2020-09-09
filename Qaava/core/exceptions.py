@@ -59,3 +59,7 @@ class QaavaInitializationCancelled(QgsPluginException):
 
 class QaavaDatabaseError(QgsPluginException):
     pass
+
+
+class QaavaLayerError(QgsPluginException):
+    pass

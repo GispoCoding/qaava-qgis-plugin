@@ -21,10 +21,10 @@ import enum
 import logging
 from typing import Union, Dict, Tuple, Optional, List
 
+from ..core.wrappers.layer_wrapper import LayerWrapper
 from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME, GENERAL_PLAN_URL,
                                      GENERAL_PLAN_MODEL_FILE_NAME, GENERAL_PLAN_PROJECT_FILE_NAME)
 from ..qgis_plugin_tools.tools.exceptions import QgsPluginNotImplementedException
-from . import common, general_plan
 from ..qgis_plugin_tools.tools.network import fetch
 from ..qgis_plugin_tools.tools.resources import plugin_name
 from ..qgis_plugin_tools.tools.version import version_from_string, string_from_version
@@ -34,10 +34,10 @@ LOGGER = logging.getLogger(plugin_name())
 
 class LandUsePlan:
     key = ""
-    auth_cfg_id = ""
+    auth_cfg_key = ""
     schema_url = ""
     versions_file = 'versions.txt'
-    query_fields: Dict[str, common.DatabaseField] = {}
+    layer: LayerWrapper = None
 
     def __init__(self):
         self.raw_schema: Optional[str] = None
@@ -64,18 +64,6 @@ class LandUsePlan:
         """
         raise QgsPluginNotImplementedException()
 
-    def fix_project(self, auth_cfg_id, conn_params, content):
-        # Import here in order to avoid circular import problem in tests
-        from ..core.db.qgis_project_utils import fix_data_sources_from_binary_projects
-
-        proj_bytes = [line.split(',')[5][4:-3] for line in content.split('\n') if
-                      line.startswith('INSERT INTO public.qgis_projects')]
-        byts = [bytes.fromhex(b) for b in proj_bytes]
-        ret_vals = fix_data_sources_from_binary_projects(conn_params, auth_cfg_id=auth_cfg_id, contents=byts)
-        for i in range(len(proj_bytes)):
-            content = content.replace(proj_bytes[i], ret_vals[i].decode('utf-8'))
-        return content
-
     def alter_schema(self):
         """
         Alters raw schemas so that it will work even in populated databases and with any owner
@@ -98,12 +86,8 @@ class DetailedLandUsePlan(LandUsePlan):
     key = f"{QAAVA_DB_NAME}/detailed"
     auth_cfg_key = f"{key}/auth_cfg"
     schema_url = DETAILED_PLAN_DATA_MODEL_URL
-    query_fields: Dict[str, common.DatabaseField] = {
-        str(field): field
-        for field in [
-            common.ProcessInfo.name
-        ]
-    }
+    layer = LayerWrapper('Yleiskaava', 'gid')  # TODO: fix this when qgis project is ready
+
 
 class GeneralLandUsePlan(LandUsePlan):
     key = f"{QAAVA_DB_NAME}/general"
@@ -112,15 +96,7 @@ class GeneralLandUsePlan(LandUsePlan):
     schema_url = GENERAL_PLAN_URL
     file_name = GENERAL_PLAN_MODEL_FILE_NAME
     project_file = GENERAL_PLAN_PROJECT_FILE_NAME
-    query_fields: Dict[str, common.DatabaseField] = {
-        str(field): field
-        for field in [
-            general_plan.ZoningPlan.name,
-            general_plan.ZoningPlan.editor,
-            general_plan.ZoningPlan.start_date,
-            common.ProcessInfo.name
-        ]
-    }
+    layer = LayerWrapper('Yleiskaava', 'gid')
 
     def __init__(self):
         super().__init__()
@@ -149,9 +125,10 @@ class GeneralLandUsePlan(LandUsePlan):
         :return: project sql string
         """
         # TODO: move to super class when implemented in Detailed plan as well
+        # Import here in order to avoid circular import problem in tests
+        from ..core.db.qgis_project_utils import fix_project
         content = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.project_file}")
-        content = self.fix_project(auth_cfg_id, conn_params, content)
-        return content
+        return fix_project(auth_cfg_id, conn_params, content)
 
 
 class LandUsePlanEnum(enum.Enum):

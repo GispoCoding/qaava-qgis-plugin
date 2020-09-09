@@ -16,33 +16,16 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-#
-#
-#  This file is part of Qaava-qgis-plugin.
-#
-#  Qaava-qgis-plugin is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  Qaava-qgis-plugin is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from typing import List, Dict, Tuple
+from typing import List, Dict
 
 from psycopg2.sql import SQL, Composable
 
 from .database import Database
+from ..wrappers.field_wrapper import FieldWrapper
+from ..wrappers.layer_wrapper import LayerWrapper
 from ...definitions.db import Operation
-from ...model.common import ProcessInfo, DatabaseField
-from ...model.detailed_plan import DetailedPlan
-from ...model.general_plan import ZoningPlan
 from ...model.land_use_plan import LandUsePlanEnum
 from ...qgis_plugin_tools.tools.resources import plugin_name
 
@@ -59,7 +42,7 @@ class QueryRepository(Database):
         self.from_parts: List[Composable] = []
         self.where_parts: List[Composable] = []
         self.vars: Dict[str, any] = {}
-        self.table = ZoningPlan if self.plan_enum == LandUsePlanEnum.general else DetailedPlan
+        self.layer_wrapper: LayerWrapper = self.plan_enum.value.layer
 
         self._set_initial_parts()
 
@@ -74,48 +57,22 @@ class QueryRepository(Database):
         self.vars.clear()
         self._set_initial_parts()
 
-    def fetch_choices(self, field: DatabaseField) -> Tuple[List[str], bool]:
-        """
-
-        :return: Choice list and whether choices are string or not
-        """
-        if field == ProcessInfo.name:
-            codes = self.fetch_available_status_codes()
-            return [f"{code['gid']}: {code['name']}" for code in codes], False
-        else:
-            return [], True
-
-    def fetch_available_status_codes(self) -> List[ProcessInfo.Type]:
-        query = (SQL('SELECT {gid}, {name} as name FROM {processInfo}')
-                 .format(processInfo=ProcessInfo.table(), gid=ProcessInfo.gid,
-                         name=ProcessInfo.name.field))
-
-        return self.execute_select(query, ret_dict=True)
-
-    def set_status(self, status_gid: int, operation: Operation):
-        self.from_parts.append(
-            SQL('LEFT JOIN {processInfo} p ON {rel}=p.{p_gid}')
-                .format(processInfo=ProcessInfo.table(), rel=self.table.process_info.field, p_gid=ProcessInfo.gid)
-        )
-        self.where_parts.append(
-            SQL('p.{p_gid}' + operation.value + '%(status)s').format(p_gid=ProcessInfo.gid)
-        )
-        self.vars['status'] = status_gid
-
-    def add_and_condition(self, field: DatabaseField, operation: Operation, value: any):
-        if field == ProcessInfo.name:
-            self.set_status(int(value.split(":")[0]), operation)
-        else:
-            self.where_parts.append(
-                SQL('pl.{fld}' + operation.value + '%(' + str(field) + ')s').format(fld=field.field)
+    def add_and_condition(self, field: FieldWrapper, operation: Operation, value: any) -> None:
+        if field.has_parent:
+            self.from_parts.append(
+                SQL('LEFT JOIN {f_table} ON {gid_f}={f_pk}').format(f_table=field.table, gid_f=field.fk, f_pk=field.pk)
             )
 
-            self.vars[str(field)] = value
+        self.where_parts.append(
+            SQL('{fld}' + operation.value + '%(' + field.field_with_table + ')s').format(fld=field.field)
+        )
 
-    def add_extent(self, xmin: float, ymin: float, xmax: float, ymax: float):
+        self.vars[field.field_with_table] = value
+
+    def add_extent(self, xmin: float, ymin: float, xmax: float, ymax: float) -> None:
         self.where_parts.append(
             SQL('pl.{geom} && ST_MakeEnvelope(%(xmin)s, %(ymin)s, %(xmax)s, %(ymax)s, 3877)').format(
-                geom=self.table.geom.field)
+                geom=self.layer_wrapper.geom_field)
         )
         self.vars.update({'xmin': xmin, 'ymin': ymin, 'xmax': xmax, 'ymax': ymax})
 
@@ -126,5 +83,5 @@ class QueryRepository(Database):
         return self.mogrify_query(self.query, self.vars)
 
     def _set_initial_parts(self):
-        self.select_parts.append(SQL('SELECT pl.{gid}').format(gid=self.table.gid))
-        self.from_parts.append(SQL('FROM {plan} pl').format(plan=self.table.table()))
+        self.select_parts.append(SQL('SELECT pl.{pk}').format(pk=self.layer_wrapper.pk))
+        self.from_parts.append(SQL('FROM {table} pl').format(table=self.layer_wrapper.table))
