@@ -28,10 +28,11 @@ import timeit
 import psycopg2
 import pytest
 from PyQt5.QtCore import QSettings
-from qgis.core import QgsProject
+from qgis.core import (QgsProject, QgsApplication, QgsVectorLayer, QgsDataSourceUri, QgsRelation, QgsRelationManager)
 
 from ..core.db.database import Database
-from ..core.db.db_utils import set_qaava_connection
+from ..core.db.db_utils import set_qaava_connection, set_auth_cfg
+from ..core.db.qgis_project_utils import fix_project
 from ..definitions.constants import PG_CONNECTIONS
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.testing.utilities import get_qgis_app, is_running_inside_ci
@@ -75,14 +76,20 @@ def initialize_db_settings2(database_params):
     remove_db_settings()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope='session')
 def auth_cfg(database_params):
-    prms = database_params.copy()
-    prms.pop('user')
-    prms.pop('password')
-    set_settings(prms, has_pwd=False, auth_cfg='test_config')
-    QGIS_APP.authManager()
-    # TODO: continue
+    set_settings(database_params, has_pwd=False, auth_cfg=CONN_NAME)
+    set_qaava_connection(LandUsePlanEnum.general, CONN_NAME)
+    set_auth_cfg(LandUsePlanEnum.general, CONN_NAME, database_params['user'], database_params['password'])
+    yield CONN_NAME
+    remove_db_settings()
+
+
+@pytest.fixture(scope='session')
+def auth_cfg_detailed(database_params):
+    set_settings(database_params, has_pwd=False, auth_cfg=CONN_NAME)
+    set_qaava_connection(LandUsePlanEnum.detailed, CONN_NAME)
+    set_auth_cfg(LandUsePlanEnum.detailed, CONN_NAME, database_params['user'], database_params['password'])
     yield CONN_NAME
     remove_db_settings()
 
@@ -144,23 +151,78 @@ else:
 
 
 @pytest.fixture(scope='session')
-def general_db(db):
+def general_db_schema_and_codes(db):
     params = db['general']
-    db = Database(params)
-    with open(get_test_resource('db_fixtures', '01_general_plan_0.1.0.sql')) as f:
-        sql = f.read()
-        db.execute_insert(clean_schema(sql))
+    insert_sql(params, 'general_plan_0.2.0.sql')
     return params
 
 
 @pytest.fixture(scope='session')
-def detailed_db(db):
-    params = db['detailed']
-    db = Database(params)
-    with open(get_test_resource('db_fixtures', '01_detailed_plan_0.0.0.sql')) as f:
-        sql = f.read()
-        db.execute_insert(clean_schema(sql))
+def general_db_with_data(general_db_schema_and_codes):
+    prms = general_db_schema_and_codes
+    insert_sql(prms, 'general_data_0.2.0.sql')
+    return prms
+
+
+@pytest.fixture(scope='session')
+def general_db_with_data_and_layers(general_db_with_data, auth_cfg):
+    prms = general_db_with_data
+    common_uri = f'dbname=\'{prms["dbname"]}\' host={prms["host"]} port={prms["port"]} sslmode=disable authcfg={auth_cfg}'
+
+    layers = {
+        'Yleiskaava': f'{common_uri} key=\'uuid\' srid=3877 type=MultiPolygonZ checkPrimaryKeyUnicity=\'1\' table="yleiskaava"."yleiskaava" (geom)',
+        'Vaihetieto': f'{common_uri} key=\'gid\' checkPrimaryKeyUnicity=\'1\' table="koodistot"."vaihetieto"'
+    }
+
+    relations = {
+        'vaihetieto_fk': ('Vaihetieto', 'gid', 'Yleiskaava', 'gid_vaihetieto'),
+    }
+
+    inserted_ids = {}
+
+    for name, uri in layers.items():
+        layer = QgsVectorLayer(QgsDataSourceUri(uri).uri(False), name, 'postgres')
+        assert layer.isValid()
+        inserted_ids[name] = layer.id()
+        QGIS_INSTANCE.addMapLayer(layer)
+
+    relation_manager: QgsRelationManager = QgsProject.instance().relationManager()
+    for name, rel_params in relations.items():
+        rel = QgsRelation()
+        rel.setReferencedLayer(inserted_ids[rel_params[0]])
+        rel.setReferencingLayer(inserted_ids[rel_params[2]])
+        rel.addFieldPair(rel_params[3], rel_params[1])
+        rel.setName(name)
+        relation_manager.addRelation(rel)
+
+    return prms
+
+
+@pytest.fixture(scope='session')
+def general_db_with_data_and_project(general_db_with_data, auth_cfg):
+    '''
+    This fixture assumes that fix_project is working properly
+    '''
+    params = general_db_with_data
+    with open(get_test_resource('db_fixtures', 'general_plan_project_0.2.0.sql')) as f:
+        content = fix_project(auth_cfg_id=auth_cfg, conn_params=general_db_with_data, content=f.read())
+    insert_sql(params, sql_content=content)
+
     return params
+
+
+@pytest.fixture(scope='session')
+def detailed_db_schema_and_codes(db):
+    params = db['detailed']
+    insert_sql(params, 'detailed_plan_0.0.0.sql')
+    return params
+
+
+'''
+####################
+Helper functions
+###################
+'''
 
 
 def clean_schema(raw_schema: str) -> str:
@@ -228,7 +290,20 @@ def remove_db_settings():
     s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/authcfg")
     s.remove(LandUsePlanEnum.detailed.value.key)
     s.remove(LandUsePlanEnum.general.value.key)
+    s.remove(LandUsePlanEnum.detailed.value.auth_cfg_key)
+    s.remove(LandUsePlanEnum.general.value.auth_cfg_key)
+    QgsApplication.authManager().removeAuthSetting(CONN_NAME)
 
 
 def get_test_resource(*args: str) -> str:
     return plugin_path('test', *args)
+
+
+def insert_sql(params, sql_file=None, sql_content=None):
+    db = Database(params)
+    if sql_file is not None:
+        with open(get_test_resource('db_fixtures', sql_file)) as f:
+            sql = f.read()
+            db.execute_insert(clean_schema(sql))
+    if sql_content is not None:
+        db.execute_insert(clean_schema(sql_content))

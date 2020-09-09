@@ -72,3 +72,15 @@ def test_db_initializer_with_general_plan(new_project, db):
     assert set(rows).intersection(expected_schemas) == expected_schemas
     available_projects = initializer.get_available_projects()
     assert available_projects == ['qaava-yleiskaava']
+
+
+def test_fixture_order_1(general_db_schema_and_codes):
+    db1 = Database(general_db_schema_and_codes)
+    rows = db1.execute_select("SELECT count(*) FROM yleiskaava.yleiskaava")
+    assert rows == [(0,)]
+
+
+def test_fixture_order_2(general_db_with_data):
+    db1 = Database(general_db_with_data)
+    rows = db1.execute_select("SELECT count(*) FROM yleiskaava.yleiskaava")
+    assert rows == [(4,)]

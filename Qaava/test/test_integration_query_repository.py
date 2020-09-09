@@ -45,8 +45,8 @@ from ..model.general_plan import ZoningPlan
 from ..model.land_use_plan import LandUsePlanEnum
 
 
-def test_fetch_available_status_codes(general_db):
-    repository = QueryRepository(general_db, LandUsePlanEnum.general)
+def test_fetch_available_status_codes(general_db_schema_and_codes):
+    repository = QueryRepository(general_db_schema_and_codes, LandUsePlanEnum.general)
     codes = repository.fetch_available_status_codes()
     assert len(codes) == 9
     assert {'gid': 1, 'name': 'aloitusvaihe'} in codes
@@ -58,7 +58,7 @@ def test_querier_fields(general_connection_set):
                               'voimaantulopvm': ZoningPlan.start_date, 'vaihetieto.nimi': ProcessInfo.name}
 
 
-def test_querier_extent(general_db, general_connection_set):
+def test_querier_extent(general_db_schema_and_codes, general_connection_set):
     set_qaava_connection(LandUsePlanEnum.general, CONN_NAME)
     extent = QgsRectangle().fromWkt(
         'POLYGON((23840873.5152964 6952581.91716873,23840873.5152964 6981622.5665375,23875214.1013225 6981622.5665375,23875214.1013225 6952581.91716873,23840873.5152964 6952581.91716873))')
@@ -70,44 +70,44 @@ def test_querier_extent(general_db, general_connection_set):
                      '3877)')
 
 
-def test_fetch_land_use_with_status(general_db):
+def test_fetch_land_use_with_status(general_db_schema_and_codes):
     # TODO: add test data
-    repository = QueryRepository(general_db, LandUsePlanEnum.general)
+    repository = QueryRepository(general_db_schema_and_codes, LandUsePlanEnum.general)
     repository.set_status(1, Operation.EQ)
     plans = repository.run_query()
     assert len(plans) == 0
 
 
-def test_query_repository_initialization(general_db):
-    repository = QueryRepository(general_db, LandUsePlanEnum.general)
+def test_query_repository_initialization(general_db_schema_and_codes):
+    repository = QueryRepository(general_db_schema_and_codes, LandUsePlanEnum.general)
     query = repository.show_query()
     assert query == 'SELECT pl."gid" FROM "yleiskaava"."yleiskaava" pl '
 
 
-def test_query_repository_initialization_detailed(general_db):
-    repository = QueryRepository(general_db, LandUsePlanEnum.detailed)
+def test_query_repository_initialization_detailed(general_db_schema_and_codes):
+    repository = QueryRepository(general_db_schema_and_codes, LandUsePlanEnum.detailed)
     query = repository.show_query()
     assert query == 'SELECT pl."gid" FROM "asemakaavat"."asemakaava" pl '
 
 
-def test_query_status_1(general_db):
-    repository = QueryRepository(general_db, LandUsePlanEnum.general)
+def test_query_status_1(general_db_schema_and_codes):
+    repository = QueryRepository(general_db_schema_and_codes, LandUsePlanEnum.general)
     repository.set_status(1, Operation.EQ)
     query = repository.show_query()
     assert query == ('SELECT pl."gid" FROM "yleiskaava"."yleiskaava" pl LEFT JOIN '
                      '"koodistot"."vaihetieto" p ON "gid_vaihetieto"=p."gid" WHERE p."gid"=1')
 
 
-def test_query_status_2(general_db):
-    repository = QueryRepository(general_db, LandUsePlanEnum.general)
+def test_query_status_2(general_db_schema_and_codes):
+    repository = QueryRepository(general_db_schema_and_codes, LandUsePlanEnum.general)
     repository.add_and_condition(ProcessInfo.name, Operation.GT, "1: aloitusvaihe")
     query = repository.show_query()
     assert query == ('SELECT pl."gid" FROM "yleiskaava"."yleiskaava" pl LEFT JOIN '
                      '"koodistot"."vaihetieto" p ON "gid_vaihetieto"=p."gid" WHERE p."gid">1')
 
 
-def test_query_chained_1(general_db):
-    repository = QueryRepository(general_db, LandUsePlanEnum.general)
+def test_query_chained_1(general_db_schema_and_codes):
+    repository = QueryRepository(general_db_schema_and_codes, LandUsePlanEnum.general)
     repository.add_and_condition(ZoningPlan.name, Operation.EQ, "testplan")
     repository.add_and_condition(ZoningPlan.editor, Operation.LIKE, "ed%or")
     repository.add_and_condition(ProcessInfo.name, Operation.EQ, "1: aloitusvaihe")
