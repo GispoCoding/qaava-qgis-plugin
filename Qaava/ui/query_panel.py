@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import QGridLayout, QComboBox, QPushButton, QCheckBox
 from qgis.core import QgsApplication, QgsVectorLayer, QgsMapLayerProxyModel, QgsCoordinateReferenceSystem
 from qgis.gui import QgsMapCanvas, QgsExtentGroupBox
 
-from .base_panel import BasePanel, log_if_fails
+from .base_panel import BasePanel
 from ..core.db.querier import Querier
 from ..core.exceptions import QaavaLayerError
 from ..core.wrappers.field_wrapper import FieldWrapper
@@ -35,6 +35,7 @@ from ..definitions.db import Operation
 from ..definitions.qui import Panels
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
+from ..qgis_plugin_tools.tools.decorations import log_if_fails
 from ..qgis_plugin_tools.tools.fields import widget_for_field, value_for_widget
 from ..qgis_plugin_tools.tools.i18n import tr
 from ..qgis_plugin_tools.tools.resources import plugin_name
