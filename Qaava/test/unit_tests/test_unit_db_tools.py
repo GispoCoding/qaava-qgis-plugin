@@ -16,37 +16,27 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-#
-#
-#  This file is part of Qaava-qgis-plugin.
-#
-#  Qaava-qgis-plugin is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  Qaava-qgis-plugin is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import pytest
 
-from .conftest import (remove_db_settings, CONN_NAME)
-from ..core.db.db_utils import (get_existing_database_connections, set_qaava_connection,
-                                get_db_connection_params)
-from ..core.exceptions import QaavaDatabaseNotSetException
-from ..model.land_use_plan import LandUsePlanEnum
+from ..conftest import (remove_db_settings, CONN_NAME)
+from ...core.db.db_utils import (get_existing_database_connections, set_qaava_connection,
+                                 get_db_connection_params, get_qaava_connection_name)
+from ...core.exceptions import QaavaDatabaseNotSetException
+from ...model.land_use_plan import LandUsePlanEnum
 
 
-# DB utils tests
 def test_get_existing_database_connections_empty():
     remove_db_settings()
     connections = get_existing_database_connections()
     assert connections == set()
+
+
+def test_connection_is_same():
+    remove_db_settings()
+    set_qaava_connection(LandUsePlanEnum.detailed, CONN_NAME)
+    name = get_qaava_connection_name(LandUsePlanEnum.detailed)
+    assert name == CONN_NAME
 
 
 def test_get_existing_database_connections_1(initialize_db_settings):

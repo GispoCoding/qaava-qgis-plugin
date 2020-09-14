@@ -16,29 +16,15 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-#
-#
-#  This file is part of Qaava-qgis-plugin.
-#
-#  Qaava-qgis-plugin is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  Qaava-qgis-plugin is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
 
+from PyQt5 import QtGui
 from PyQt5.QtWidgets import QDialog
 
 from .about_panel import AboutPanel
 from .db_panel import DbPanel
+from .query_panel import QueryPanel
 from .settings_panel import SettingsPanel
 from ..definitions.qui import Panels
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
@@ -62,14 +48,18 @@ class Dialog(QDialog, FORM_CLASS):
         self.iface = iface
 
         self.panels = {
+            Panels.Query: QueryPanel(self),
             Panels.Database: DbPanel(self),
             Panels.Settings: SettingsPanel(self),
             Panels.About: AboutPanel(self)
         }
 
         self.responsive_elements = {
+            Panels.Query: [self.q_push_button_reset, self.q_push_button_refresh, self.query_grid,
+                           self.q_push_button_add_row, self.q_push_button_show_query,
+                           self.q_push_button_run_query, self.q_push_button_clear_filter],
             Panels.Database: {self.dbComboBox, self.dmComboBox, self.refreshPushButton, self.agreedCheckBox,
-                              self.btn_db_initialize},
+                              self.btn_db_initialize, self.btn_db_register, self.btn_db_open_project, self.cb_projects},
             Panels.Settings: [],
             Panels.About: []
         }
@@ -86,6 +76,15 @@ class Dialog(QDialog, FORM_CLASS):
             for panel in self.panels.values():
                 panel.setup_panel()
         except Exception as e:
-            LOGGER.exception(tr(u"Unhandled exception occurred during UI initialization."), bar_msg(e))
+            LOGGER.exception(tr(u'Unhandled exception occurred during UI initialization.'), bar_msg(e))
 
+        # The first panel is shown initially
         self.menu_widget.setCurrentRow(0)
+
+    def closeEvent(self, evt: QtGui.QCloseEvent) -> None:
+        LOGGER.debug('Closing dialog')
+        try:
+            for panel in self.panels.values():
+                panel.teardown_panel()
+        except Exception as e:
+            LOGGER.exception(tr(u'Unhandled exception occurred during UI closing.'), bar_msg(e))

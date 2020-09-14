@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 #  Gispo Ltd., hereby disclaims all copyright interest in the program Qaava-qgis-plugin
 #  Copyright (C) 2020 Gispo Ltd (https://www.gispo.fi/).
 #
@@ -20,26 +17,24 @@
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
-import glob
+import pytest
+from qgis.core import QgsProject
 
-from qgis_plugin_tools.infrastructure.plugin_maker import PluginMaker
+from ..conftest import get_test_resource, IFACE
+from ...core.db.qgis_project_utils import fix_project, load_project
+from ...model.land_use_plan import LandUsePlanEnum
 
-'''
-#################################################
-# Edit the following to match the plugin
-#################################################
-'''
 
-py_files = (
-    [fil for fil in glob.glob("**/*.py", recursive=True) if "test/" not in fil] +
-    ["test/test_translations.py"]
-)
-locales = ['fi']
-profile = 'qaava'
-ui_files = list(glob.glob("**/*.ui", recursive=True))
-resources = list(glob.glob("**/*.qrc", recursive=True))
-extra_dirs = ["resources", "logs"]
-compiled_resources = ["resources.py"]
+def test_fix_project(database_params):
+    with open(get_test_resource('db_fixtures', 'general_plan_project_0.2.0.sql')) as f:
+        orig = f.read()
+        fixed = fix_project('test_auth_cfg', database_params, orig)
+        assert fixed != orig
 
-PluginMaker(py_files=py_files, ui_files=ui_files, resources=resources, extra_dirs=extra_dirs,
-            compiled_resources=compiled_resources, locales=locales, profile=profile)
+
+@pytest.mark.skip('opening any project fails in test environment... Is there a solution for this?')
+def test_loading_project(general_db):
+    IFACE.newProject()
+    load_project('qaava-yleiskaava', LandUsePlanEnum.general)
+    layers = QgsProject.instance().mapLayers()
+    assert len(layers) > 3

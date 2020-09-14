@@ -16,29 +16,14 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-#
-#
-#  This file is part of Qaava-qgis-plugin.
-#
-#  Qaava-qgis-plugin is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  Qaava-qgis-plugin is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
+
 
 import pytest
 
-from ..definitions.constants import DETAILED_PLAN_DATA_MODEL_URL
-from ..model.land_use_plan import DetailedLandUsePlan, GeneralLandUsePlan
-from ..qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException
-from ..qgis_plugin_tools.tools.network import fetch
+from ...definitions.constants import DETAILED_PLAN_DATA_MODEL_URL
+from ...model.land_use_plan import DetailedLandUsePlan, GeneralLandUsePlan
+from ...qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException
+from ...qgis_plugin_tools.tools.network import fetch
 
 
 def test_fetch(new_project):
@@ -65,8 +50,8 @@ def test_general_plan_schema_fetch(new_project):
 
 def test_general_plan_fetch_versions(new_project):
     plan = GeneralLandUsePlan()
-    assert plan.newest_version == (0, 1, 0)
-    assert plan.available_versions == [(0, 1, 0)]
+    assert plan.newest_version >= (0, 0, 0)
+    assert (0, 1, 0) in plan.available_versions
 
 
 def test_project_fetch(new_project, database_params):

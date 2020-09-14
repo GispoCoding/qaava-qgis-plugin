@@ -2,12 +2,15 @@
 <ui version="4.0">
  <class>main_dialog</class>
  <widget class="QDialog" name="main_dialog">
+  <property name="windowModality">
+   <enum>Qt::WindowModal</enum>
+  </property>
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>927</width>
-    <height>535</height>
+    <width>946</width>
+    <height>644</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -82,7 +85,12 @@
      </property>
      <item>
       <property name="text">
-       <string>Database</string>
+       <string>Query</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+          <string>Database</string>
       </property>
      </item>
      <item>
@@ -109,8 +117,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>764</width>
-          <height>531</height>
+          <width>783</width>
+          <height>640</height>
          </rect>
         </property>
         <property name="minimumSize">
@@ -120,31 +128,269 @@
          </size>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout_2">
-         <item>
-          <widget class="QStackedWidget" name="stacked_widget">
-           <property name="currentIndex">
-            <number>0</number>
-           </property>
-           <widget class="QWidget" name="database">
-            <layout class="QVBoxLayout" name="verticalLayout_13">
-             <item>
-              <widget class="QGroupBox" name="groupBox_6">
-               <property name="title">
-                <string>Database configuration</string>
-               </property>
-               <layout class="QVBoxLayout" name="verticalLayout_12">
-                <item>
-                 <widget class="QLabel" name="label_3">
-                  <property name="text">
-                   <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;At the moment there are 2 possible database
-                    models to choose from: &lt;a href=&quot;https://github.com/GispoCoding/qaava/tree/master/asemakaavan-tietomalli&quot;&gt;&lt;span
-                    style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;a detailed land use plan database
-                    model&lt;/span&gt;&lt;/a&gt; and a general plan database model. &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
-                   </string>
-                  </property>
-                  <property name="wordWrap">
-                   <bool>true</bool>
-                  </property>
+            <item>
+                <widget class="QStackedWidget" name="stacked_widget">
+                    <property name="currentIndex">
+                        <number>0</number>
+                    </property>
+                    <widget class="QWidget" name="query">
+                        <layout class="QVBoxLayout" name="verticalLayout_14">
+                            <item>
+                                <widget class="QGroupBox" name="groupBox_7">
+                                    <property name="title">
+                                        <string>Query part</string>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_13">
+                                        <item>
+                                            <layout class="QHBoxLayout" name="horizontalLayout_6">
+                                                <property name="sizeConstraint">
+                                                    <enum>QLayout::SetDefaultConstraint</enum>
+                                                </property>
+                                                <item>
+                                                    <widget class="QLabel" name="dmLabel_2">
+                                                        <property name="text">
+                                                            <string>Layer to query</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item>
+                                                    <widget class="QgsMapLayerComboBox" name="q_combo_box_layer">
+                                                        <property name="minimumSize">
+                                                            <size>
+                                                                <width>200</width>
+                                                                <height>0</height>
+                                                            </size>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item>
+                                                    <spacer name="horizontalSpacer_3">
+                                                        <property name="orientation">
+                                                            <enum>Qt::Horizontal</enum>
+                                                        </property>
+                                                        <property name="sizeHint" stdset="0">
+                                                            <size>
+                                                                <width>40</width>
+                                                                <height>20</height>
+                                                            </size>
+                                                        </property>
+                                                    </spacer>
+                                                </item>
+                                                <item>
+                                                    <widget class="QPushButton" name="q_push_button_refresh">
+                                                        <property name="text">
+                                                            <string>Refresh</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item>
+                                                    <widget class="QPushButton" name="q_push_button_reset">
+                                                        <property name="text">
+                                                            <string>Reset</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                        <item>
+                                            <layout class="QGridLayout" name="query_grid">
+                                                <item row="0" column="2">
+                                                    <widget class="QLabel" name="label_4">
+                                                        <property name="text">
+                                                            <string>Operation</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="0" column="3">
+                                                    <widget class="QLabel" name="label_5">
+                                                        <property name="text">
+                                                            <string>Value</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="0" column="1">
+                                                    <widget class="QLabel" name="label_2">
+                                                        <property name="text">
+                                                            <string>Field</string>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item row="0" column="0">
+                                                    <widget class="QLabel" name="label_6">
+                                                        <property name="maximumSize">
+                                                            <size>
+                                                                <width>80</width>
+                                                                <height>16777215</height>
+                                                            </size>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string/>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                        <item>
+                                            <layout class="QHBoxLayout" name="horizontalLayout_5">
+                                                <item>
+                                                    <widget class="QPushButton" name="q_push_button_add_row">
+                                                        <property name="toolTip">
+                                                            <string>Add row</string>
+                                                        </property>
+                                                        <property name="text">
+                                                            <string/>
+                                                        </property>
+                                                    </widget>
+                                                </item>
+                                                <item>
+                                                    <spacer name="horizontalSpacer_4">
+                                                        <property name="orientation">
+                                                            <enum>Qt::Horizontal</enum>
+                                                        </property>
+                                                        <property name="sizeHint" stdset="0">
+                                                            <size>
+                                                                <width>40</width>
+                                                                <height>20</height>
+                                                            </size>
+                                                        </property>
+                                                    </spacer>
+                                                </item>
+                                            </layout>
+                                        </item>
+                                        <item>
+                                            <widget class="QgsExtentGroupBox" name="q_extent">
+                                                <property name="inputMethodHints">
+                                                    <set>Qt::ImhNone</set>
+                                                </property>
+                                                <property name="title">
+                                                    <string>Extent (current: none)</string>
+                                                </property>
+                                                <property name="flat">
+                                                    <bool>true</bool>
+                                                </property>
+                                                <property name="checkable">
+                                                    <bool>true</bool>
+                                                </property>
+                                                <property name="checked">
+                                                    <bool>false</bool>
+                                                </property>
+                                                <property name="collapsed">
+                                                    <bool>true</bool>
+                                                </property>
+                                                <property name="syncGroup">
+                                                    <string/>
+                                                </property>
+                                                <property name="scrollOnExpand">
+                                                    <bool>true</bool>
+                                                </property>
+                                                <property name="saveCheckedState">
+                                                    <bool>false</bool>
+                                                </property>
+                                                <property name="titleBase">
+                                                    <string>Extent</string>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <item>
+                                <widget class="QgsCollapsibleGroupBox" name="q_gb_sql">
+                                    <property name="title">
+                                        <string>Generated SQL</string>
+                                    </property>
+                                    <property name="collapsed">
+                                        <bool>true</bool>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_16">
+                                        <item>
+                                            <widget class="QTextBrowser" name="q_text_browser_sql">
+                                                <property name="sizePolicy">
+                                                    <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                                                        <horstretch>0</horstretch>
+                                                        <verstretch>0</verstretch>
+                                                    </sizepolicy>
+                                                </property>
+                                                <property name="font">
+                                                    <font>
+                                                        <family>Sans Serif</family>
+                                                        <pointsize>12</pointsize>
+                                                    </font>
+                                                </property>
+                                            </widget>
+                                        </item>
+                                    </layout>
+                                </widget>
+                            </item>
+                            <item>
+                                <spacer name="verticalSpacer_4">
+                                    <property name="orientation">
+                                        <enum>Qt::Vertical</enum>
+                                    </property>
+                                    <property name="sizeHint" stdset="0">
+                                        <size>
+                                            <width>20</width>
+                                            <height>40</height>
+                                        </size>
+                                    </property>
+                                </spacer>
+                            </item>
+                            <item>
+                                <layout class="QHBoxLayout" name="horizontalLayout_7">
+                                    <item>
+                                        <widget class="QPushButton" name="q_push_button_show_query">
+                                            <property name="text">
+                                                <string>Show query</string>
+                                            </property>
+                                        </widget>
+                                    </item>
+                                    <item>
+                                        <widget class="QPushButton" name="q_push_button_run_query">
+                                            <property name="text">
+                                                <string>Run query</string>
+                                            </property>
+                                        </widget>
+                                    </item>
+                                    <item>
+                                        <widget class="QPushButton" name="q_push_button_clear_filter">
+                                            <property name="maximumSize">
+                                                <size>
+                                                    <width>100</width>
+                                                    <height>16777215</height>
+                                                </size>
+                                            </property>
+                                            <property name="text">
+                                                <string>Clear</string>
+                                            </property>
+                                        </widget>
+                                    </item>
+                                </layout>
+                            </item>
+                        </layout>
+                    </widget>
+                    <widget class="QWidget" name="database">
+                        <layout class="QVBoxLayout" name="verticalLayout_13">
+                            <item>
+                                <widget class="QGroupBox" name="groupBox_6">
+                                    <property name="title">
+                                        <string>Database configuration</string>
+                                    </property>
+                                    <layout class="QVBoxLayout" name="verticalLayout_12">
+                                        <item>
+                                            <widget class="QLabel" name="label_3">
+                                                <property name="text">
+                                                    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;At the moment
+                                                        there are 2 possible database
+                                                        models to choose from: &lt;a href=&quot;https://github.com/GispoCoding/qaava/tree/master/asemakaavan-tietomalli&quot;&gt;&lt;span
+                                                        style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;a
+                                                        detailed land use plan database
+                                                        model&lt;/span&gt;&lt;/a&gt; and a general plan database model.
+                                                        &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                                                    </string>
+                                                </property>
+                                                <property name="wordWrap">
+                                                    <bool>true</bool>
+                                                </property>
                  </widget>
                 </item>
                 <item>
@@ -353,9 +599,32 @@
             </layout>
            </widget>
            <widget class="QWidget" name="settings">
-            <layout class="QVBoxLayout" name="verticalLayout_9">
+            <layout class="QVBoxLayout" name="verticalLayout_15">
              <item>
-              <widget class="QGroupBox" name="groupBox_5">
+              <widget class="QgsCollapsibleGroupBox" name="mGroupBox_4">
+               <property name="title">
+                <string>Query</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_9">
+                <item>
+                 <layout class="QGridLayout" name="gridLayout_7">
+                  <item row="0" column="0">
+                   <widget class="QLabel" name="label_level_file_2">
+                    <property name="text">
+                     <string>Number of choices fetched for each field</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item row="0" column="1">
+                   <widget class="QSpinBox" name="s_sb_choices"/>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QgsCollapsibleGroupBox" name="mGroupBox_3">
                <property name="title">
                 <string>Logging</string>
                </property>
@@ -593,14 +862,25 @@
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QgsCollapsibleGroupBox</class>
-   <extends>QGroupBox</extends>
-   <header>qgscollapsiblegroupbox.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
+    <customwidgets>
+        <customwidget>
+            <class>QgsCollapsibleGroupBox</class>
+            <extends>QGroupBox</extends>
+            <header>qgscollapsiblegroupbox.h</header>
+            <container>1</container>
+        </customwidget>
+        <customwidget>
+            <class>QgsExtentGroupBox</class>
+            <extends>QgsCollapsibleGroupBox</extends>
+            <header>qgsextentgroupbox.h</header>
+            <container>1</container>
+        </customwidget>
+        <customwidget>
+            <class>QgsMapLayerComboBox</class>
+            <extends>QComboBox</extends>
+            <header>qgsmaplayercombobox.h</header>
+        </customwidget>
+    </customwidgets>
  <resources/>
  <connections/>
 </ui>
