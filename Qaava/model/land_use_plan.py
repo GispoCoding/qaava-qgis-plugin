@@ -22,8 +22,9 @@ import logging
 from typing import Union, Dict, Tuple, Optional, List
 
 from ..core.wrappers.layer_wrapper import LayerWrapper
-from ..definitions.constants import (DETAILED_PLAN_DATA_MODEL_URL, QAAVA_DB_NAME, GENERAL_PLAN_URL,
-                                     GENERAL_PLAN_MODEL_FILE_NAME, GENERAL_PLAN_PROJECT_FILE_NAME)
+from ..definitions.constants import (QAAVA_DB_NAME, GENERAL_PLAN_URL,
+                                     GENERAL_PLAN_MODEL_FILE_NAME, GENERAL_PLAN_PROJECT_FILE_NAME, DETAILED_PLAN_URL,
+                                     DETAILED_PLAN_MODEL_FILE_NAME)
 from ..qgis_plugin_tools.tools.exceptions import QgsPluginNotImplementedException
 from ..qgis_plugin_tools.tools.network import fetch
 from ..qgis_plugin_tools.tools.resources import plugin_name
@@ -37,6 +38,8 @@ class LandUsePlan:
     auth_cfg_key = ""
     schema_url = ""
     versions_file = 'versions.txt'
+    url = ''
+    file_name = ''
     layer: LayerWrapper = None
 
     def __init__(self):
@@ -46,6 +49,17 @@ class LandUsePlan:
         self.schema: Union[str, None] = None
         self.available_versions: Optional[List[Tuple[int, int, int]]] = None
         self.newest_version: Optional[Tuple[int, int, int]] = None
+        self.fetch_versions()
+
+    def fetch_versions(self):
+        """
+        Fetch version information of the model
+        """
+        self.available_versions = [version_from_string(v) for v in
+                                   fetch(f"{self.url}/{self.versions_file}").strip().split('\n')]
+        self.newest_version = max(self.available_versions)
+        LOGGER.debug(
+            f'Newest version {self.newest_version}, available versions {self.available_versions}')
 
     def fetch_schema(self, current_version: Optional[Tuple[int, int, int]] = None) -> str:
         """
@@ -53,8 +67,8 @@ class LandUsePlan:
         :param current_version: current version of the schema
         :return: schema sql
         """
-        self.raw_schema = fetch(self.schema_url)
-        self.alter_schema()  # TODO: This is just temporary solution, remove when this is not needed anymore
+        self.raw_schema = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.file_name}")
+        self.alter_schema()
         return self.schema
 
     def fetch_project(self, conn_params: Dict[str, str], auth_cfg_id: str) -> str:
@@ -85,7 +99,9 @@ class LandUsePlan:
 class DetailedLandUsePlan(LandUsePlan):
     key = f"{QAAVA_DB_NAME}/detailed"
     auth_cfg_key = f"{key}/auth_cfg"
-    schema_url = DETAILED_PLAN_DATA_MODEL_URL
+    url = DETAILED_PLAN_URL
+    schema_url = DETAILED_PLAN_URL
+    file_name = DETAILED_PLAN_MODEL_FILE_NAME
     layer = LayerWrapper('Yleiskaava', 'uuid')  # TODO: fix this when qgis project is ready
 
 
@@ -97,27 +113,6 @@ class GeneralLandUsePlan(LandUsePlan):
     file_name = GENERAL_PLAN_MODEL_FILE_NAME
     project_file = GENERAL_PLAN_PROJECT_FILE_NAME
     layer = LayerWrapper('Yleiskaava', 'uuid')
-
-    def __init__(self):
-        super().__init__()
-        self.fetch_versions()
-
-    def fetch_schema(self, current_version: Optional[Tuple[int, int, int]] = None) -> str:
-        # TODO: add migration support here in some point
-        self.raw_schema = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.file_name}")
-        self.alter_schema()
-        return self.schema
-
-    def fetch_versions(self):
-        """
-        Fetch version information of the model
-        """
-        # TODO: move to super class when implemented in Detailed plan as well
-        self.available_versions = [version_from_string(v) for v in
-                                   fetch(f"{self.url}/{self.versions_file}").strip().split('\n')]
-        self.newest_version = max(self.available_versions)
-        LOGGER.debug(
-            f'Newest version {self.newest_version}, available versions {self.available_versions}')
 
     def fetch_project(self, conn_params: Dict[str, str], auth_cfg_id: str) -> str:
         """
