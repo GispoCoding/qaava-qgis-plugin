@@ -30,6 +30,9 @@ GENERAL_PLAN_PROJECT_FILE_NAME = 'yleiskaava-projekti.sql'
 DETAILED_PLAN_URL = f'{QAAVA_GITHUB_URL}/asemakaavan-tietomalli'
 DETAILED_PLAN_MODEL_FILE_NAME = 'asemakaavan-tietomalli.sql'
 
+VERSIONS_FILE_NAME = 'versions.txt'
+MIGRATION_FILE_NAME = 'migraatio.sql'
+
 # Database
 PG_CONNECTIONS = "PostgreSQL/connections"
 QAAVA_DB_NAME = setting_key("postgresqlConnectionName")

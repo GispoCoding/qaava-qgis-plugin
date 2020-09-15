@@ -18,7 +18,7 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from typing import Optional
+from typing import Optional, List, Dict
 
 import psycopg2
 from PyQt5.QtCore import QCoreApplication
@@ -32,6 +32,7 @@ from ...qgis_plugin_tools.tools.custom_logging import bar_msg
 from ...qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException, QgsPluginNotImplementedException
 from ...qgis_plugin_tools.tools.i18n import tr
 from ...qgis_plugin_tools.tools.resources import plugin_name
+from ...qgis_plugin_tools.tools.version import version_from_string, string_from_version
 from ...ui.db_tools_ask_credentials import DbAskCredentialsDialog
 
 LOGGER = logging.getLogger(plugin_name())
@@ -44,9 +45,9 @@ class DatabaseInitializer:
         self.qgs_app = qgs_app
 
         self.database: Optional[Database] = None
-        self.conn_params = None
-        self.plan_enum = None
-        self.plan = None
+        self.conn_params: Dict = {}
+        self.plan_enum: Optional[LandUsePlanEnum] = None
+        self.plan: Optional[LandUsePlan] = None
 
     def initialize_database(self, db_conn_name: str, plan_sting: str) -> None:
         """
@@ -112,7 +113,35 @@ class DatabaseInitializer:
             raise QaavaDatabaseError(tr(u"Database connection error"),
                                      bar_msg=bar_msg(tr(u"Could not access the database.")))
 
-    def get_available_projects(self):
+    def promote_database(self):
+        """
+        Promote database to newest schema version
+        """
+        try:
+            query = 'SELECT versio FROM koodistot.tietomalli_metatiedot'
+            current_version = max([version_from_string(v[0]) for v in
+                                   self.database.execute_select(query)])
+            LOGGER.debug(f'Database version is {current_version}')
+        except psycopg2.OperationalError:
+            raise QaavaDatabaseError(tr('Connection error'),
+                                     bar_msg(tr(u'Could not connect to the database')))
+        except psycopg2.DatabaseError:
+            raise QaavaDatabaseError(tr('The database is not initialized properly'),
+                                     bar_msg(tr('Please initialize the database')))
+
+        try:
+            migration_script = self.plan.create_migration_script(current_version)
+            migration_script += 'UPDATE koodistot.tietomalli_metatiedot SET versio = %(newest_version)s'
+            self.database.execute_insert(migration_script,
+                                         {'newest_version': string_from_version(self.plan.newest_version)})
+
+        except (Exception, psycopg2.DatabaseError) as e:
+            LOGGER.exception('Error occurred while running migration script')
+            raise QaavaDatabaseError(tr('Error occurred while running migration script'),
+                                     bar_msg(tr('Please check internet connection and contact '
+                                                'developers if the problem persists')))
+
+    def get_available_projects(self) -> List[str]:
         """
         Get available projects from the database
         :return:

@@ -18,6 +18,7 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
+from typing import Dict
 
 from PyQt5.QtCore import QSettings
 from qgis.core import QgsAuthMethodConfig, QgsApplication, QgsAuthManager, QgsDataSourceUri
@@ -130,7 +131,7 @@ def get_db_connection_pg_uri(plan: LandUsePlanEnum, project_name: str) -> str:
     return uri
 
 
-def get_db_connection_params(plan: LandUsePlanEnum) -> {str: str}:
+def get_db_connection_params(plan: LandUsePlanEnum) -> Dict[str, str]:
     """
     :return: Psycopg2 connection params for Qaava database
     """

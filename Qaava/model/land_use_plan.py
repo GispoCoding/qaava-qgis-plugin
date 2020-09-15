@@ -24,7 +24,7 @@ from typing import Union, Dict, Tuple, Optional, List
 from ..core.wrappers.layer_wrapper import LayerWrapper
 from ..definitions.constants import (QAAVA_DB_NAME, GENERAL_PLAN_URL,
                                      GENERAL_PLAN_MODEL_FILE_NAME, GENERAL_PLAN_PROJECT_FILE_NAME, DETAILED_PLAN_URL,
-                                     DETAILED_PLAN_MODEL_FILE_NAME)
+                                     DETAILED_PLAN_MODEL_FILE_NAME, VERSIONS_FILE_NAME, MIGRATION_FILE_NAME)
 from ..qgis_plugin_tools.tools.exceptions import QgsPluginNotImplementedException
 from ..qgis_plugin_tools.tools.network import fetch
 from ..qgis_plugin_tools.tools.resources import plugin_name
@@ -37,7 +37,8 @@ class LandUsePlan:
     key = ""
     auth_cfg_key = ""
     schema_url = ""
-    versions_file = 'versions.txt'
+    versions_file = VERSIONS_FILE_NAME
+    migration_file = MIGRATION_FILE_NAME
     url = ''
     file_name = ''
     layer: LayerWrapper = None
@@ -61,6 +62,20 @@ class LandUsePlan:
         LOGGER.debug(
             f'Newest version {self.newest_version}, available versions {self.available_versions}')
 
+    def create_migration_script(self, current_version: Tuple[int, int, int]):
+        """
+        Creates migration script
+        :param current_version: current version of the schema
+        :return: schema sql
+        """
+        migration_script = ''
+        versions = [v for v in self.available_versions if v > current_version]
+        for version in versions:
+            migration_script += f'-- For version {string_from_version(version)}'
+            migration_script += fetch(f"{self.url}/{string_from_version(version)}/{self.migration_file}")
+            migration_script += '\n\n'
+        return migration_script
+
     def fetch_schema(self, current_version: Optional[Tuple[int, int, int]] = None) -> str:
         """
         Fetch schema from the schema_url
@@ -68,7 +83,7 @@ class LandUsePlan:
         :return: schema sql
         """
         self.raw_schema = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.file_name}")
-        self.alter_schema()
+        self.schema = self.alter_schema(self.raw_schema)
         return self.schema
 
     def fetch_project(self, conn_params: Dict[str, str], auth_cfg_id: str) -> str:
@@ -78,13 +93,14 @@ class LandUsePlan:
         """
         raise QgsPluginNotImplementedException()
 
-    def alter_schema(self):
+    @staticmethod
+    def alter_schema(script: str):
         """
         Alters raw schemas so that it will work even in populated databases and with any owner
         :return:
         """
         schema_lines = []
-        for line in self.raw_schema.split("\n"):
+        for line in script.split("\n"):
             if (line.startswith("-- DROP ") or line.startswith("-- ALTER")) and "EXTENSION" not in line:
                 line = line.replace("-- ", "")
             if "OWNER TO postgres" in line:
@@ -93,7 +109,7 @@ class LandUsePlan:
                 line = line.replace("CREATE EXTENSION", "CREATE EXTENSION IF NOT EXISTS")
 
             schema_lines.append(line)
-        self.schema = "\n".join(schema_lines)
+        return "\n".join(schema_lines)
 
 
 class DetailedLandUsePlan(LandUsePlan):

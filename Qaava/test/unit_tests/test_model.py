@@ -58,3 +58,15 @@ def test_project_fetch(new_project, database_params):
     plan = GeneralLandUsePlan()
     project_sql = plan.fetch_project(conn_params=database_params, auth_cfg_id='test-auth-cfg')
     assert len(project_sql) > 1000
+
+
+def test_migration(new_project):
+    plan = GeneralLandUsePlan()
+    migration_script = plan.create_migration_script((0, 1, 0))
+    assert len(migration_script) > 1000
+
+
+def test_detailed_plan_migration(new_project):
+    plan = DetailedLandUsePlan()
+    migration_script = plan.create_migration_script((0, 1, 0))
+    assert len(migration_script) > 1000
