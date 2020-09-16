@@ -22,11 +22,17 @@ from ..qgis_plugin_tools.tools.settings import setting_key
 # Urls
 QAAVA_GITHUB_URL = "https://raw.githubusercontent.com/GispoCoding/qaava/master"
 
-DETAILED_PLAN_DATA_MODEL_URL = f"{QAAVA_GITHUB_URL}/asemakaavan-tietomalli/tietomalli_luonnos.sql"
-GENERAL_PLAN_URL = f"{QAAVA_GITHUB_URL}/yleiskaavan-tietomalli"
-GENERAL_PLAN_DATA_VERSIONS_URL = f"{GENERAL_PLAN_URL}/versions.txt"
+DETAILED_PLAN_DATA_MODEL_URL = f'{QAAVA_GITHUB_URL}/asemakaavan-tietomalli/tietomalli_luonnos.sql'
+GENERAL_PLAN_URL = f'{QAAVA_GITHUB_URL}/yleiskaavan-tietomalli'
 GENERAL_PLAN_MODEL_FILE_NAME = 'yleiskaavan-tietomalli.sql'
 GENERAL_PLAN_PROJECT_FILE_NAME = 'yleiskaava-projekti.sql'
+
+DETAILED_PLAN_URL = f'{QAAVA_GITHUB_URL}/asemakaavan-tietomalli'
+DETAILED_PLAN_MODEL_FILE_NAME = 'asemakaavan-tietomalli.sql'
+DETAILED_PLAN_PROJECT_FILE_NAME = 'asemakaava-projekti.sql'
+
+VERSIONS_FILE_NAME = 'versions.txt'
+MIGRATION_FILE_NAME = 'migraatio.sql'
 
 # Database
 PG_CONNECTIONS = "PostgreSQL/connections"

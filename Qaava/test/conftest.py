@@ -122,13 +122,17 @@ if not is_running_inside_ci():
         params = {**database_params, **{"port": port}}
         params_for_detailed = {**params, **{"dbname": "qaava-detailed"}}
         params_for_general = {**params, **{"dbname": "qaava-general"}}
+        params_for_general_old = {**params, **{"dbname": "qaava-general-old"}}
+        params_for_detailed_old = {**params, **{"dbname": "qaava-detailed-old"}}
         wait_until_responsive(
-            timeout=10.0, pause=1, check=lambda: is_responsive(params)
+            timeout=20.0, pause=1, check=lambda: is_responsive(params)
         )
         return {
             "db1": params,
             "detailed": params_for_detailed,
-            "general": params_for_general
+            "general": params_for_general,
+            "general_old": params_for_general_old,
+            "detailed_old": params_for_detailed_old
         }
 else:
     @pytest.fixture(scope='session')
@@ -141,14 +145,17 @@ else:
         params = {**database_params}
         params_for_detailed = {**params, **{"dbname": "qaava-detailed"}}
         params_for_general = {**params, **{"dbname": "qaava-general"}}
+        params_for_general_old = {**params, **{"dbname": "qaava-general-old"}}
+        params_for_detailed_old = {**params, **{"dbname": "qaava-detailed -old"}}
         wait_until_responsive(
-            timeout=10.0, pause=1, check=lambda: is_responsive(params)
+            timeout=20.0, pause=1, check=lambda: is_responsive(params)
         )
-
         return {
             "db1": params,
             "detailed": params_for_detailed,
-            "general": params_for_general
+            "general": params_for_general,
+            "general_old": params_for_general_old,
+            "detailed_old": params_for_detailed_old
         }
 
 
@@ -209,7 +216,14 @@ def general_db(db):
 @pytest.fixture(scope='session')
 def detailed_db(db):
     params = db['detailed']
-    insert_sql(params, 'detailed_plan_0.0.0.sql')
+    insert_sql(params, 'detailed_plan_0.2.0.sql')
+    return params
+
+
+@pytest.fixture(scope='session')
+def detailed_db_old(db):
+    params = db['detailed_old']
+    insert_sql(params, 'detailed_plan_0.1.0.sql')
     return params
 
 
