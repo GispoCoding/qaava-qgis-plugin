@@ -19,20 +19,20 @@
 
 import logging
 import uuid
-from typing import Dict, Optional
+from typing import Dict, Optional, List
 
 from PyQt5.QtCore import QVariant
 from PyQt5.QtWidgets import QGridLayout, QComboBox, QPushButton, QCheckBox
-from qgis.core import QgsApplication, QgsVectorLayer, QgsMapLayerProxyModel, QgsCoordinateReferenceSystem
+from qgis.core import QgsApplication, QgsVectorLayer, QgsCoordinateReferenceSystem, \
+    QgsProviderRegistry, QgsProject
 from qgis.gui import QgsMapCanvas, QgsExtentGroupBox
 
 from .base_panel import BasePanel
 from ..core.db.querier import Querier
 from ..core.exceptions import QaavaLayerError
 from ..core.wrappers.field_wrapper import FieldWrapper
-from ..definitions.constants import KEY_FOR_NUMBER_OF_QUERY_CHOICES, DEFAULT_NUMBER_OF_QUERY_CHOICES
 from ..definitions.db import Operation
-from ..definitions.qui import Panels
+from ..definitions.qui import Panels, Settings
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
 from ..qgis_plugin_tools.tools.decorations import log_if_fails
@@ -57,15 +57,19 @@ class QueryPanel(BasePanel):
         # noinspection PyArgumentList
         change_layer = lambda _=None: self._change_layer(self.dlg.q_combo_box_layer.currentLayer())
 
+        # noinspection PyCallByClass,PyArgumentList
         self.dlg.q_push_button_add_row.setIcon(QgsApplication.getThemeIcon('/mActionAdd.svg'))
         self.dlg.q_push_button_add_row.clicked.connect(lambda _: self._add_row(len(self.rows) + 1))
         self.dlg.q_push_button_show_query.clicked.connect(lambda _: self.run('_show_query'))
         self.dlg.q_push_button_run_query.clicked.connect(self.run)
         self.dlg.q_push_button_clear_filter.clicked.connect(self._clear_filter)
 
-        self.dlg.q_combo_box_layer.setFilters(QgsMapLayerProxyModel.Filters(QgsMapLayerProxyModel.Filter.PointLayer |
-                                                                            QgsMapLayerProxyModel.Filter.PolygonLayer |
-                                                                            QgsMapLayerProxyModel.Filter.LineLayer))
+        # noinspection PyArgumentList
+        self.dlg.q_combo_box_layer.setExcludedProviders(
+            [p for p in QgsProviderRegistry.instance().providerList() if p != 'postgres'])
+
+        # noinspection PyArgumentList
+        QgsProject.instance().layersAdded.connect(self._updated_map_layers)
 
         self.dlg.q_push_button_reset.clicked.connect(change_layer)
         self.dlg.q_push_button_refresh.clicked.connect(change_layer)
@@ -91,16 +95,34 @@ class QueryPanel(BasePanel):
         for row_id in list(self.rows.keys()):
             self._remove_row(row_id)
 
+        # noinspection PyArgumentList
+        self._updated_map_layers(QgsProject.instance().mapLayers().values())
+
+    def _updated_map_layers(self, map_layers: List[QgsVectorLayer]):
+        excepted_layers = self.dlg.q_combo_box_layer.exceptedLayerList()
+        excepted_strings = get_setting(Settings.layer_should_not_contain_string.name,
+                                       Settings.layer_should_not_contain_string.value,
+                                       str).split(',')
+
+        for layer in map_layers:
+            if any(x in layer.name() for x in excepted_strings):
+                excepted_layers.append(layer)
+        self.dlg.q_combo_box_layer.setExceptedLayerList(excepted_layers)
+
     def _change_layer(self, layer: Optional[QgsVectorLayer]):
         self.dlg.q_text_browser_sql.setText('')
         self.dlg.q_gb_sql.setCollapsed(True)
         self._clear_filter()
         if layer is not None:
+            # Set extent disabled if layer has no geometry
+            self.dlg.q_extent.setEnabled(layer.geometryType() != 4)
+
             try:
                 # TODO: get the plan from elsewhere
                 self.querier = Querier(LandUsePlanEnum.general.name, layer,
                                        limit_for_unique=int(
-                                           get_setting(KEY_FOR_NUMBER_OF_QUERY_CHOICES, DEFAULT_NUMBER_OF_QUERY_CHOICES,
+                                           get_setting(Settings.number_of_query_choices.name,
+                                                       Settings.number_of_query_choices.value,
                                                        int)))
             except QaavaLayerError as e:
                 LOGGER.error(str(e), extra=e.bar_msg)
@@ -167,12 +189,15 @@ class QueryPanel(BasePanel):
         self.grid.addWidget(bx_operation, row_index, 2)
         self.grid.addWidget(bx_value, row_index, 3)
 
+        # noinspection PyUnresolvedReferences
         bx_field.currentTextChanged.connect(lambda field: self._field_changed(self.querier.fields[field], row_uuid))
         bx_field.addItems(list(self.querier.fields.keys()))
         bx_field.setCurrentText(list(self.querier.fields.keys())[0])
 
+        # noinspection PyCallByClass,PyArgumentList
         b_rm = QPushButton(text='', icon=QgsApplication.getThemeIcon('/mActionRemove.svg'))
         b_rm.setToolTip(tr('Remove row'))
+        # noinspection PyUnresolvedReferences
         b_rm.clicked.connect(lambda _: self._remove_row(row_uuid))
         self.rows[row_uuid]['rm'] = b_rm
         self.grid.addWidget(b_rm, row_index, 0)
