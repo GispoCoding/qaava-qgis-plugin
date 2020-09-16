@@ -83,10 +83,6 @@ class DatabaseInitializer:
                                          'There might be errors in schema. If the problem persists, '
                                          'contact developers')))
 
-        LOGGER.info(tr(u"Success"),
-                    extra=bar_msg(tr(u"Database initialized succesfully with land use plan ") + self.plan_enum.name,
-                                  success=True))
-
     def register_database(self, db_conn_name: str, plan_sting: str) -> None:
         """
         Register database for the land use planning

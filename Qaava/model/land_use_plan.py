@@ -76,10 +76,9 @@ class LandUsePlan:
             migration_script += '\n\n'
         return migration_script
 
-    def fetch_schema(self, current_version: Optional[Tuple[int, int, int]] = None) -> str:
+    def fetch_schema(self) -> str:
         """
         Fetch schema from the schema_url
-        :param current_version: current version of the schema
         :return: schema sql
         """
         self.raw_schema = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.file_name}")
