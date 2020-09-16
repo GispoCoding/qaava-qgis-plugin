@@ -183,12 +183,23 @@ def general_db(db):
 
     # Feel free to add more layers and relations. Easiest way to get the source string is QgsVectorLayer.source()
     layers = {
+        # geometry layers
         'Yleiskaava': f'{common_uri} key=\'uuid\' srid=3877 type=MultiPolygonZ checkPrimaryKeyUnicity=\'1\' table="yleiskaava"."yleiskaava" (geom)',
-        'Vaihetieto': f'{common_uri} key=\'gid\' checkPrimaryKeyUnicity=\'1\' table="koodistot"."vaihetieto"'
+        'Maankäyttöalue': f'{common_uri} key=\'uuid\' srid=3877 type=MultiPolygonZ checkPrimaryKeyUnicity=\'1\' table="yleiskaava"."maankayttoalue" (geom)',
+
+        # table layers
+        'Vaihetieto': f'{common_uri} key=\'gid\' checkPrimaryKeyUnicity=\'1\' table="koodistot"."vaihetieto"',
+        'Dokumentti': f'{common_uri} key=\'gid\' checkPrimaryKeyUnicity=\'1\' table="kaavan_lisatiedot"."dokumentti"',
+
+        # relation layers
+        'many_dokumentti_has_many_yleiskaava': f'{common_uri} key=\'gid_dokumentti,uuid_yleiskaava\' checkPrimaryKeyUnicity=\'1\' table="kaavan_lisatiedot"."many_dokumentti_has_many_yleiskaava"',
     }
 
     relations = {
         'vaihetieto_fk': ('Vaihetieto', 'gid', 'Yleiskaava', 'gid_vaihetieto'),
+        'Yleiskaavan maankäyttöalueet': ('Yleiskaava', 'uuid', 'Maankäyttöalue', 'uuid_yleiskaava'),
+        'Yleiskaavan dokumentit': ('Yleiskaava', 'uuid', 'many_dokumentti_has_many_yleiskaava', 'uuid_yleiskaava'),
+        'Dokumentin kaavat': ('Dokumentti', 'gid', 'many_dokumentti_has_many_yleiskaava', 'gid_dokumentti')
     }
 
     inserted_ids = {}
@@ -203,10 +214,11 @@ def general_db(db):
     relation_manager: QgsRelationManager = QgsProject.instance().relationManager()
     for name, rel_params in relations.items():
         rel = QgsRelation()
+        rel.setId(name)
+        rel.setName(name)
         rel.setReferencedLayer(inserted_ids[rel_params[0]])
         rel.setReferencingLayer(inserted_ids[rel_params[2]])
         rel.addFieldPair(rel_params[3], rel_params[1])
-        rel.setName(name)
         relation_manager.addRelation(rel)
 
     yield params

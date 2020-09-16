@@ -51,10 +51,10 @@ class DbPanel(BasePanel):
         self.dlg.dbComboBox.currentTextChanged.connect(lambda _: self.set_available_projects([]))
         self.dlg.cb_projects.currentTextChanged.connect(
             lambda _: self.dlg.btn_db_open_project.setEnabled(len(self.dlg.cb_projects.currentText()) > 0))
-        self.dlg.btn_db_open_project.clicked.connect(self.open_project)
 
         # Run connections
         self.dlg.btn_db_initialize.clicked.connect(self.run)
+        self.dlg.btn_db_open_project.clicked.connect(lambda _: self.run('open_project'))
         self.dlg.btn_db_register.clicked.connect(lambda _: self.run('register'))
         self.dlg.db_btn_promote.clicked.connect(lambda _: self.run('promote'))
 

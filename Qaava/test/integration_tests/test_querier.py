@@ -35,7 +35,7 @@ def test_querier_fields(general_db):
 def test_query_repository_initialization(general_db):
     querier = Querier(LandUsePlanEnum.general.name)
     query = querier.show_query()
-    assert query == 'SELECT "uuid" FROM "yleiskaava"."yleiskaava" '
+    assert query == 'SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" '
 
 
 def test_querier_extent(general_db):
@@ -43,7 +43,7 @@ def test_querier_extent(general_db):
     querier = Querier(LandUsePlanEnum.general.name)
     querier.add_extent(extent)
     query = querier.show_query()
-    assert query == ('SELECT "uuid" FROM "yleiskaava"."yleiskaava" WHERE "geom" && '
+    assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" WHERE "geom" && '
                      'ST_MakeEnvelope(23456138.0, 6695226.0, 23456935.0, 6695726.0, 27310)')
     assert len(querier.run()) == 1
 
@@ -52,8 +52,8 @@ def test_fetch_land_use_with_status(general_db):
     querier = Querier(LandUsePlanEnum.general.name)
     querier.add_condition(querier.fields['Vaihetieto.nimi'], Operation.EQ, 'aloitusvaihe')
     query = querier.show_query()
-    assert query == ('SELECT "uuid" FROM "yleiskaava"."yleiskaava" '
-                     'LEFT JOIN "koodistot"."vaihetieto" ON "gid_vaihetieto"="koodistot"."vaihetieto"."gid" '
+    assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
+                     '"koodistot"."vaihetieto" ON "gid_vaihetieto"="koodistot"."vaihetieto"."gid" '
                      'WHERE "koodistot"."vaihetieto"."nimi"=\'aloitusvaihe\'')
     assert len(querier.run()) == 4
 
@@ -64,7 +64,7 @@ def test_chained_query_1(general_db):
     querier.add_condition(querier.fields['Vaihetieto.nimi'], Operation.LIKE, 'aloit%svaihe')
     querier.add_condition(querier.fields['nimi'], Operation.GTE, '')
     query = querier.show_query()
-    assert query == ('SELECT "uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
+    assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
                      '"koodistot"."vaihetieto" ON "gid_vaihetieto"="koodistot"."vaihetieto"."gid" '
                      'WHERE "luomispvm"<\'2020-09-09 15:10:04\' AND  '
                      '"koodistot"."vaihetieto"."nimi" LIKE \'aloit%svaihe\' AND  "nimi" IS NULL')

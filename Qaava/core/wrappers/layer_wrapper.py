@@ -58,7 +58,7 @@ class LayerWrapper:
 
     @property
     def pk(self) -> Composable:
-        return sql.Identifier(self.pk_field)
+        return sql.Identifier(self.uri.table(), self.pk_field)
 
     @property
     def geom_field(self) -> Composable:
@@ -73,6 +73,7 @@ class LayerWrapper:
         """
         Get QgsVectorLayer from wrapper
         """
+        # noinspection PyArgumentList
         layers = list(
             filter(lambda l: isinstance(l, QgsVectorLayer),
                    QgsProject.instance().mapLayersByName(self.layer_name)))
@@ -88,6 +89,7 @@ class LayerWrapper:
         :param related_fields: Whether to list also fields from relations
         """
         layer = self.get_layer()
+        # noinspection PyArgumentList
         relation_manager: QgsRelationManager = QgsProject.instance().relationManager()
 
         fields = []
