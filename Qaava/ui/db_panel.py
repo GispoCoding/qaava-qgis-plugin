@@ -16,24 +16,9 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-#
-#
-#  This file is part of Qaava-qgis-plugin.
-#
-#  Qaava-qgis-plugin is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation, either version 2 of the License, or
-#  (at your option) any later version.
-#
-#  Qaava-qgis-plugin is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
+from typing import List, Optional
 
 from qgis.core import QgsApplication
 
@@ -55,6 +40,7 @@ class DbPanel(BasePanel):
     def __init__(self, dialog):
         super().__init__(dialog)
         self.panel = Panels.Database
+        self.initializer: Optional[DatabaseInitializer] = None
 
     def setup_panel(self):
         self.populate_dbComboBox()
@@ -70,9 +56,15 @@ class DbPanel(BasePanel):
         # Run connections
         self.dlg.btn_db_initialize.clicked.connect(self.run)
         self.dlg.btn_db_register.clicked.connect(lambda _: self.run('register'))
+        self.dlg.db_btn_promote.clicked.connect(lambda _: self.run('promote'))
 
         self.dlg.agreedCheckBox.setChecked(False)
         self.on_agreedCheckBox_stateChanged()
+        self.set_versions()
+
+    def teardown_panel(self):
+        super().teardown_panel()
+        self.initializer = None
 
     def populate_dbComboBox(self):
         self.dlg.dbComboBox.clear()
@@ -92,9 +84,14 @@ class DbPanel(BasePanel):
         self.dlg.btn_db_initialize.setEnabled(self.dlg.agreedCheckBox.isChecked())
         self.dlg.btn_db_open_project.setEnabled(self.dlg.agreedCheckBox.isChecked())
 
-    def set_available_projects(self, projects):
+    def set_available_projects(self, projects: List[str]):
         self.dlg.cb_projects.clear()
         self.dlg.cb_projects.addItems(projects)
+
+    def set_versions(self, curr_version: str = '', newest_version: str = ''):
+        self.dlg.db_l_curr_version.setText(curr_version)
+        self.dlg.db_l_new_version.setText(newest_version)
+        self.dlg.db_btn_promote.setEnabled(curr_version != newest_version)
 
     def get_db(self) -> str:
         return self.dlg.dbComboBox.currentText()
@@ -110,14 +107,25 @@ class DbPanel(BasePanel):
 
     def _run(self):
         # noinspection PyArgumentList
-        initializer = DatabaseInitializer(self.dlg, QgsApplication.instance())
-        initializer.initialize_database(self.get_db(), self.get_plan())
-        projects = initializer.get_available_projects()
+        self.initializer = DatabaseInitializer(self.dlg, QgsApplication.instance())
+        self.initializer.initialize_database(self.get_db(), self.get_plan())
+        LOGGER.info(tr(f'Database Initialized'), extra=bar_msg(self.get_db(), success=True))
+        projects = self.initializer.get_available_projects()
         self.set_available_projects(projects)
+        self.set_versions(*self.initializer.get_versions())
 
     def register(self):
-        initializer = DatabaseInitializer(self.dlg, QgsApplication.instance())
-        initializer.register_database(self.get_db(), self.get_plan())
+        # noinspection PyArgumentList
+        self.initializer = DatabaseInitializer(self.dlg, QgsApplication.instance())
+        self.initializer.register_database(self.get_db(), self.get_plan())
         LOGGER.info(tr(f'Database registered'), extra=bar_msg(self.get_db(), success=True))
-        projects = initializer.get_available_projects()
+        projects = self.initializer.get_available_projects()
         self.set_available_projects(projects)
+        self.set_versions(*self.initializer.get_versions())
+
+    def promote(self):
+        self.initializer.promote_database()
+        LOGGER.info(tr(f'Database promoted', ),
+                    extra=bar_msg(tr('Promoted from version {} to version {}', self.dlg.db_l_curr_version.text(),
+                                     self.dlg.db_l_new_version.text()), success=True))
+        self.set_versions(*self.initializer.get_versions())
