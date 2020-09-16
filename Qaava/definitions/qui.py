@@ -47,7 +47,9 @@ class Panels(enum.Enum):
             return QIcon(resources_path('icons', _icon))
 
 
+# TODO: add all to settings_panel
 @enum.unique
 class Settings(enum.Enum):
     number_of_query_choices = 10
     layer_should_not_contain_string = 'many_,tyyppi'
+    field_name_should_not_start_with = 'gid_,gid,uuid'

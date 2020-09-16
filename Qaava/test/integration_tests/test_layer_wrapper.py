@@ -26,40 +26,27 @@ def test_simple_wrapper(general_db):
 
 
 def test_get_fields(general_db):
-    lw = LayerWrapper('Yleiskaava', 'gid')
+    lw = LayerWrapper('Yleiskaava', 'uuid')
     fields = lw.get_fields(3, False)
-    field_names = [f.name for f in fields]
-    assert field_names == ['gid', 'uuid', 'nimi', 'kaavatunnus', 'laatija',
-                           'viimeisin_muokkaaja', 'vahvistaja', 'luomispvm',
-                           'poistamispvm', 'voimaantulopvm', 'kumoamispvm']
+    fields = {f.alias: f for f in fields}
+    assert list(fields.keys()) == ['nimi', 'kaavatunnus', 'laatija',
+                                   'viimeisin_muokkaaja', 'vahvistaja', 'luomispvm',
+                                   'poistamispvm', 'voimaantulopvm', 'kumoamispvm']
 
-    assert 'sanna_gispo' in fields[5].unique_values
+    assert 'sanna_gispo' in fields['viimeisin_muokkaaja'].unique_values
 
 
 def test_get_child_fields(general_db):
-    lw = LayerWrapper('Yleiskaava', 'gid')
+    lw = LayerWrapper('Yleiskaava', 'uuid')
     fields = lw.get_fields(10, True)
-    field_names = [f.alias for f in fields]
-    assert field_names == ['gid',
-                           'uuid',
-                           'nimi',
-                           'kaavatunnus',
-                           'laatija',
-                           'viimeisin_muokkaaja',
-                           'vahvistaja',
-                           'luomispvm',
-                           'poistamispvm',
-                           'voimaantulopvm',
-                           'kumoamispvm',
-                           'Vaihetieto.gid',
-                           'Vaihetieto.nimi',
-                           'Vaihetieto.kuvaus',
-                           'Dokumentti.gid',
-                           'Dokumentti.otsikko',
-                           'Dokumentti.uri',
-                           'Kaavamääräys.uuid',
-                           'Kaavamääräys.luontipvm',
-                           'Kaavamääräys.otsikko',
-                           'Kaavamääräys.maaraysteksti']
-    assert fields[12].unique_values == {'hyväksytty', 'valmisteluvaihe', 'lainvoimainen', 'keskeytetty', 'aloitusvaihe',
-                                        'hyväksymisvaihe', 'kumottu', 'luonnosvaihe', 'ehdotusvaihe'}
+    fields = {f.alias: f for f in fields}
+    assert list(fields.keys()) == ['nimi', 'kaavatunnus', 'laatija', 'viimeisin_muokkaaja', 'vahvistaja',
+                                   'luomispvm', 'poistamispvm', 'voimaantulopvm', 'kumoamispvm', 'Has Vaihetieto',
+                                   'Vaihetieto.nimi', 'Vaihetieto.kuvaus',
+                                   'Dokumentti.otsikko', 'Dokumentti.uri', 'Has Dokumentti',
+                                   'Kaavamääräys.luontipvm', 'Kaavamääräys.otsikko', 'Kaavamääräys.maaraysteksti',
+                                   'Has Kaavamääräys']
+    assert fields['Vaihetieto.nimi'].unique_values == {'hyväksytty', 'valmisteluvaihe', 'lainvoimainen', 'keskeytetty',
+                                                       'aloitusvaihe',
+                                                       'hyväksymisvaihe', 'kumottu', 'luonnosvaihe', 'ehdotusvaihe'}
+    assert fields['Kaavamääräys.otsikko'].unique_values == {'yleismääräys1', 'Testausmääräys', 'Toimiihan tämä'}

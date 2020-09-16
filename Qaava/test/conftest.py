@@ -146,7 +146,7 @@ else:
         params_for_detailed = {**params, **{"dbname": "qaava-detailed"}}
         params_for_general = {**params, **{"dbname": "qaava-general"}}
         params_for_general_old = {**params, **{"dbname": "qaava-general-old"}}
-        params_for_detailed_old = {**params, **{"dbname": "qaava-detailed -old"}}
+        params_for_detailed_old = {**params, **{"dbname": "qaava-detailed-old"}}
         wait_until_responsive(
             timeout=20.0, pause=1, check=lambda: is_responsive(params)
         )

@@ -28,7 +28,7 @@ from qgis.core import QgsRectangle, QgsVectorLayer
 
 from .db_utils import get_db_connection_params
 from .query_repository import QueryRepository
-from ..wrappers.field_wrapper import FieldWrapper
+from ..wrappers.field_wrapper import FieldWrapper, IsForeignNullFieldWrapper
 from ..wrappers.layer_wrapper import LayerWrapper
 from ...definitions.db import Operation
 from ...model.land_use_plan import LandUsePlanEnum, LandUsePlan
@@ -42,10 +42,10 @@ class Querier:
     Abstraction of query_repository for query_panel
     """
 
-    def __init__(self, plan_enum_str: str, layer: Optional[QgsVectorLayer] = None, limit_for_unique: int = 0):
+    def __init__(self, plan_enum_str: str, layer: QgsVectorLayer, limit_for_unique: int = 0):
         self.plan_enum = LandUsePlanEnum[plan_enum_str]
         self.plan: LandUsePlan = self.plan_enum.value
-        self.layer_wrapper = LayerWrapper.from_qgs_layer(layer) if layer is not None else self.plan.layer
+        self.layer_wrapper = LayerWrapper.from_qgs_layer(layer)
         self.limit_for_unique = limit_for_unique
         self.qr: Optional[QueryRepository] = None
         self._fields: Dict[str, FieldWrapper] = {}
@@ -125,7 +125,7 @@ class Querier:
         if isinstance(value, str):
             val = None if not len(value) or value.lower() in ['null', 'none', 'tyhjä'] else value
             if val is None:
-                operation = Operation.IS
+                operation = Operation.IS if operation != Operation.IS_NOT else Operation.IS_NOT
             else:
                 if field.type in [
                     QVariant.Int,
@@ -136,6 +136,9 @@ class Querier:
                     val = int(val)
                 elif field.type == QVariant.Double:
                     val = float(val)
+        if isinstance(field, IsForeignNullFieldWrapper):
+            operation = Operation.IS_NOT if value else Operation.IS
+            val = None
 
         return self.qr.add_and_condition(field, operation, val)
 

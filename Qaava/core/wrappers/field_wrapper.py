@@ -18,52 +18,46 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 from typing import Set, Optional
 
+from PyQt5.QtCore import QVariant
 from psycopg2 import sql
 from psycopg2.sql import Composable
 from qgis.core import QgsField
 
+from ...definitions.qui import Settings
+from ...qgis_plugin_tools.tools.i18n import tr
+from ...qgis_plugin_tools.tools.settings import get_setting
+
 
 class FieldWrapper:
 
-    def __init__(self, field: QgsField, idx: int, values: Set, layer_name: str, schema: str, table: str,
-                 parent_layer_name: Optional[str] = None,
-                 parent_table: Optional[str] = None,
-                 pk_name: Optional[str] = None,
-                 foreign_field: Optional['FieldWrapper'] = None) -> None:
+    def __init__(self, layer_wrapper, field: QgsField, values: Set, pk_name: Optional[str] = None,
+                 ) -> None:
+        from .layer_wrapper import LayerWrapper
+        self.layer_wrapper: LayerWrapper = layer_wrapper
         self.name = field.name()
         self._alias = field.alias()
         self.type = field.type()
-        self.layer_name = layer_name
-        self.idx = idx
         self.unique_values = values
-        self.schema = schema
-        self._table = table
-        self.parent_layer_name = parent_layer_name
-        self.parent_table = parent_table
         self.pk_name = pk_name
-        self.foreign_field = foreign_field
 
     @staticmethod
-    def from_layer_wrapper(lw, field: QgsField, idx: int, values: Set,
+    def from_layer_wrapper(lw, field: QgsField, values: Set,
                            pk_name: str) -> 'FieldWrapper':
-        from .layer_wrapper import LayerWrapper
-        lw: LayerWrapper = lw
-        uri = lw.uri
-        table = uri.table()
-        schema = uri.schema()
-        if lw.parent_layer is not None:
-            par_layer: LayerWrapper = lw.parent_layer
-            uri = par_layer.uri
-            return FieldWrapper(field, idx, values, lw.layer_name, schema=schema, table=table,
-                                parent_layer_name=par_layer.layer_name, parent_table=uri.table(),
-                                pk_name=pk_name, foreign_field=lw.foreign_field)
-        else:
-            return FieldWrapper(field, idx, values, lw.layer_name, schema=schema, table=table,
-                                pk_name=pk_name)
+        return FieldWrapper(lw, field, values, pk_name)
+
+    @staticmethod
+    def is_proper_field(field_name: str, pk_field: Optional[str] = None) -> bool:
+        should_not_start_with = get_setting(Settings.field_name_should_not_start_with.name,
+                                            Settings.field_name_should_not_start_with.value,
+                                            str).split(',')
+        if pk_field:
+            should_not_start_with.append(pk_field)
+
+        return not any(field_name.lower().startswith(x) for x in should_not_start_with)
 
     @property
     def has_parent(self) -> bool:
-        return self.parent_layer_name is not None
+        return (self.layer_wrapper.parent_layer is not None) and not self.is_many_to_many
 
     @property
     def is_many_to_many(self) -> bool:
@@ -71,55 +65,81 @@ class FieldWrapper:
 
     @property
     def table(self) -> Composable:
-        return sql.Identifier(self.schema, self._table)
+        uri = self.layer_wrapper.uri
+        return sql.Identifier(uri.schema(), uri.table())
 
     @property
     def field(self) -> Composable:
-        return sql.Identifier(self._table, self.name)
+        uri = self.layer_wrapper.uri
+        return sql.Identifier(uri.table(), self.name)
 
     @property
     def field_with_table(self) -> str:
-        return '_'.join((self.schema, self._table, self.name))
+        uri = self.layer_wrapper.uri
+        return '_'.join((uri.schema(), uri.table(), self.name))
 
     @property
     def pk(self) -> Composable:
-        return sql.Identifier(self.schema, self._table, self.pk_name)
+        uri = self.layer_wrapper.uri
+        return sql.Identifier(uri.schema(), uri.table(), self.pk_name)
 
     @property
     def fk(self) -> Composable:
-        return self.foreign_field.field
+        return self.layer_wrapper.foreign_field.field
 
     @property
     def alias(self) -> str:
         alias = self._alias if self._alias != '' else self.name
         if self.has_parent or self.is_many_to_many:
-            return f'{self.layer_name}.{alias}'
+            return f'{self.layer_wrapper.layer_name}.{alias}'
         else:
             return alias
+
+    def get_field(self):
+        return [f for f in self.layer_wrapper.get_layer().fields().toList() if f.name() == self.name][0]
 
     def __str__(self) -> str:
         return f'{self.alias} ({self.name})'
 
 
-class RelationalFieldWrapper(FieldWrapper):
+class IsForeignNullFieldWrapper(FieldWrapper):
 
-    def __init__(self, field: QgsField, idx: int, values: Set, layer_name: str, schema: str, table: str,
-                 rlw) -> None:
-        super().__init__(field, idx, values, layer_name, schema, table)
-        from .layer_wrapper import RelationalLayerWrapper
-        self.rlw: RelationalLayerWrapper = rlw
+    def __init__(self, layer_wrapper, field: QgsField, values: Set, pk_name: str, other_layer_name: str,
+                 f_pk: Optional[FieldWrapper] = None) -> None:
+        super().__init__(layer_wrapper, field, values, pk_name)
+        self.type = QVariant.Bool
+        self.other_layer_name = other_layer_name
+        self.f_pk: Optional[FieldWrapper] = f_pk
 
     @staticmethod
-    def from_relation_wrapper(rlw, lw, field: QgsField, idx: int,
-                              values: set) -> 'RelationalFieldWrapper':
-        from .layer_wrapper import LayerWrapper, RelationalLayerWrapper
-        rlw: RelationalLayerWrapper
-        lw: LayerWrapper
-        uri = lw.uri
-        table = uri.table()
-        schema = uri.schema()
+    def create(lw, field: QgsField, values: Set, pk_name: str, other_layer_name: str,
+               f_pk: Optional[FieldWrapper] = None):
+        return IsForeignNullFieldWrapper(lw, field, values, pk_name, other_layer_name, f_pk)
 
-        return RelationalFieldWrapper(field, idx, values, lw.layer_name, schema=schema, table=table, rlw=rlw)
+    @property
+    def pk(self) -> Composable:
+        if self.f_pk is None:
+            return super().pk
+        else:
+            return self.f_pk.field
+
+    @property
+    def alias(self) -> str:
+        return tr('Has {}', self.other_layer_name)
+
+
+class RelationalFieldWrapper(FieldWrapper):
+
+    def __init__(self, rel_layer_wrapper, layer_wrapper, field: QgsField, values: Set) -> None:
+        from .layer_wrapper import RelationalLayerWrapper
+        super().__init__(layer_wrapper, field, values)
+
+        self.rel_layer_wrapper: RelationalLayerWrapper = rel_layer_wrapper
+
+    @staticmethod
+    def from_relation_wrapper(rlw, lw, field: QgsField,
+                              values: set) -> 'RelationalFieldWrapper':
+        return RelationalFieldWrapper(rlw, lw, field, values)
 
     @property
     def is_many_to_many(self) -> bool:
@@ -127,21 +147,21 @@ class RelationalFieldWrapper(FieldWrapper):
 
     @property
     def many_to_many_table(self) -> Composable:
-        uri = self.rlw.uri
+        uri = self.rel_layer_wrapper.uri
         return sql.Identifier(uri.schema(), uri.table())
 
     @property
-    def m_id1(self) -> Composable:
-        return self.rlw.fw1.field
+    def m_a(self) -> Composable:
+        return self.rel_layer_wrapper.fw_m_a.field
 
     @property
-    def m_id2(self) -> Composable:
-        return self.rlw.fw2.field
+    def a_pk(self) -> Composable:
+        return self.rel_layer_wrapper.fw_a.field
 
     @property
-    def m_id3(self) -> Composable:
-        return self.rlw.fw3.field
+    def m_b(self) -> Composable:
+        return self.rel_layer_wrapper.fw_m_b.field
 
     @property
-    def m_id4(self) -> Composable:
-        return self.rlw.fw4.field
+    def b_pk(self) -> Composable:
+        return self.rel_layer_wrapper.fw_b.field

@@ -16,33 +16,39 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-
+import pytest
 from qgis.core import QgsRectangle
 
 from ...core.db.querier import Querier
+from ...core.wrappers.layer_wrapper import LayerWrapper
 from ...definitions.db import Operation
 from ...model.land_use_plan import LandUsePlanEnum
 
 
-def test_querier_fields(general_db):
-    querier = Querier(LandUsePlanEnum.general.name)
-    assert set(querier.fields.keys()) == {'Dokumentti.gid', 'Dokumentti.otsikko', 'Dokumentti.uri',
-                                          'Kaavamääräys.luontipvm', 'Kaavamääräys.maaraysteksti',
-                                          'Kaavamääräys.otsikko', 'Kaavamääräys.uuid', 'Vaihetieto.gid',
-                                          'Vaihetieto.kuvaus', 'Vaihetieto.nimi', 'gid', 'kaavatunnus', 'kumoamispvm',
-                                          'laatija', 'luomispvm', 'nimi', 'poistamispvm', 'uuid', 'vahvistaja',
-                                          'viimeisin_muokkaaja', 'voimaantulopvm'}
+@pytest.fixture
+def layer():
+    return LayerWrapper('Yleiskaava', 'uuid').get_layer()
 
 
-def test_query_repository_initialization(general_db):
-    querier = Querier(LandUsePlanEnum.general.name)
+def test_querier_fields(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
+    assert set(querier.fields.keys()) == {'Dokumentti.otsikko', 'Dokumentti.uri', 'Has Dokumentti',
+                                          'Has Kaavamääräys', 'Has Vaihetieto', 'Kaavamääräys.luontipvm',
+                                          'Kaavamääräys.maaraysteksti', 'Kaavamääräys.otsikko',
+                                          'Vaihetieto.kuvaus', 'Vaihetieto.nimi',
+                                          'kaavatunnus', 'kumoamispvm', 'laatija', 'luomispvm', 'nimi', 'poistamispvm',
+                                          'vahvistaja', 'viimeisin_muokkaaja', 'voimaantulopvm'}
+
+
+def test_query_repository_initialization(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
     query = querier.show_query()
     assert query == 'SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" '
 
 
-def test_querier_extent(general_db):
+def test_querier_extent(general_db, layer):
     extent = QgsRectangle(23456138, 6695226, 23456935, 6695726)
-    querier = Querier(LandUsePlanEnum.general.name)
+    querier = Querier(LandUsePlanEnum.general.name, layer)
     querier.add_extent(extent)
     query = querier.show_query()
     assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" WHERE "geom" && '
@@ -50,8 +56,8 @@ def test_querier_extent(general_db):
     assert len(querier.run()) == 1
 
 
-def test_querier_land_use_with_status(general_db):
-    querier = Querier(LandUsePlanEnum.general.name)
+def test_querier_land_use_with_status(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
     querier.add_condition(querier.fields['Vaihetieto.nimi'], Operation.EQ, 'aloitusvaihe')
     query = querier.show_query()
     assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
@@ -61,8 +67,17 @@ def test_querier_land_use_with_status(general_db):
     assert len(querier.run()) == 4
 
 
-def test_querier_document_with_title(general_db):
-    querier = Querier(LandUsePlanEnum.general.name)
+def test_querier_land_use_has_status(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
+    querier.add_condition(querier.fields['Has Vaihetieto'], Operation.IS, True)
+    query = querier.show_query()
+    assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" WHERE '
+                     '"yleiskaava"."gid_vaihetieto" IS NOT NULL')
+    assert len(querier.run()) == 4
+
+
+def test_querier_document_with_title(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
     querier.add_condition(querier.fields['Dokumentti.otsikko'], Operation.EQ, 'Kukkakauppias')
     query = querier.show_query()
     assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
@@ -74,8 +89,8 @@ def test_querier_document_with_title(general_db):
     assert len(querier.run()) == 0
 
 
-def test_querier_order(general_db):
-    querier = Querier(LandUsePlanEnum.general.name)
+def test_querier_order(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
     querier.add_condition(querier.fields['Kaavamääräys.otsikko'], Operation.EQ, 'Testausmääräys')
     query = querier.show_query()
     assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
@@ -87,8 +102,19 @@ def test_querier_order(general_db):
     assert len(querier.run()) == 3
 
 
-def test_chained_query_1(general_db):
-    querier = Querier(LandUsePlanEnum.general.name)
+def test_querier_land_use_has_order(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
+    querier.add_condition(querier.fields['Has Kaavamääräys'], Operation.IS, True)
+    query = querier.show_query()
+    assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
+                     '"yleiskaava"."many_yleiskaava_has_many_kaavamaarays" ON '
+                     '"many_yleiskaava_has_many_kaavamaarays"."uuid_yleiskaava"="yleiskaava"."uuid" '
+                     'WHERE "many_yleiskaava_has_many_kaavamaarays"."uuid_yleiskaava" IS NOT NULL')
+    assert len(querier.run()) == 5
+
+
+def test_chained_query_1(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
     querier.add_condition(querier.fields['luomispvm'], Operation.LT, '2020-09-09 15:10:04')
     querier.add_condition(querier.fields['Vaihetieto.nimi'], Operation.LIKE, 'aloit%svaihe')
     querier.add_condition(querier.fields['nimi'], Operation.GTE, '')

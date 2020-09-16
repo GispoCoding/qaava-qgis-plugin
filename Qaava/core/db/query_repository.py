@@ -66,12 +66,12 @@ class QueryRepository(Database):
         elif field.is_many_to_many:
             field: RelationalFieldWrapper
             self.from_parts.append(
-                SQL('LEFT JOIN {m_table} ON {m_id1}={m_id2}').format(m_table=field.many_to_many_table,
-                                                                     m_id1=field.m_id1, m_id2=field.m_id2)
+                SQL('LEFT JOIN {m_table} ON {m_a}={a_pk}').format(m_table=field.many_to_many_table,
+                                                                  m_a=field.m_a, a_pk=field.a_pk)
             )
             self.from_parts.append(
-                SQL('LEFT JOIN {f_table} ON {m_id3}={m_id4}').format(f_table=field.table,
-                                                                     m_id3=field.m_id3, m_id4=field.m_id4)
+                SQL('LEFT JOIN {f_table} ON {m_b}={b_pk}').format(f_table=field.table,
+                                                                  m_b=field.m_b, b_pk=field.b_pk)
             )
 
         self.where_parts.append(
