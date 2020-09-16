@@ -24,7 +24,7 @@ from psycopg2 import sql
 from psycopg2.sql import Composable
 from qgis.core import (QgsVectorLayer, QgsProject, QgsField, QgsRelationManager, QgsRelation, QgsDataSourceUri)
 
-from .field_wrapper import FieldWrapper
+from .field_wrapper import FieldWrapper, RelationalFieldWrapper
 from ..exceptions import QaavaLayerError
 from ...qgis_plugin_tools.tools.custom_logging import bar_msg
 from ...qgis_plugin_tools.tools.i18n import tr
@@ -97,22 +97,42 @@ class LayerWrapper:
         field: QgsField
         for idx, field in enumerate(layer.fields().toList()):
             field_name = field.name()
-            if not field_name.startswith('gid_') and not (
-                field_name == self.pk_field and self.parent_layer is not None):
+            if not field_name.startswith('gid_'):
                 unique_values = layer.uniqueValues(idx, limit=limit) if limit > 0 else set()
                 wrapper = FieldWrapper.from_layer_wrapper(self, field, idx, unique_values, self.pk_field)
                 fields.append(wrapper)
 
             elif related_fields:
-                relations: List[QgsRelation] = relation_manager.referencingRelations(layer, idx)
-                if len(relations) >= 1:
-                    relation = relations[0]
-                    referenced_layer: QgsVectorLayer = relation.referencedLayer()
-                    ref_field_idx = relation.referencedFields()[0]
-                    ref_field: QgsField = referenced_layer.fields().toList()[ref_field_idx]
-                    fld_wrapper = FieldWrapper.from_layer_wrapper(self, field, idx, set(), ref_field.name())
-                    ref_layer = LayerWrapper.from_qgs_layer(referenced_layer, self, fld_wrapper)
-                    fields += ref_layer.get_fields(limit, False)
+                fields += self._get_fields_related_to_field(field, idx, layer, limit, relation_manager)
+
+        if related_fields:
+            fields += self._get_related(layer, limit, relation_manager)
+
+        return fields
+
+    def _get_related(self, layer, limit, relation_manager) -> List[FieldWrapper]:
+        fields: List[FieldWrapper] = []
+        relations: List[QgsRelation] = relation_manager.referencedRelations(layer)
+        relations = list(filter(lambda r: 'many_' in r.referencingLayer().name(), relations))
+        if len(relations):
+            for relation in relations:
+                rlw = RelationalLayerWrapper.create(self, relation_manager, relation)
+                fields += rlw.get_fields(limit)
+
+        return fields
+
+    def _get_fields_related_to_field(self, field, idx, layer, limit, relation_manager) -> List[FieldWrapper]:
+        fields: List[FieldWrapper] = []
+        relations: List[QgsRelation] = relation_manager.referencingRelations(layer, idx)
+
+        if len(relations):
+            for relation in relations:
+                referenced_layer: QgsVectorLayer = relation.referencedLayer()
+                ref_field_idx = relation.referencedFields()[0]
+                ref_field: QgsField = referenced_layer.fields().toList()[ref_field_idx]
+                fld_wrapper = FieldWrapper.from_layer_wrapper(self, field, idx, set(), ref_field.name())
+                ref_layer = LayerWrapper.from_qgs_layer(referenced_layer, self, fld_wrapper)
+                fields += ref_layer.get_fields(limit, False)
 
         return fields
 
@@ -136,3 +156,79 @@ class LayerWrapper:
     def clear_filter(self) -> bool:
         layer = self.get_layer()
         return layer.setSubsetString('')
+
+
+class RelationalLayerWrapper(LayerWrapper):
+
+    def __init__(self, layer_name: str, foreign_layer_name: str, parent_layer: LayerWrapper,
+                 fw1: FieldWrapper, fw2: FieldWrapper, fw3: FieldWrapper, fw4: FieldWrapper) -> None:
+        super().__init__(layer_name, parent_layer=parent_layer)
+        self.foreign_layer_name = foreign_layer_name
+        self.fw1 = fw1
+        self.fw2 = fw2
+        self.fw3 = fw3
+        self.fw4 = fw4
+
+    def _get_other_layer(self):
+        """
+        Get QgsVectorLayer from wrapper
+        """
+        # noinspection PyArgumentList
+        layers = list(
+            filter(lambda l: isinstance(l, QgsVectorLayer),
+                   QgsProject.instance().mapLayersByName(self.foreign_layer_name)))
+        if len(layers) != 1:
+            raise QaavaLayerError(tr("Invalid number of layers in project"), bar_msg=bar_msg(
+                tr("{} layers by the name of {}, expecting 1", len(layers), self.foreign_layer_name)))
+        return layers[0]
+
+    @staticmethod
+    def create(layer_wrapper: LayerWrapper, relation_manager: QgsRelationManager,
+               relation: QgsRelation) -> 'RelationalLayerWrapper':
+        referencing_layer: QgsVectorLayer = relation.referencingLayer()
+        referencing_field_idx = relation.referencingFields()[0]
+        referencing_field: QgsField = referencing_layer.fields().toList()[referencing_field_idx]
+        referenced_field_idx = relation.referencedFields()[0]
+        referenced_field: QgsField = layer_wrapper.get_layer().fields().toList()[referenced_field_idx]
+
+        try:
+            other_relation: QgsRelation = [r for r in relation_manager.referencingRelations(referencing_layer)
+                                           if r.id() != relation.id()][0]
+        except KeyError:
+            raise QaavaLayerError(tr('Relation error'), bar_msg(
+                tr('Relation {} does not contain referencing another layer', relation.name())))
+
+        other_layer: QgsVectorLayer = other_relation.referencedLayer()
+        other_layer_field_idx = other_relation.referencedFields()[0]
+        other_layer_field = other_layer.fields().toList()[other_layer_field_idx]
+        idxxx = other_relation.referencingFields()[0]
+        flddd = referencing_layer.fields().toList()[idxxx]
+
+        relation_layer_wrapper = LayerWrapper.from_qgs_layer(referencing_layer)
+
+        rf_fw1 = FieldWrapper.from_layer_wrapper(relation_layer_wrapper, referencing_field, referenced_field_idx, set(),
+                                                 '')
+        rf_fw2 = FieldWrapper.from_layer_wrapper(layer_wrapper, referenced_field, referencing_field_idx, set(), '')
+        rf_fw3 = FieldWrapper.from_layer_wrapper(relation_layer_wrapper, flddd, idxxx, set(), '')
+        other_layer_wrapper = LayerWrapper.from_qgs_layer(other_layer, relation_layer_wrapper, rf_fw3)
+
+        rf_fw4 = FieldWrapper.from_layer_wrapper(other_layer_wrapper, other_layer_field, other_layer_field_idx, set(),
+                                                 '')
+
+        return RelationalLayerWrapper(referencing_layer.name(), other_layer.name(), layer_wrapper, rf_fw1,
+                                      rf_fw2, rf_fw3, rf_fw4)
+
+    def get_fields(self, limit: int, related_fields: bool = False) -> List[RelationalFieldWrapper]:
+        layer = self._get_other_layer()
+        lw = LayerWrapper.from_qgs_layer(layer, self.parent_layer)
+        fields = []
+
+        field: QgsField
+        for idx, field in enumerate(layer.fields().toList()):
+            field_name = field.name()
+            if not field_name.startswith('gid_'):
+                unique_values = layer.uniqueValues(idx, limit=limit) if limit > 0 else set()
+                wrapper = RelationalFieldWrapper.from_relation_wrapper(self, lw, field, idx, unique_values)
+                fields.append(wrapper)
+
+        return fields

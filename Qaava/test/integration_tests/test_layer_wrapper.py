@@ -40,9 +40,26 @@ def test_get_child_fields(general_db):
     lw = LayerWrapper('Yleiskaava', 'gid')
     fields = lw.get_fields(10, True)
     field_names = [f.alias for f in fields]
-    assert field_names == ['gid', 'uuid', 'nimi', 'kaavatunnus', 'laatija',
-                           'viimeisin_muokkaaja', 'vahvistaja', 'luomispvm',
-                           'poistamispvm', 'voimaantulopvm', 'kumoamispvm',
-                           'Vaihetieto.nimi', 'Vaihetieto.kuvaus']
-    assert fields[11].unique_values == {'hyväksytty', 'valmisteluvaihe', 'lainvoimainen', 'keskeytetty', 'aloitusvaihe',
+    assert field_names == ['gid',
+                           'uuid',
+                           'nimi',
+                           'kaavatunnus',
+                           'laatija',
+                           'viimeisin_muokkaaja',
+                           'vahvistaja',
+                           'luomispvm',
+                           'poistamispvm',
+                           'voimaantulopvm',
+                           'kumoamispvm',
+                           'Vaihetieto.gid',
+                           'Vaihetieto.nimi',
+                           'Vaihetieto.kuvaus',
+                           'Dokumentti.gid',
+                           'Dokumentti.otsikko',
+                           'Dokumentti.uri',
+                           'Kaavamääräys.uuid',
+                           'Kaavamääräys.luontipvm',
+                           'Kaavamääräys.otsikko',
+                           'Kaavamääräys.maaraysteksti']
+    assert fields[12].unique_values == {'hyväksytty', 'valmisteluvaihe', 'lainvoimainen', 'keskeytetty', 'aloitusvaihe',
                                         'hyväksymisvaihe', 'kumottu', 'luonnosvaihe', 'ehdotusvaihe'}

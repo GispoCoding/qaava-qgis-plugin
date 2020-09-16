@@ -23,7 +23,7 @@ from typing import List, Dict, Optional, Union
 from psycopg2.sql import SQL, Composable
 
 from .database import Database
-from ..wrappers.field_wrapper import FieldWrapper
+from ..wrappers.field_wrapper import FieldWrapper, RelationalFieldWrapper
 from ..wrappers.layer_wrapper import LayerWrapper
 from ...definitions.db import Operation
 from ...model.land_use_plan import LandUsePlanEnum
@@ -62,6 +62,16 @@ class QueryRepository(Database):
         if field.has_parent:
             self.from_parts.append(
                 SQL('LEFT JOIN {f_table} ON {gid_f}={f_pk}').format(f_table=field.table, gid_f=field.fk, f_pk=field.pk)
+            )
+        elif field.is_many_to_many:
+            field: RelationalFieldWrapper
+            self.from_parts.append(
+                SQL('LEFT JOIN {m_table} ON {m_id1}={m_id2}').format(m_table=field.many_to_many_table,
+                                                                     m_id1=field.m_id1, m_id2=field.m_id2)
+            )
+            self.from_parts.append(
+                SQL('LEFT JOIN {f_table} ON {m_id3}={m_id4}').format(f_table=field.table,
+                                                                     m_id3=field.m_id3, m_id4=field.m_id4)
             )
 
         self.where_parts.append(

@@ -190,16 +190,21 @@ def general_db(db):
         # table layers
         'Vaihetieto': f'{common_uri} key=\'gid\' checkPrimaryKeyUnicity=\'1\' table="koodistot"."vaihetieto"',
         'Dokumentti': f'{common_uri} key=\'gid\' checkPrimaryKeyUnicity=\'1\' table="kaavan_lisatiedot"."dokumentti"',
+        'Kaavamääräys': f'{common_uri} key=\'uuid\' checkPrimaryKeyUnicity=\'1\' table="koodistot"."kaavamaarays"',
 
         # relation layers
         'many_dokumentti_has_many_yleiskaava': f'{common_uri} key=\'gid_dokumentti,uuid_yleiskaava\' checkPrimaryKeyUnicity=\'1\' table="kaavan_lisatiedot"."many_dokumentti_has_many_yleiskaava"',
+        'many_yleiskaava_has_many_kaavamaarays': f'{common_uri} key=\'uuid_yleiskaava,uuid_kaavamaarays\' checkPrimaryKeyUnicity=\'1\' table="yleiskaava"."many_yleiskaava_has_many_kaavamaarays"',
     }
 
     relations = {
         'vaihetieto_fk': ('Vaihetieto', 'gid', 'Yleiskaava', 'gid_vaihetieto'),
         'Yleiskaavan maankäyttöalueet': ('Yleiskaava', 'uuid', 'Maankäyttöalue', 'uuid_yleiskaava'),
         'Yleiskaavan dokumentit': ('Yleiskaava', 'uuid', 'many_dokumentti_has_many_yleiskaava', 'uuid_yleiskaava'),
-        'Dokumentin kaavat': ('Dokumentti', 'gid', 'many_dokumentti_has_many_yleiskaava', 'gid_dokumentti')
+        'Dokumentin kaavat': ('Dokumentti', 'gid', 'many_dokumentti_has_many_yleiskaava', 'gid_dokumentti'),
+        'Yleiskaavan kaavamääräykset': (
+            'Yleiskaava', 'uuid', 'many_yleiskaava_has_many_kaavamaarays', 'uuid_yleiskaava'),
+        'kaavamaarays_yleis': ('Kaavamääräys', 'uuid', 'many_yleiskaava_has_many_kaavamaarays', 'uuid_kaavamaarays'),
     }
 
     inserted_ids = {}
@@ -308,6 +313,7 @@ def initialize_auth_manager():
     # QgsAuthManager.init() is executed during QGIS application init and hence
     # you do not normally need to call it directly.
 
+    # noinspection PyArgumentList
     authMgr = QgsApplication.authManager()
 
     if authMgr.authenticationDatabasePath():

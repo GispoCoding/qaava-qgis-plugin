@@ -66,15 +66,16 @@ class FieldWrapper:
         return self.parent_layer_name is not None
 
     @property
+    def is_many_to_many(self) -> bool:
+        return False
+
+    @property
     def table(self) -> Composable:
         return sql.Identifier(self.schema, self._table)
 
     @property
     def field(self) -> Composable:
-        if self.has_parent:
-            return sql.Identifier(self.schema, self._table, self.name)
-        else:
-            return sql.Identifier(self.name)
+        return sql.Identifier(self._table, self.name)
 
     @property
     def field_with_table(self) -> str:
@@ -91,10 +92,56 @@ class FieldWrapper:
     @property
     def alias(self) -> str:
         alias = self._alias if self._alias != '' else self.name
-        if self.has_parent:
+        if self.has_parent or self.is_many_to_many:
             return f'{self.layer_name}.{alias}'
         else:
             return alias
 
     def __str__(self) -> str:
         return f'{self.alias} ({self.name})'
+
+
+class RelationalFieldWrapper(FieldWrapper):
+
+    def __init__(self, field: QgsField, idx: int, values: Set, layer_name: str, schema: str, table: str,
+                 rlw) -> None:
+        super().__init__(field, idx, values, layer_name, schema, table)
+        from .layer_wrapper import RelationalLayerWrapper
+        self.rlw: RelationalLayerWrapper = rlw
+
+    @staticmethod
+    def from_relation_wrapper(rlw, lw, field: QgsField, idx: int,
+                              values: set) -> 'RelationalFieldWrapper':
+        from .layer_wrapper import LayerWrapper, RelationalLayerWrapper
+        rlw: RelationalLayerWrapper
+        lw: LayerWrapper
+        uri = lw.uri
+        table = uri.table()
+        schema = uri.schema()
+
+        return RelationalFieldWrapper(field, idx, values, lw.layer_name, schema=schema, table=table, rlw=rlw)
+
+    @property
+    def is_many_to_many(self) -> bool:
+        return True
+
+    @property
+    def many_to_many_table(self) -> Composable:
+        uri = self.rlw.uri
+        return sql.Identifier(uri.schema(), uri.table())
+
+    @property
+    def m_id1(self) -> Composable:
+        return self.rlw.fw1.field
+
+    @property
+    def m_id2(self) -> Composable:
+        return self.rlw.fw2.field
+
+    @property
+    def m_id3(self) -> Composable:
+        return self.rlw.fw3.field
+
+    @property
+    def m_id4(self) -> Composable:
+        return self.rlw.fw4.field

@@ -26,10 +26,12 @@ from ...model.land_use_plan import LandUsePlanEnum
 
 def test_querier_fields(general_db):
     querier = Querier(LandUsePlanEnum.general.name)
-    assert set(querier.fields.keys()) == {'gid', 'uuid', 'nimi', 'kaavatunnus', 'laatija',
-                                          'viimeisin_muokkaaja', 'vahvistaja', 'luomispvm',
-                                          'poistamispvm', 'voimaantulopvm', 'kumoamispvm',
-                                          'Vaihetieto.nimi', 'Vaihetieto.kuvaus'}
+    assert set(querier.fields.keys()) == {'Dokumentti.gid', 'Dokumentti.otsikko', 'Dokumentti.uri',
+                                          'Kaavamääräys.luontipvm', 'Kaavamääräys.maaraysteksti',
+                                          'Kaavamääräys.otsikko', 'Kaavamääräys.uuid', 'Vaihetieto.gid',
+                                          'Vaihetieto.kuvaus', 'Vaihetieto.nimi', 'gid', 'kaavatunnus', 'kumoamispvm',
+                                          'laatija', 'luomispvm', 'nimi', 'poistamispvm', 'uuid', 'vahvistaja',
+                                          'viimeisin_muokkaaja', 'voimaantulopvm'}
 
 
 def test_query_repository_initialization(general_db):
@@ -48,14 +50,41 @@ def test_querier_extent(general_db):
     assert len(querier.run()) == 1
 
 
-def test_fetch_land_use_with_status(general_db):
+def test_querier_land_use_with_status(general_db):
     querier = Querier(LandUsePlanEnum.general.name)
     querier.add_condition(querier.fields['Vaihetieto.nimi'], Operation.EQ, 'aloitusvaihe')
     query = querier.show_query()
     assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
-                     '"koodistot"."vaihetieto" ON "gid_vaihetieto"="koodistot"."vaihetieto"."gid" '
-                     'WHERE "koodistot"."vaihetieto"."nimi"=\'aloitusvaihe\'')
+                     '"koodistot"."vaihetieto" ON '
+                     '"yleiskaava"."gid_vaihetieto"="koodistot"."vaihetieto"."gid" WHERE '
+                     '"vaihetieto"."nimi"=\'aloitusvaihe\'')
     assert len(querier.run()) == 4
+
+
+def test_querier_document_with_title(general_db):
+    querier = Querier(LandUsePlanEnum.general.name)
+    querier.add_condition(querier.fields['Dokumentti.otsikko'], Operation.EQ, 'Kukkakauppias')
+    query = querier.show_query()
+    assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
+                     '"kaavan_lisatiedot"."many_dokumentti_has_many_yleiskaava" ON '
+                     '"many_dokumentti_has_many_yleiskaava"."uuid_yleiskaava"="yleiskaava"."uuid" '
+                     'LEFT JOIN "kaavan_lisatiedot"."dokumentti" ON '
+                     '"many_dokumentti_has_many_yleiskaava"."gid_dokumentti"="dokumentti"."gid" '
+                     'WHERE "dokumentti"."otsikko"=\'Kukkakauppias\'')
+    assert len(querier.run()) == 0
+
+
+def test_querier_order(general_db):
+    querier = Querier(LandUsePlanEnum.general.name)
+    querier.add_condition(querier.fields['Kaavamääräys.otsikko'], Operation.EQ, 'Testausmääräys')
+    query = querier.show_query()
+    assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
+                     '"yleiskaava"."many_yleiskaava_has_many_kaavamaarays" ON '
+                     '"many_yleiskaava_has_many_kaavamaarays"."uuid_yleiskaava"="yleiskaava"."uuid" '
+                     'LEFT JOIN "koodistot"."kaavamaarays" ON '
+                     '"many_yleiskaava_has_many_kaavamaarays"."uuid_kaavamaarays"="kaavamaarays"."uuid" '
+                     'WHERE "kaavamaarays"."otsikko"=\'Testausmääräys\'')
+    assert len(querier.run()) == 3
 
 
 def test_chained_query_1(general_db):
@@ -65,6 +94,7 @@ def test_chained_query_1(general_db):
     querier.add_condition(querier.fields['nimi'], Operation.GTE, '')
     query = querier.show_query()
     assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" LEFT JOIN '
-                     '"koodistot"."vaihetieto" ON "gid_vaihetieto"="koodistot"."vaihetieto"."gid" '
-                     'WHERE "luomispvm"<\'2020-09-09 15:10:04\' AND  '
-                     '"koodistot"."vaihetieto"."nimi" LIKE \'aloit%svaihe\' AND  "nimi" IS NULL')
+                     '"koodistot"."vaihetieto" ON '
+                     '"yleiskaava"."gid_vaihetieto"="koodistot"."vaihetieto"."gid" WHERE '
+                     '"yleiskaava"."luomispvm"<\'2020-09-09 15:10:04\' AND  "vaihetieto"."nimi" '
+                     'LIKE \'aloit%svaihe\' AND  "yleiskaava"."nimi" IS NULL')
