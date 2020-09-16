@@ -119,9 +119,9 @@ class DatabaseInitializer:
         """
         Promote database to newest schema version
         """
-        current_version, is_outdated = self.is_schema_outdated()
+        current_version, newest_version = (version_from_string(v) for v in self.get_versions())
 
-        if is_outdated:
+        if current_version < newest_version:
             try:
                 migration_script = self.plan.create_migration_script(current_version)
                 migration_script += 'UPDATE koodistot.tietomalli_metatiedot SET versio = %(newest_version)s'
@@ -136,10 +136,10 @@ class DatabaseInitializer:
 
         LOGGER.info('Schema is up to date')
 
-    def is_schema_outdated(self) -> Tuple[Tuple[int, int, int], bool]:
+    def get_versions(self) -> Tuple[str, str]:
         """
-        Checks if database schema is outdated
-        :return: current version of the schema and whether it is outdated or not
+        Get current and newest versions as string
+        :return: current version of the schema and newest version of the schema
         """
         try:
             query = 'SELECT versio FROM koodistot.tietomalli_metatiedot'
@@ -152,7 +152,7 @@ class DatabaseInitializer:
         except psycopg2.DatabaseError:
             raise QaavaDatabaseError(tr('The database is not initialized properly'),
                                      bar_msg(tr('Please initialize the database')))
-        return current_version, current_version < self.plan.newest_version
+        return string_from_version(current_version), string_from_version(self.plan.newest_version)
 
     def get_available_projects(self) -> List[str]:
         """

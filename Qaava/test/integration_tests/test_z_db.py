@@ -35,9 +35,8 @@ def test_migrations_for_detailed(new_project, detailed_db_old):
         assert rows == [('0.1.0',)]
         initializer = DatabaseInitializer(IFACE, QGIS_APP)
         initializer.register_database(CONN_NAME, "detailed")
-        current_version, is_outdated = initializer.is_schema_outdated()
-        assert current_version == (0, 1, 0)
-        assert is_outdated
+        current_version, newest_version = initializer.get_versions()
+        assert current_version == '0.1.0'
         initializer.promote_database()
         rows = db.execute_select('SELECT versio FROM koodistot.tietomalli_metatiedot')
         assert version_from_string(rows[0][0]) >= (0, 2, 0)
