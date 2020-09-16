@@ -18,7 +18,7 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Tuple
 
 import psycopg2
 from PyQt5.QtCore import QCoreApplication
@@ -75,11 +75,13 @@ class DatabaseInitializer:
             self.database.execute_insert(schema_query)
             self.database.execute_insert(project_query)
         except psycopg2.OperationalError:
-            raise QaavaDatabaseError(tr("Connection error"),
-                                     bar_msg(tr(u"Could not connect to the database: ") + db_conn_name))
+            raise QaavaDatabaseError(tr('Connection error'),
+                                     bar_msg(tr('Could not connect to the database {} ', db_conn_name)))
         except (Exception, psycopg2.DatabaseError) as e:
-            raise QaavaDatabaseError(tr("Error occured while injecting schema"),
-                                     bar_msg(tr(u"Could not connect to the database: ") + db_conn_name))
+            raise QaavaDatabaseError(tr('Error occured while injecting schema'),
+                                     bar_msg(tr(
+                                         'There might be errors in schema. If the problem persists, '
+                                         'contact developers')))
 
         LOGGER.info(tr(u"Success"),
                     extra=bar_msg(tr(u"Database initialized succesfully with land use plan ") + self.plan_enum.name,
@@ -117,6 +119,28 @@ class DatabaseInitializer:
         """
         Promote database to newest schema version
         """
+        current_version, is_outdated = self.is_schema_outdated()
+
+        if is_outdated:
+            try:
+                migration_script = self.plan.create_migration_script(current_version)
+                migration_script += 'UPDATE koodistot.tietomalli_metatiedot SET versio = %(newest_version)s'
+                self.database.execute_insert(migration_script,
+                                             {'newest_version': string_from_version(self.plan.newest_version)})
+
+            except (Exception, psycopg2.DatabaseError) as e:
+                LOGGER.exception('Error occurred while running migration script')
+                raise QaavaDatabaseError(tr('Error occurred while running migration script'),
+                                         bar_msg(tr('Please check internet connection and contact '
+                                                    'developers if the problem persists')))
+
+        LOGGER.info('Schema is up to date')
+
+    def is_schema_outdated(self) -> Tuple[Tuple[int, int, int], bool]:
+        """
+        Checks if database schema is outdated
+        :return: current version of the schema and whether it is outdated or not
+        """
         try:
             query = 'SELECT versio FROM koodistot.tietomalli_metatiedot'
             current_version = max([version_from_string(v[0]) for v in
@@ -128,18 +152,7 @@ class DatabaseInitializer:
         except psycopg2.DatabaseError:
             raise QaavaDatabaseError(tr('The database is not initialized properly'),
                                      bar_msg(tr('Please initialize the database')))
-
-        try:
-            migration_script = self.plan.create_migration_script(current_version)
-            migration_script += 'UPDATE koodistot.tietomalli_metatiedot SET versio = %(newest_version)s'
-            self.database.execute_insert(migration_script,
-                                         {'newest_version': string_from_version(self.plan.newest_version)})
-
-        except (Exception, psycopg2.DatabaseError) as e:
-            LOGGER.exception('Error occurred while running migration script')
-            raise QaavaDatabaseError(tr('Error occurred while running migration script'),
-                                     bar_msg(tr('Please check internet connection and contact '
-                                                'developers if the problem persists')))
+        return current_version, current_version < self.plan.newest_version
 
     def get_available_projects(self) -> List[str]:
         """
