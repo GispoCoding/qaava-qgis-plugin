@@ -61,7 +61,7 @@ class DatabaseInitializer:
 
             try:
                 project_query = self.plan.fetch_project(self.conn_params, db_conn_name)
-            except QgsPluginNotImplementedException:
+            except (QgsPluginNotImplementedException, QgsPluginNetworkException):
                 LOGGER.warning(tr("Not implemented:"), extra=bar_msg(tr(u"Project SQL is not implemented yet")))
                 project_query = 'SELECT 1'
 

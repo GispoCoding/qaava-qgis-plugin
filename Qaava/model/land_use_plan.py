@@ -24,8 +24,8 @@ from typing import Union, Dict, Tuple, Optional, List
 from ..core.wrappers.layer_wrapper import LayerWrapper
 from ..definitions.constants import (QAAVA_DB_NAME, GENERAL_PLAN_URL,
                                      GENERAL_PLAN_MODEL_FILE_NAME, GENERAL_PLAN_PROJECT_FILE_NAME, DETAILED_PLAN_URL,
-                                     DETAILED_PLAN_MODEL_FILE_NAME, VERSIONS_FILE_NAME, MIGRATION_FILE_NAME)
-from ..qgis_plugin_tools.tools.exceptions import QgsPluginNotImplementedException
+                                     DETAILED_PLAN_MODEL_FILE_NAME, VERSIONS_FILE_NAME, MIGRATION_FILE_NAME,
+                                     DETAILED_PLAN_PROJECT_FILE_NAME)
 from ..qgis_plugin_tools.tools.network import fetch
 from ..qgis_plugin_tools.tools.resources import plugin_name
 from ..qgis_plugin_tools.tools.version import version_from_string, string_from_version
@@ -41,6 +41,7 @@ class LandUsePlan:
     migration_file = MIGRATION_FILE_NAME
     url = ''
     file_name = ''
+    project_file = ''
     layer: LayerWrapper = None
 
     def __init__(self):
@@ -90,7 +91,10 @@ class LandUsePlan:
         Fetch QGIS project sql string. Might contain multiple projects
         :return: project sql string
         """
-        raise QgsPluginNotImplementedException()
+        # Import here in order to avoid circular import problem in tests
+        from ..core.db.qgis_project_utils import fix_project
+        content = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.project_file}")
+        return fix_project(auth_cfg_id, conn_params, content)
 
     @staticmethod
     def alter_schema(script: str):
@@ -117,6 +121,7 @@ class DetailedLandUsePlan(LandUsePlan):
     url = DETAILED_PLAN_URL
     schema_url = DETAILED_PLAN_URL
     file_name = DETAILED_PLAN_MODEL_FILE_NAME
+    project_file = DETAILED_PLAN_PROJECT_FILE_NAME
     layer = LayerWrapper('Yleiskaava', 'uuid')  # TODO: fix this when qgis project is ready
 
 
@@ -128,17 +133,6 @@ class GeneralLandUsePlan(LandUsePlan):
     file_name = GENERAL_PLAN_MODEL_FILE_NAME
     project_file = GENERAL_PLAN_PROJECT_FILE_NAME
     layer = LayerWrapper('Yleiskaava', 'uuid')
-
-    def fetch_project(self, conn_params: Dict[str, str], auth_cfg_id: str) -> str:
-        """
-        Fetch QGIS project sql string. Might contain multiple projects
-        :return: project sql string
-        """
-        # TODO: move to super class when implemented in Detailed plan as well
-        # Import here in order to avoid circular import problem in tests
-        from ..core.db.qgis_project_utils import fix_project
-        content = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.project_file}")
-        return fix_project(auth_cfg_id, conn_params, content)
 
 
 class LandUsePlanEnum(enum.Enum):
