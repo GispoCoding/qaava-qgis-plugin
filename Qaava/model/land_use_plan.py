@@ -21,7 +21,6 @@ import enum
 import logging
 from typing import Union, Dict, Tuple, Optional, List
 
-from ..core.wrappers.layer_wrapper import LayerWrapper
 from ..definitions.constants import (QAAVA_DB_NAME, GENERAL_PLAN_URL,
                                      GENERAL_PLAN_MODEL_FILE_NAME, GENERAL_PLAN_PROJECT_FILE_NAME, DETAILED_PLAN_URL,
                                      DETAILED_PLAN_MODEL_FILE_NAME, VERSIONS_FILE_NAME, MIGRATION_FILE_NAME,
@@ -42,7 +41,6 @@ class LandUsePlan:
     url = ''
     file_name = ''
     project_file = ''
-    layer: LayerWrapper = None
 
     def __init__(self):
         self.raw_schema: Optional[str] = None
@@ -122,7 +120,6 @@ class DetailedLandUsePlan(LandUsePlan):
     schema_url = DETAILED_PLAN_URL
     file_name = DETAILED_PLAN_MODEL_FILE_NAME
     project_file = DETAILED_PLAN_PROJECT_FILE_NAME
-    layer = LayerWrapper('Yleiskaava', 'uuid')  # TODO: fix this when qgis project is ready
 
 
 class GeneralLandUsePlan(LandUsePlan):
@@ -132,7 +129,6 @@ class GeneralLandUsePlan(LandUsePlan):
     schema_url = GENERAL_PLAN_URL
     file_name = GENERAL_PLAN_MODEL_FILE_NAME
     project_file = GENERAL_PLAN_PROJECT_FILE_NAME
-    layer = LayerWrapper('Yleiskaava', 'uuid')
 
 
 class LandUsePlanEnum(enum.Enum):

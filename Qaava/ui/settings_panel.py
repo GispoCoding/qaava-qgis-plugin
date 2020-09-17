@@ -21,8 +21,7 @@ import logging
 import webbrowser
 
 from .base_panel import BasePanel
-from ..definitions.constants import KEY_FOR_NUMBER_OF_QUERY_CHOICES, DEFAULT_NUMBER_OF_QUERY_CHOICES
-from ..definitions.qui import Panels
+from ..definitions.qui import Panels, Settings
 from ..qgis_plugin_tools.tools.custom_logging import get_log_level_key, LogTarget, get_log_level_name
 from ..qgis_plugin_tools.tools.resources import plugin_name, plugin_path
 from ..qgis_plugin_tools.tools.settings import set_setting, get_setting
@@ -42,8 +41,8 @@ class SettingsPanel(BasePanel):
         self.dlg.combo_box_log_level_file.clear()
         self.dlg.combo_box_log_level_console.clear()
         self.dlg.s_sb_choices.setValue(
-            int(get_setting(KEY_FOR_NUMBER_OF_QUERY_CHOICES, DEFAULT_NUMBER_OF_QUERY_CHOICES, int)))
-        self.dlg.s_sb_choices.valueChanged.connect(lambda v: set_setting(KEY_FOR_NUMBER_OF_QUERY_CHOICES, v))
+            int(get_setting(Settings.number_of_query_choices.name, Settings.number_of_query_choices.value, int)))
+        self.dlg.s_sb_choices.valueChanged.connect(lambda v: set_setting(Settings.number_of_query_choices.name, v))
 
         self.dlg.combo_box_log_level_file.addItems(LOGGING_LEVELS)
         self.dlg.combo_box_log_level_console.addItems(LOGGING_LEVELS)

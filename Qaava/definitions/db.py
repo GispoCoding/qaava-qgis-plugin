@@ -50,3 +50,4 @@ class Operation(Enum):
     LIKE = ' LIKE '
     ILIKE = ' ILIKE '
     IS = ' IS '
+    IS_NOT = ' IS NOT '
