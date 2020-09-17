@@ -61,7 +61,7 @@ python build.py transcompile
 ### Creating a release
 Follow these steps to create a release
 * Add changelog information to [CHANGELOG.md](../CHANGELOG.md) using this
-[format](https://github.com/opengisch/qgis-plugin-ci/blob/1.8.2/CHANGELOG.md) 
+[format](https://raw.githubusercontent.com/opengisch/qgis-plugin-ci/master/CHANGELOG.md)
 * Make a new commit. (`git add -A && git commit -m "Release v0.1.0"`)
 * Create new tag for it (`git tag -a v0.1.0 -m "Version 0.1.0"`)
 * Push tag to Github using `git push --follow-tags`
