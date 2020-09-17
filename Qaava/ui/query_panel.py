@@ -54,9 +54,6 @@ class QueryPanel(BasePanel):
         self.rows: Dict = {}
 
     def setup_panel(self):
-        # noinspection PyArgumentList
-        change_layer = lambda _=None: self._change_layer(self.dlg.q_combo_box_layer.currentLayer())
-
         # noinspection PyCallByClass,PyArgumentList
         self.dlg.q_push_button_add_row.setIcon(QgsApplication.getThemeIcon('/mActionAdd.svg'))
         self.dlg.q_push_button_add_row.clicked.connect(lambda _: self._add_row(len(self.rows) + 1))
@@ -71,15 +68,21 @@ class QueryPanel(BasePanel):
         # noinspection PyArgumentList
         QgsProject.instance().layersAdded.connect(self._updated_map_layers)
 
-        self.dlg.q_push_button_reset.clicked.connect(change_layer)
-        self.dlg.q_push_button_refresh.clicked.connect(change_layer)
-        self.dlg.q_combo_box_layer.layerChanged.connect(change_layer)
+        self.dlg.q_push_button_reset.clicked.connect(self.change_layer)
+        self.dlg.q_push_button_refresh.clicked.connect(self.change_layer)
+        self.dlg.q_combo_box_layer.layerChanged.connect(self.change_layer)
 
         if self.dlg.q_combo_box_layer.currentLayer() is not None:
-            change_layer()
+            self.change_layer()
 
+    @log_if_fails
     def teardown_panel(self):
         self._clear_filter()
+
+    @log_if_fails
+    def on_update_map_layers(self):
+        # noinspection PyArgumentList
+        self._updated_map_layers(QgsProject.instance().mapLayers().values(), bypass_running=True)
 
     @log_if_fails
     def _initialize(self, crs: Optional[QgsCoordinateReferenceSystem] = None):
@@ -98,17 +101,23 @@ class QueryPanel(BasePanel):
         # noinspection PyArgumentList
         self._updated_map_layers(QgsProject.instance().mapLayers().values())
 
-    def _updated_map_layers(self, map_layers: List[QgsVectorLayer]):
-        excepted_layers = self.dlg.q_combo_box_layer.exceptedLayerList()
-        excepted_strings = get_setting(Settings.layer_should_not_contain_string.name,
-                                       Settings.layer_should_not_contain_string.value,
-                                       str).split(',')
+    def _updated_map_layers(self, map_layers: List[QgsVectorLayer], bypass_running: bool = False):
+        if not self.dlg.is_running or bypass_running:
+            excepted_layers = []
+            excepted_strings = get_setting(Settings.layer_should_not_contain_string.name,
+                                           Settings.layer_should_not_contain_string.value,
+                                           str).split(',')
 
-        for layer in map_layers:
-            if any(x in layer.name() for x in excepted_strings):
-                excepted_layers.append(layer)
-        self.dlg.q_combo_box_layer.setExceptedLayerList(excepted_layers)
+            for layer in map_layers:
+                if any(x in layer.name() for x in excepted_strings):
+                    excepted_layers.append(layer)
+            self.dlg.q_combo_box_layer.setExceptedLayerList(excepted_layers)
 
+    def change_layer(self, *args):
+        if not self.dlg.is_running:
+            self._change_layer(self.dlg.q_combo_box_layer.currentLayer())
+
+    @log_if_fails
     def _change_layer(self, layer: Optional[QgsVectorLayer]):
         self.dlg.q_text_browser_sql.setText('')
         self.dlg.q_gb_sql.setCollapsed(True)
@@ -150,7 +159,10 @@ class QueryPanel(BasePanel):
     def _clear_filter(self):
         if self.querier is not None:
             LOGGER.debug('Clearing filter')
-            self.querier.clear_filter()
+            try:
+                self.querier.clear_filter()
+            except QaavaLayerError:
+                LOGGER.debug('Layer not available')
 
     def _generate_query(self):
         self.querier.clear()

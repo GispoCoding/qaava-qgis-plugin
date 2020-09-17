@@ -19,6 +19,7 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
+from typing import Dict
 
 from PyQt5.QtWidgets import QDialog
 
@@ -40,6 +41,7 @@ class BasePanel:
     def __init__(self, dialog: QDialog):
         self._panel = None
         self._dialog = dialog
+        self.elem_map: Dict[int, bool] = {}
 
     @property
     def panel(self) -> Panels:
@@ -65,6 +67,9 @@ class BasePanel:
     def teardown_panel(self):
         """Teardown for the panels"""
 
+    def on_update_map_layers(self):
+        """Occurs when map layers are updated"""
+
     def run(self, method='_run'):
         if not method:
             method = '_run'
@@ -86,10 +91,13 @@ class BasePanel:
 
     def _start_process(self):
         """Make some stuff before launching the process."""
-        for elem in self.dlg.responsive_elements[self.panel]:
+        self.dlg.is_running = True
+        for i, elem in enumerate(self.dlg.responsive_elements[self.panel]):
+            self.elem_map[i] = elem.isEnabled()
             elem.setEnabled(False)
 
     def _end_process(self):
         """Make some stuff after the process."""
-        for elem in self.dlg.responsive_elements[self.panel]:
-            elem.setEnabled(True)
+        self.dlg.is_running = False
+        for i, elem in enumerate(self.dlg.responsive_elements[self.panel]):
+            elem.setEnabled(self.elem_map.get(i, True))

@@ -42,6 +42,7 @@ def load_project(project_name: str, plan: LandUsePlanEnum) -> None:
     """
     # noinspection PyArgumentList
     project = QgsProject.instance()
+    project.clear()
     uri = get_db_connection_pg_uri(plan, project_name)
     succeeded = project.read(uri)
     if not succeeded:

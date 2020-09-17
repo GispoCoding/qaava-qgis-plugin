@@ -46,6 +46,7 @@ class Dialog(QDialog, FORM_CLASS):
         QDialog.__init__(self, parent)
         self.setupUi(self)
         self.iface = iface
+        self.is_running = False
 
         self.panels = {
             Panels.Query: QueryPanel(self),
@@ -57,9 +58,10 @@ class Dialog(QDialog, FORM_CLASS):
         self.responsive_elements = {
             Panels.Query: [self.q_push_button_reset, self.q_push_button_refresh, self.query_grid,
                            self.q_push_button_add_row, self.q_push_button_show_query,
-                           self.q_push_button_run_query, self.q_push_button_clear_filter],
-            Panels.Database: {self.dbComboBox, self.dmComboBox, self.refreshPushButton, self.agreedCheckBox,
-                              self.btn_db_initialize, self.btn_db_register, self.btn_db_open_project, self.cb_projects},
+                           self.q_push_button_run_query, self.q_push_button_clear_filter, self.q_combo_box_layer],
+            Panels.Database: [self.dbComboBox, self.dmComboBox, self.refreshPushButton, self.agreedCheckBox,
+                              self.btn_db_initialize, self.btn_db_register, self.btn_db_open_project, self.cb_projects,
+                              self.db_btn_promote],
             Panels.Settings: [],
             Panels.About: []
         }
@@ -88,3 +90,11 @@ class Dialog(QDialog, FORM_CLASS):
                 panel.teardown_panel()
         except Exception as e:
             LOGGER.exception(tr(u'Unhandled exception occurred during UI closing.'), bar_msg(e))
+
+    def on_update_map_layers(self):
+        LOGGER.debug('Updating map layers')
+        try:
+            for panel in self.panels.values():
+                panel.on_update_map_layers()
+        except Exception as e:
+            LOGGER.exception(tr(u'Unhandled exception occurred while updating map layers.'), bar_msg(e))

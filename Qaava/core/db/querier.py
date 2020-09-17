@@ -112,7 +112,7 @@ class Querier:
         unique_values = [val for val in field.unique_values if val != null]
         return unique_values, field.type == QVariant.String
 
-    def add_condition(self, field: FieldWrapper, operation: Operation, value: Union[str, bool]):
+    def add_condition(self, field: FieldWrapper, operation: Operation, value: Union[str, bool, int, float]):
         """
         Add condition for the query
 

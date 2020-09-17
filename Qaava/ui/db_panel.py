@@ -82,7 +82,6 @@ class DbPanel(BasePanel):
 
     def on_agreedCheckBox_stateChanged(self):
         self.dlg.btn_db_initialize.setEnabled(self.dlg.agreedCheckBox.isChecked())
-        self.dlg.btn_db_open_project.setEnabled(self.dlg.agreedCheckBox.isChecked())
 
     def set_available_projects(self, projects: List[str]):
         self.dlg.cb_projects.clear()
@@ -104,6 +103,7 @@ class DbPanel(BasePanel):
         if len(project_name):
             plan_enum = LandUsePlanEnum[self.get_plan()]
             load_project(project_name, plan_enum)
+            self.dlg.on_update_map_layers()
 
     def _run(self):
         # noinspection PyArgumentList
