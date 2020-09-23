@@ -41,22 +41,25 @@ to run tests with:
 python build.py test
 ```
 
-#### Translating
+#### Translating with transifex
 
-The translation files are in [i18n](../Qaava/resources/i18n) folder.
-Translatable content in python files is code such as `tr(u"Hello World")`. 
+Fill in `transifex_coordinator` (Transifex username) and `transifex_organization`
+in [.qgis-plugin-ci](../.qgis-plugin-ci) to use Transifex translation.
 
-To update language *.ts* files to contain newest lines to translate, run
-```shell script
-python build.py transup
-```
+##### Pushing / creating new translations
+* First install [Transifex CLI](https://docs.transifex.com/client/installing-the-client) and
+  [qgis-plugin-ci](https://github.com/opengisch/qgis-plugin-ci)
+* Run `qgis-plugin-ci push-translation <your-transifex-token>`
+* Go to your Transifex site, add some languages and start translating
+* Copy [push_translations.yml](push_translations.yml) file to [workflows](../.github/workflows) folder
+    to enable automatic pushing after commits to master
+* Add this badge ![](https://github.com/<organization>/<repo>/workflows/Translations/badge.svg) to the [README](../README.md)
 
-You can then open the *.ts* files you wish to translate with Qt Linguist and make the changes.
-
-Compile the translations to *.qm* files with:
-```shell script
-python build.py transcompile
-```
+##### Pulling
+There is no need to pull if you configure `--transifex-token` into your
+[release](../.github/workflows/release.yml) workflow (remember to use Github Secrets).
+You can however pull manually to test the process.
+* Run `qgis-plugin-ci pull-translation --compile <your-transifex-token>`
 
 ### Creating a release
 Follow these steps to create a release

@@ -1,3 +1,5 @@
 plugin_path: Qaava
 github_organization_slug: GispoCoding
 project_slug: qaava-qgis-plugin
+transifex_coordinator: Joonalai
+transifex_organization: gispo
