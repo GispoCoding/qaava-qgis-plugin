@@ -95,6 +95,11 @@
      </item>
      <item>
       <property name="text">
+       <string>Import</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>Database</string>
       </property>
      </item>
@@ -451,6 +456,141 @@
               </layout>
              </item>
             </layout>
+           </widget>
+           <widget class="QWidget" name="import_2">
+            <widget class="QWidget" name="verticalLayoutWidget">
+             <property name="geometry">
+              <rect>
+               <x>50</x>
+               <y>100</y>
+               <width>321</width>
+               <height>391</height>
+              </rect>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_20">
+              <item>
+               <widget class="QGroupBox" name="groupBox_5">
+                <property name="title">
+                 <string>Settings</string>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_19">
+                 <item>
+                  <layout class="QHBoxLayout" name="horizontalLayout_3">
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_9">
+                     <item>
+                      <layout class="QFormLayout" name="formLayout">
+                       <item row="0" column="0">
+                        <widget class="QLabel" name="label_10">
+                         <property name="text">
+                          <string>Layer</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="0" column="1">
+                        <widget class="QgsMapLayerComboBox" name="layer_combo_box"/>
+                       </item>
+                      </layout>
+                     </item>
+                    </layout>
+                   </item>
+                   <item>
+                    <layout class="QHBoxLayout" name="horizontalLayout_10">
+                     <item>
+                      <layout class="QFormLayout" name="formLayout_2">
+                       <item row="0" column="0">
+                        <widget class="QLabel" name="label_11">
+                         <property name="text">
+                          <string>Table</string>
+                         </property>
+                        </widget>
+                       </item>
+                       <item row="0" column="1">
+                        <widget class="QComboBox" name="q_combo_box_table"/>
+                       </item>
+                      </layout>
+                     </item>
+                    </layout>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox_8">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="title">
+                 <string>Column mapping</string>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_21">
+                 <item>
+                  <layout class="QFormLayout" name="form_layout_column_mapping">
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_field">
+                     <property name="text">
+                      <string>Table Column 1:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QComboBox" name="q_combo_box_field"/>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="field2Label">
+                     <property name="text">
+                      <string>Table Column 2:</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QComboBox" name="field2ComboBox"/>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_11">
+                <property name="rightMargin">
+                 <number>10</number>
+                </property>
+                <item>
+                 <spacer name="horizontalSpacer_6">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="q_push_button_import">
+                  <property name="sizePolicy">
+                   <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                    <horstretch>0</horstretch>
+                    <verstretch>0</verstretch>
+                   </sizepolicy>
+                  </property>
+                  <property name="text">
+                   <string>Import</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
            </widget>
            <widget class="QWidget" name="database">
             <layout class="QVBoxLayout" name="verticalLayout_18">

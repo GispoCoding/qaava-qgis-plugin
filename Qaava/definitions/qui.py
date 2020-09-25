@@ -33,6 +33,7 @@ class Panels(enum.Enum):
     Database = {'icon': '/dbmanager.svg'}
     Settings = {'icon': '/mActionMapSettings.svg'}
     About = {'icon': '/mActionHelpContents.svg'}
+    Import = {'icon': '/dbmanager.svg'}
 
     # noinspection PyCallByClass,PyArgumentList
     @property

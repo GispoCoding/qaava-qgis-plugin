@@ -24,6 +24,7 @@ from PyQt5.QtWidgets import QDialog, QMessageBox, QDesktopWidget
 
 from .about_panel import AboutPanel
 from .db_panel import DbPanel
+from .import_panel import ImportPanel
 from .qaava_panel import QaavaPanel
 from .query_panel import QueryPanel
 from .settings_panel import SettingsPanel
@@ -57,7 +58,8 @@ class Dialog(QDialog, FORM_CLASS):
             Panels.Query: QueryPanel(self),
             Panels.Database: db_panel,
             Panels.Settings: SettingsPanel(self),
-            Panels.About: AboutPanel(self)
+            Panels.About: AboutPanel(self),
+            Panels.Import: ImportPanel(self)
         }
 
         self.responsive_elements = {
@@ -69,7 +71,8 @@ class Dialog(QDialog, FORM_CLASS):
                               self.btn_db_initialize, self.btn_db_register, self.btn_db_open_project, self.cb_projects,
                               self.db_btn_promote],
             Panels.Settings: [],
-            Panels.About: []
+            Panels.About: [],
+            Panels.Import: [self.q_push_button_import]
         }
 
         for i, panel in enumerate(self.panels):
