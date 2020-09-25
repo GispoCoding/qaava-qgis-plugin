@@ -18,22 +18,14 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 
-import pytest
-
 from ...definitions.constants import DETAILED_PLAN_DATA_MODEL_URL
 from ...model.land_use_plan import DetailedLandUsePlan, GeneralLandUsePlan
-from ...qgis_plugin_tools.tools.exceptions import QgsPluginNetworkException
 from ...qgis_plugin_tools.tools.network import fetch
 
 
 def test_fetch(new_project):
     data_model = fetch(DETAILED_PLAN_DATA_MODEL_URL)
     assert len(data_model) > 10000
-
-
-def test_fetch_invalid_url(new_project):
-    with pytest.raises(QgsPluginNetworkException):
-        fetch("invalidurl")
 
 
 def test_detailed_plan_schema_fetch(new_project):
