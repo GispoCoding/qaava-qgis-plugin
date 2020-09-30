@@ -1,3 +1,4 @@
 Qaava/.coverage
 Qaava/test/db_fixtures/.*.lock
-/Qaava/Qaava.zip
+Qaava/Qaava.zip
+Qaava/i18n/

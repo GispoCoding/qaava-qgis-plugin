@@ -23,4 +23,4 @@ jobs:
 
       # When osgeo upload is wanted: --osgeo-username usrname --osgeo-password ${{ secrets.OSGEO_PASSWORD }}
       - name: Deploy plugin
-        run: qgis-plugin-ci release ${GITHUB_REF/refs\/tags\//} --github-token ${{ secrets.GITHUB_TOKEN }} --disable-submodule-update
+        run: qgis-plugin-ci release ${GITHUB_REF/refs\/tags\//} --github-token ${{ secrets.GITHUB_TOKEN }} --transifex-token ${{ secrets.TRANSIFEX_TOKEN }} --disable-submodule-update
