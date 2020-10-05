@@ -32,6 +32,27 @@ from ..qgis_plugin_tools.tools.resources import plugin_name
 LOGGER = logging.getLogger(plugin_name())
 
 
+def process(fn):
+    """
+    This decoration should be used when same effect as BasePanel.run is wanted for multiple methods
+    """
+    from functools import wraps
+
+    @wraps(fn)
+    def wrapper(self: BasePanel, *args, **kwargs):
+        self._start_process()
+        try:
+            fn(self)
+        except QgsPluginException as e:
+            LOGGER.exception(str(e), extra=e.bar_msg)
+        except Exception as e:
+            LOGGER.exception(tr('Unhandled exception occurred'), extra=bar_msg(e))
+        finally:
+            self._end_process()
+
+    return wrapper
+
+
 class BasePanel:
     """
     Base panel for dialog. Adapted from https://github.com/3liz/QuickOSM

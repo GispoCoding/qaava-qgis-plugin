@@ -22,7 +22,7 @@ from typing import List, Optional
 
 from qgis.core import QgsApplication
 
-from .base_panel import BasePanel
+from .base_panel import BasePanel, process
 from ..core.db.db_initializer import DatabaseInitializer
 from ..core.db.db_utils import get_existing_database_connections
 from ..core.db.qgis_project_utils import load_project
@@ -54,9 +54,9 @@ class DbPanel(BasePanel):
 
         # Run connections
         self.dlg.btn_db_initialize.clicked.connect(self.run)
-        self.dlg.btn_db_open_project.clicked.connect(lambda _: self.run('open_project'))
-        self.dlg.btn_db_register.clicked.connect(lambda _: self.run('register'))
-        self.dlg.db_btn_promote.clicked.connect(lambda _: self.run('promote'))
+        self.dlg.btn_db_open_project.clicked.connect(self.open_project)
+        self.dlg.btn_db_register.clicked.connect(self.register)
+        self.dlg.db_btn_promote.clicked.connect(self.promote)
 
         self.dlg.agreedCheckBox.setChecked(False)
         self.on_agreedCheckBox_stateChanged()
@@ -98,13 +98,6 @@ class DbPanel(BasePanel):
     def get_plan(self) -> str:
         return self.dlg.dmComboBox.currentText()
 
-    def open_project(self):
-        project_name = self.dlg.cb_projects.currentText()
-        if len(project_name):
-            plan_enum = LandUsePlanEnum[self.get_plan()]
-            load_project(project_name, plan_enum)
-            self.dlg.on_update_map_layers()
-
     def _run(self):
         # noinspection PyArgumentList
         self.initializer = DatabaseInitializer(self.dlg, QgsApplication.instance())
@@ -116,6 +109,15 @@ class DbPanel(BasePanel):
         self.set_available_projects(projects)
         self.set_versions(*self.initializer.get_versions())
 
+    @process
+    def open_project(self):
+        project_name = self.dlg.cb_projects.currentText()
+        if len(project_name):
+            plan_enum = LandUsePlanEnum[self.get_plan()]
+            load_project(project_name, plan_enum)
+            self.dlg.on_update_map_layers()
+
+    @process
     def register(self):
         # noinspection PyArgumentList
         self.initializer = DatabaseInitializer(self.dlg, QgsApplication.instance())
@@ -125,6 +127,7 @@ class DbPanel(BasePanel):
         self.set_available_projects(projects)
         self.set_versions(*self.initializer.get_versions())
 
+    @process
     def promote(self):
         self.initializer.promote_database()
         LOGGER.info(tr(f'Database promoted', ),
