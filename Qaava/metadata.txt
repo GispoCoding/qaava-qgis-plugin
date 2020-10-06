@@ -12,5 +12,6 @@ repository=https://github.com/GispoCoding/qaava-qgis-plugin
 homepage=https://github.com/GispoCoding/qaava
 tracker=https://github.com/GispoCoding/qaava-qgis-plugin/issues
 category=Plugins
-experimental=True
+icon=resources/icons/icon_hr.png
+experimental=False
 deprecated=False
