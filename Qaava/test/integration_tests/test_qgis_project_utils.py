@@ -32,7 +32,7 @@ def test_fix_project(database_params):
         assert fixed != orig
 
 
-def test_fix_project_with(database_params):
+def test_fix_data_sources_from_binary_projects(database_params):
     conn_string = "dbname='qaavadb1' host=localhost port=5439 sslmode=disable authcfg=test_auth_cfg"
     with open(get_test_resource('test_data', 'general_project.qgz'), 'rb') as f:
         content = f.read()
