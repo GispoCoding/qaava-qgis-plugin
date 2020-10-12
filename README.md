@@ -1,5 +1,9 @@
 QAAVA QGIS Plugin
 ================
+
+<img src="Qaava/resources/icons/icon_hr.png" alt="Logo of Qaava" width="250"/>
+
+
 ![](https://github.com/GispoCoding/qaava-qgis-plugin/workflows/Tests/badge.svg)
 ![](https://github.com/GispoCoding/qaava-qgis-plugin/workflows/Release/badge.svg)
 ![](https://github.com/GispoCoding/qaava-qgis-plugin/workflows/Translations/badge.svg)

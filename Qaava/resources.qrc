@@ -1,5 +1,0 @@
-<RCC>
-    <qresource prefix="/plugins/Qaava">
-        <file>resources/icons/icon.png</file>
-    </qresource>
-</RCC>
