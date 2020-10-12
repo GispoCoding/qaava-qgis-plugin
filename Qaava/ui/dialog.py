@@ -73,6 +73,7 @@ class Dialog(QDialog, FORM_CLASS):
         for i, panel in enumerate(self.panels):
             item = self.menu_widget.item(i)
             item.setIcon(panel.icon)
+            self.panels[panel].panel = panel
 
         # Change panel as menu item is changed
         self.menu_widget.currentRowChanged['int'].connect(

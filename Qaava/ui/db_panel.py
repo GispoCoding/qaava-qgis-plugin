@@ -29,6 +29,7 @@ from ..core.db.qgis_project_utils import load_project
 from ..definitions.qui import Panels
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
+from ..qgis_plugin_tools.tools.decorations import log_if_fails
 from ..qgis_plugin_tools.tools.i18n import tr
 from ..qgis_plugin_tools.tools.resources import plugin_name
 
@@ -48,7 +49,8 @@ class DbPanel(BasePanel):
 
         self.dlg.refreshPushButton.clicked.connect(self.on_refreshPushButton_clicked)
         self.dlg.agreedCheckBox.clicked.connect(self.on_agreedCheckBox_stateChanged)
-        self.dlg.dbComboBox.currentTextChanged.connect(lambda _: self.set_available_projects([]))
+        self.dlg.dbComboBox.currentTextChanged.connect(lambda _: self._reset_gui())
+        self.dlg.dmComboBox.currentTextChanged.connect(lambda _: self._reset_gui())
         self.dlg.cb_projects.currentTextChanged.connect(
             lambda _: self.dlg.btn_db_open_project.setEnabled(len(self.dlg.cb_projects.currentText()) > 0))
 
@@ -58,6 +60,10 @@ class DbPanel(BasePanel):
         self.dlg.btn_db_register.clicked.connect(self.register)
         self.dlg.db_btn_promote.clicked.connect(self.promote)
 
+        self._reset_gui()
+
+    def _reset_gui(self):
+        self.set_available_projects([])
         self.dlg.agreedCheckBox.setChecked(False)
         self.on_agreedCheckBox_stateChanged()
         self.set_versions()
@@ -128,7 +134,7 @@ class DbPanel(BasePanel):
         self.set_available_projects(projects)
         self.set_versions(*self.initializer.get_versions())
 
-    @process
+    @log_if_fails
     def promote(self):
         self.initializer.promote_database()
         LOGGER.info(tr(f'Database promoted', ),

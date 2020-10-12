@@ -134,4 +134,7 @@ class BasePanel:
         """Make some stuff after the process."""
         self.dlg.is_running = False
         for i, elem in enumerate(self.dlg.responsive_elements[self.panel]):
-            elem.setEnabled(self.elem_map.get(i, True))
+            # Some process could change the status to True
+            is_enabled = elem.isEnabled()
+            if not is_enabled:
+                elem.setEnabled(self.elem_map.get(i, True))
