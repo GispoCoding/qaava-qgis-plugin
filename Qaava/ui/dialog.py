@@ -24,6 +24,7 @@ from PyQt5.QtWidgets import QDialog
 
 from .about_panel import AboutPanel
 from .db_panel import DbPanel
+from .qaava_panel import QaavaPanel
 from .query_panel import QueryPanel
 from .settings_panel import SettingsPanel
 from ..definitions.qui import Panels
@@ -48,14 +49,17 @@ class Dialog(QDialog, FORM_CLASS):
         self.iface = iface
         self.is_running = False
 
+        db_panel = DbPanel(self)
         self.panels = {
+            Panels.Qaava: QaavaPanel(self, db_panel),
             Panels.Query: QueryPanel(self),
-            Panels.Database: DbPanel(self),
+            Panels.Database: db_panel,
             Panels.Settings: SettingsPanel(self),
             Panels.About: AboutPanel(self)
         }
 
         self.responsive_elements = {
+            Panels.Qaava: [self.btn_qaava_general, self.btn_qaava_detailed],
             Panels.Query: [self.q_push_button_reset, self.q_push_button_refresh, self.query_grid,
                            self.q_push_button_add_row, self.q_push_button_show_query,
                            self.q_push_button_run_query, self.q_push_button_clear_filter, self.q_combo_box_layer],

@@ -42,7 +42,15 @@ def process(fn):
     def wrapper(self: BasePanel, *args, **kwargs):
         self._start_process()
         try:
-            fn(self)
+            if args and args != (False,):
+                if len(kwargs):
+                    fn(self, *args, **kwargs)
+                else:
+                    fn(self, *args)
+            elif len(kwargs):
+                fn(self, **kwargs)
+            else:
+                fn(self)
         except QgsPluginException as e:
             LOGGER.exception(str(e), extra=e.bar_msg)
         except Exception as e:

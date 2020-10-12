@@ -103,8 +103,9 @@ class DbPanel(BasePanel):
         self.initializer = DatabaseInitializer(self.dlg, QgsApplication.instance())
         self.initializer.initialize_database(self.get_db(), self.get_plan())
         LOGGER.info(tr('Database Initialized'),
-                    extra=bar_msg(tr('Database {} initialized succesfully with plan ', self.get_db(), self.get_plan()),
-                                  success=True))
+                    extra=bar_msg(
+                        tr('Database {} initialized succesfully with plan {}', self.get_db(), self.get_plan()),
+                        success=True))
         projects = self.initializer.get_available_projects()
         self.set_available_projects(projects)
         self.set_versions(*self.initializer.get_versions())
