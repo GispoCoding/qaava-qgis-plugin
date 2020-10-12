@@ -99,6 +99,11 @@ class BasePanel:
     def on_update_map_layers(self):
         """Occurs when map layers are updated"""
 
+    def is_active(self):
+        """ Is the panel currently active (selected)"""
+        curr_panel = list(self.dlg.panels.keys())[self.dlg.menu_widget.currentRow()]
+        return curr_panel == self.panel
+
     def run(self, method='_run'):
         if not method:
             method = '_run'

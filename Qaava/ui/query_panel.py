@@ -102,7 +102,7 @@ class QueryPanel(BasePanel):
         self._updated_map_layers(QgsProject.instance().mapLayers().values())
 
     def _updated_map_layers(self, map_layers: List[QgsVectorLayer], bypass_running: bool = False):
-        if not self.dlg.is_running or bypass_running:
+        if self.is_active() and (not self.dlg.is_running or bypass_running):
             excepted_layers = []
             excepted_strings = get_setting(Settings.layer_should_not_contain_string.name,
                                            Settings.layer_should_not_contain_string.value,
@@ -114,7 +114,7 @@ class QueryPanel(BasePanel):
             self.dlg.q_combo_box_layer.setExceptedLayerList(excepted_layers)
 
     def change_layer(self, *args):
-        if not self.dlg.is_running:
+        if self.is_active() and not self.dlg.is_running:
             self._change_layer(self.dlg.q_combo_box_layer.currentLayer())
 
     @log_if_fails
