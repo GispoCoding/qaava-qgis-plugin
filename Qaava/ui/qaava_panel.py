@@ -22,6 +22,7 @@ import logging
 from .base_panel import BasePanel, process
 from .db_panel import DbPanel
 from ..core.db.db_utils import get_qaava_connection_name
+from ..core.exceptions import QaavaDatabaseNotSetException
 from ..definitions.qui import Panels
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
@@ -48,14 +49,22 @@ class QaavaPanel(BasePanel):
         LOGGER.debug(f'Initializing session with {plan_enum.name} plan')
         self.plan_enum = plan_enum
 
-        # set values
-        self.dlg.dbComboBox.setCurrentText(get_qaava_connection_name(plan_enum))
-        self.dlg.dmComboBox.setCurrentText(plan_enum.name)
+        try:
+            # set values
+            self.dlg.dbComboBox.setCurrentText(get_qaava_connection_name(plan_enum))
+            self.dlg.dmComboBox.setCurrentText(plan_enum.name)
 
-        # Register and open project
-        self.db_panel.register()
-        self.db_panel.open_project()
+            # Register and open project
+            self.db_panel.register()
+            self.db_panel.open_project()
 
-        LOGGER.info(tr('Qaava session initialized'),
-                    extra=bar_msg(tr('Qaava initialized successfully with plan {}', plan_enum.name),
-                                  success=True))
+            LOGGER.info(tr('Qaava session initialized'),
+                        extra=bar_msg(tr('Qaava initialized successfully with plan {}', plan_enum.name),
+                                      success=True))
+        except QaavaDatabaseNotSetException:
+            LOGGER.warning(tr('Cancelling Qaava session'),
+                           extra=bar_msg(tr('No database initialized for plan {}', plan_enum.name)))
+            self.dlg.display_window(tr('No database initialized'),
+                                    tr('There is no database initialized for plan {}. Please initialize a database '
+                                       'to be used for editing land use plans with Qaava using Database panel.',
+                                       plan_enum.name))

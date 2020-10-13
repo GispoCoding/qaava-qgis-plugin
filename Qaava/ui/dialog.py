@@ -49,6 +49,8 @@ class Dialog(QDialog, FORM_CLASS):
         self.iface = iface
         self.is_running = False
 
+        self._set_window_location()
+
         db_panel = DbPanel(self)
         self.panels = {
             Panels.Qaava: QaavaPanel(self, db_panel),
@@ -97,6 +99,15 @@ class Dialog(QDialog, FORM_CLASS):
         """
         res = QMessageBox.information(self, title, msg, QMessageBox.Ok, QMessageBox.Cancel)
         return res == QMessageBox.Ok
+
+    def display_window(self, title: str, msg: str) -> None:
+        """
+        Display window to user
+        :param title: title of the window
+        :param msg: message of the window
+        :return:
+        """
+        res = QMessageBox.information(self, title, msg, QMessageBox.Ok)
 
     def closeEvent(self, evt: QtGui.QCloseEvent) -> None:
         LOGGER.debug('Closing dialog')
