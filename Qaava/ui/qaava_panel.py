@@ -63,8 +63,9 @@ class QaavaPanel(BasePanel):
                                       success=True))
         except QaavaDatabaseNotSetException:
             LOGGER.warning(tr('Cancelling Qaava session'),
-                           extra=bar_msg(tr('No database initialized for plan {}', plan_enum.name)))
+                           extra=bar_msg(tr('No database initialized or registered for plan {}', plan_enum.name)))
             self.dlg.display_window(tr('No database initialized'),
-                                    tr('There is no database initialized for plan {}. Please initialize a database '
+                                    tr('There is no database initialized or registered for plan {}. '
+                                       'Please initialize a database '
                                        'to be used for editing land use plans with Qaava using Database panel.',
                                        plan_enum.name))
