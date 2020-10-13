@@ -32,6 +32,35 @@ from ..qgis_plugin_tools.tools.resources import plugin_name
 LOGGER = logging.getLogger(plugin_name())
 
 
+def process(fn):
+    """
+    This decoration should be used when same effect as BasePanel.run is wanted for multiple methods
+    """
+    from functools import wraps
+
+    @wraps(fn)
+    def wrapper(self: BasePanel, *args, **kwargs):
+        self._start_process()
+        try:
+            if args and args != (False,):
+                if len(kwargs):
+                    fn(self, *args, **kwargs)
+                else:
+                    fn(self, *args)
+            elif len(kwargs):
+                fn(self, **kwargs)
+            else:
+                fn(self)
+        except QgsPluginException as e:
+            LOGGER.exception(str(e), extra=e.bar_msg)
+        except Exception as e:
+            LOGGER.exception(tr('Unhandled exception occurred'), extra=bar_msg(e))
+        finally:
+            self._end_process()
+
+    return wrapper
+
+
 class BasePanel:
     """
     Base panel for dialog. Adapted from https://github.com/3liz/QuickOSM
@@ -70,6 +99,11 @@ class BasePanel:
     def on_update_map_layers(self):
         """Occurs when map layers are updated"""
 
+    def is_active(self):
+        """ Is the panel currently active (selected)"""
+        curr_panel = list(self.dlg.panels.keys())[self.dlg.menu_widget.currentRow()]
+        return curr_panel == self.panel
+
     def run(self, method='_run'):
         if not method:
             method = '_run'
@@ -100,4 +134,7 @@ class BasePanel:
         """Make some stuff after the process."""
         self.dlg.is_running = False
         for i, elem in enumerate(self.dlg.responsive_elements[self.panel]):
-            elem.setEnabled(self.elem_map.get(i, True))
+            # Some process could change the status to True
+            is_enabled = elem.isEnabled()
+            if not is_enabled:
+                elem.setEnabled(self.elem_map.get(i, True))

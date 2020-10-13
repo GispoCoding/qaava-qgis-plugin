@@ -57,6 +57,7 @@ def fix_project(auth_cfg_id, conn_params, content):
     :param content: SQL file of containing the project(s)
     :return: list of binary QGIS project zip files with correct data sources
     """
+    # noinspection SqlResolve
     proj_bytes = [line.split(',')[5][4:-3] for line in content.split('\n') if
                   line.startswith('INSERT INTO public.qgis_projects')]
     byts = [bytes.fromhex(b) for b in proj_bytes]
@@ -66,19 +67,21 @@ def fix_project(auth_cfg_id, conn_params, content):
     return content
 
 
-def fix_data_sources_from_binary_projects(conn_params: Dict[str, str], auth_cfg_id: str, contents: List[bytes]):
+def fix_data_sources_from_binary_projects(conn_params: Dict[str, str], auth_cfg_id: str, contents: List[bytes],
+                                          _test=False):
     """
     Fix data sources from binary representation of zipped QGIS project
     :param conn_params: connection parameters of the db connection
     :param auth_cfg_id: auth config id of the connection
     :param contents: list of binary QGIS project zip files
+    :param _test: whether method is run inside test or not
     :return: list of binary QGIS project zip files with correct data sources
     """
     host = conn_params['host']
     port = conn_params['port']
     dbname = conn_params['dbname']
     ret_vals = []
-    conn_string = f"dbname='{dbname}' host={host} port={port} authcfg={auth_cfg_id}"
+    conn_string = f"dbname='{dbname}' host={host} port={port} sslmode=disable authcfg={auth_cfg_id} key="
     for i, content in enumerate(contents):
         z = io.BytesIO()
         z.write(content)
@@ -88,7 +91,11 @@ def fix_data_sources_from_binary_projects(conn_params: Dict[str, str], auth_cfg_
         qgs_proj_content = files[qgs_f_key].decode('utf-8')
 
         # Replace all connection string from layers with the db specific connection string
-        qgs_proj_content = re.sub(r'dbname=.*host=.*port=\d{4}', conn_string, qgs_proj_content)
+        qgs_proj_content = re.sub(r'dbname=.*host=.*port=\d{4}.*key=', conn_string, qgs_proj_content)
+        if _test:
+            ret_vals.append(qgs_proj_content)
+            continue
+
         if conn_string not in qgs_proj_content:
             raise QaavaProjectInInvalidFormat()
         files[qgs_f_key] = bytes(qgs_proj_content, 'utf-8')

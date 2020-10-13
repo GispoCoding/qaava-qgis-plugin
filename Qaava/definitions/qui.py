@@ -28,6 +28,7 @@ from ..qgis_plugin_tools.tools.resources import resources_path
 
 class Panels(enum.Enum):
     """Panels in the Dialog"""
+    Qaava = {'icon': 'icon.png'}
     Query = {'icon': '/search.svg'}
     Database = {'icon': '/dbmanager.svg'}
     Settings = {'icon': '/mActionMapSettings.svg'}

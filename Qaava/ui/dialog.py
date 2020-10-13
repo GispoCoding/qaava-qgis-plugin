@@ -20,10 +20,11 @@
 import logging
 
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QMessageBox, QDesktopWidget
 
 from .about_panel import AboutPanel
 from .db_panel import DbPanel
+from .qaava_panel import QaavaPanel
 from .query_panel import QueryPanel
 from .settings_panel import SettingsPanel
 from ..definitions.qui import Panels
@@ -48,14 +49,19 @@ class Dialog(QDialog, FORM_CLASS):
         self.iface = iface
         self.is_running = False
 
+        self._set_window_location()
+
+        db_panel = DbPanel(self)
         self.panels = {
+            Panels.Qaava: QaavaPanel(self, db_panel),
             Panels.Query: QueryPanel(self),
-            Panels.Database: DbPanel(self),
+            Panels.Database: db_panel,
             Panels.Settings: SettingsPanel(self),
             Panels.About: AboutPanel(self)
         }
 
         self.responsive_elements = {
+            Panels.Qaava: [self.btn_qaava_general, self.btn_qaava_detailed],
             Panels.Query: [self.q_push_button_reset, self.q_push_button_refresh, self.query_grid,
                            self.q_push_button_add_row, self.q_push_button_show_query,
                            self.q_push_button_run_query, self.q_push_button_clear_filter, self.q_combo_box_layer],
@@ -69,6 +75,7 @@ class Dialog(QDialog, FORM_CLASS):
         for i, panel in enumerate(self.panels):
             item = self.menu_widget.item(i)
             item.setIcon(panel.icon)
+            self.panels[panel].panel = panel
 
         # Change panel as menu item is changed
         self.menu_widget.currentRowChanged['int'].connect(
@@ -82,6 +89,34 @@ class Dialog(QDialog, FORM_CLASS):
 
         # The first panel is shown initially
         self.menu_widget.setCurrentRow(0)
+
+    def _set_window_location(self):
+        ag = QDesktopWidget().availableGeometry()
+        sg = QDesktopWidget().screenGeometry()
+
+        widget = self.geometry()
+        x = (ag.width() - widget.width()) / 1.5
+        y = 2 * ag.height() - sg.height() - 1.2 * widget.height()
+        self.move(x, y)
+
+    def ask_confirmation(self, title: str, msg: str) -> bool:
+        """
+        Ask confirmation via QMessageBox question
+        :param title: title of the window
+        :param msg: message of the window
+        :return: Whether user wants to continue
+        """
+        res = QMessageBox.information(self, title, msg, QMessageBox.Ok, QMessageBox.Cancel)
+        return res == QMessageBox.Ok
+
+    def display_window(self, title: str, msg: str) -> None:
+        """
+        Display window to user
+        :param title: title of the window
+        :param msg: message of the window
+        :return:
+        """
+        res = QMessageBox.information(self, title, msg, QMessageBox.Ok)
 
     def closeEvent(self, evt: QtGui.QCloseEvent) -> None:
         LOGGER.debug('Closing dialog')

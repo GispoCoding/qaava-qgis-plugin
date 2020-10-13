@@ -85,6 +85,11 @@
      </property>
      <item>
       <property name="text">
+       <string>Qaava</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
        <string>Query</string>
       </property>
      </item>
@@ -117,8 +122,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>783</width>
-          <height>640</height>
+          <width>769</width>
+          <height>654</height>
          </rect>
         </property>
         <property name="minimumSize">
@@ -131,8 +136,87 @@
          <item>
           <widget class="QStackedWidget" name="stacked_widget">
            <property name="currentIndex">
-            <number>1</number>
+            <number>0</number>
            </property>
+           <widget class="QWidget" name="qaava">
+            <layout class="QVBoxLayout" name="verticalLayout_22">
+             <item>
+              <widget class="QgsCollapsibleGroupBox" name="mGroupBox_6">
+               <property name="title">
+                <string>Qaava session initialization</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_11">
+                <item>
+                 <layout class="QVBoxLayout" name="verticalLayout_20">
+                  <item>
+                   <widget class="QLabel" name="label_12">
+                    <property name="text">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Welcome to start creating and editing land
+                      use plans with Qaava. &lt;/p&gt;&lt;p&gt;At the moment there are 2 possible database models to
+                      choose from: a &lt;a href=&quot;https://github.com/GispoCoding/qaava/tree/master/asemakaavan-tietomalli&quot;&gt;&lt;span
+                      style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;detailed&lt;/span&gt;&lt;/a&gt;
+                      land use plan model and a &lt;a href=&quot;https://github.com/GispoCoding/qaava/tree/master/asemakaavan-tietomalli&quot;&gt;&lt;span
+                      style=&quot; text-decoration: underline; color:#0000ff;&quot;&gt;general&lt;/span&gt;&lt;/a&gt;
+                      plan model. &lt;/p&gt;&lt;p&gt;Click below to initialize Qaava session either with general plan or
+                      with detailed plan.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                     </string>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QGridLayout" name="gridLayout_9">
+                    <item row="0" column="2">
+                     <widget class="QPushButton" name="btn_qaava_detailed">
+                      <property name="text">
+                       <string>Detailed</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="1">
+                     <widget class="QPushButton" name="btn_qaava_general">
+                      <property name="text">
+                       <string>General</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item row="0" column="0">
+                     <spacer name="horizontalSpacer_7">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
+                </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <spacer name="verticalSpacer_5">
+               <property name="orientation">
+                <enum>Qt::Vertical</enum>
+               </property>
+               <property name="sizeHint" stdset="0">
+                <size>
+                 <width>20</width>
+                 <height>40</height>
+                </size>
+               </property>
+              </spacer>
+             </item>
+            </layout>
+           </widget>
            <widget class="QWidget" name="query">
             <layout class="QVBoxLayout" name="verticalLayout_14">
              <item>
@@ -603,55 +687,71 @@
                   </layout>
                  </widget>
                 </item>
+               </layout>
+              </widget>
+             </item>
+             <item>
+              <widget class="QgsCollapsibleGroupBox" name="mGroupBox_8">
+               <property name="title">
+                <string>QGIS projects</string>
+               </property>
+               <layout class="QVBoxLayout" name="verticalLayout_23">
                 <item>
-                 <widget class="QgsCollapsibleGroupBox" name="mGroupBox_2">
-                  <property name="title">
-                   <string>QGIS projects</string>
-                  </property>
-                  <layout class="QVBoxLayout" name="verticalLayout_11">
-                   <item>
-                    <layout class="QHBoxLayout" name="horizontalLayout_5">
-                     <item>
-                      <widget class="QLabel" name="label_2">
-                       <property name="text">
-                        <string>Available Projects:</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <spacer name="horizontalSpacer_3">
-                       <property name="orientation">
-                        <enum>Qt::Horizontal</enum>
-                       </property>
-                       <property name="sizeHint" stdset="0">
-                        <size>
-                         <width>40</width>
-                         <height>20</height>
-                        </size>
-                       </property>
-                      </spacer>
-                     </item>
-                     <item>
-                      <widget class="QComboBox" name="cb_projects">
-                       <property name="minimumSize">
-                        <size>
-                         <width>200</width>
-                         <height>0</height>
-                        </size>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="btn_db_open_project">
-                       <property name="text">
-                        <string>Open</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </item>
-                  </layout>
-                 </widget>
+                 <layout class="QVBoxLayout" name="verticalLayout_24">
+                  <item>
+                   <widget class="QLabel" name="label_14">
+                    <property name="text">
+                     <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Open any of the projects initialized in
+                      database&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;
+                     </string>
+                    </property>
+                    <property name="wordWrap">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <layout class="QHBoxLayout" name="horizontalLayout_10">
+                    <item>
+                     <widget class="QLabel" name="label_15">
+                      <property name="text">
+                       <string>Available Projects:</string>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <spacer name="horizontalSpacer_8">
+                      <property name="orientation">
+                       <enum>Qt::Horizontal</enum>
+                      </property>
+                      <property name="sizeHint" stdset="0">
+                       <size>
+                        <width>40</width>
+                        <height>20</height>
+                       </size>
+                      </property>
+                     </spacer>
+                    </item>
+                    <item>
+                     <widget class="QComboBox" name="cb_projects">
+                      <property name="minimumSize">
+                       <size>
+                        <width>200</width>
+                        <height>0</height>
+                       </size>
+                      </property>
+                     </widget>
+                    </item>
+                    <item>
+                     <widget class="QPushButton" name="btn_db_open_project">
+                      <property name="text">
+                       <string>Open</string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </item>
+                 </layout>
                 </item>
                </layout>
               </widget>
