@@ -20,7 +20,7 @@
 import logging
 
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QDialog
+from PyQt5.QtWidgets import QDialog, QMessageBox
 
 from .about_panel import AboutPanel
 from .db_panel import DbPanel
@@ -87,6 +87,16 @@ class Dialog(QDialog, FORM_CLASS):
 
         # The first panel is shown initially
         self.menu_widget.setCurrentRow(0)
+
+    def ask_confirmation(self, title: str, msg: str) -> bool:
+        """
+        Ask confirmation via QMessageBox question
+        :param title: title of the window
+        :param msg: message of the window
+        :return: Whether user wants to continue
+        """
+        res = QMessageBox.information(self, title, msg, QMessageBox.Ok, QMessageBox.Cancel)
+        return res == QMessageBox.Ok
 
     def closeEvent(self, evt: QtGui.QCloseEvent) -> None:
         LOGGER.debug('Closing dialog')

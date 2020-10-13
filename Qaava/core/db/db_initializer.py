@@ -38,6 +38,7 @@ from ...ui.db_tools_ask_credentials import DbAskCredentialsDialog
 LOGGER = logging.getLogger(plugin_name())
 
 
+# noinspection SqlResolve
 class DatabaseInitializer:
 
     def __init__(self, dialog: QDialog, qgs_app: QCoreApplication) -> None:
@@ -71,16 +72,27 @@ class DatabaseInitializer:
                     e)))
 
         try:
-            # Actual insertion of the schema and project
+            # Actual insertion of the schema
             self.database.execute_insert(schema_query)
-            self.database.execute_insert(project_query)
         except psycopg2.OperationalError:
             raise QaavaDatabaseError(tr('Connection error'),
                                      bar_msg(tr('Could not connect to the database {} ', db_conn_name)))
         except (Exception, psycopg2.DatabaseError) as e:
             raise QaavaDatabaseError(tr('Error occured while injecting schema'),
                                      bar_msg(tr(
-                                         'There might be errors in schema. If the problem persists, '
+                                         'Check log file for details. There might be errors in schema. If the problem persists, '
+                                         'contact developers')))
+
+        try:
+            # Actual insertion of project
+            self.database.execute_insert(project_query)
+        except psycopg2.OperationalError:
+            raise QaavaDatabaseError(tr('Connection error'),
+                                     bar_msg(tr('Could not connect to the database {} ', db_conn_name)))
+        except (Exception, psycopg2.DatabaseError) as e:
+            raise QaavaDatabaseError(tr('Error occured while inserting the project'),
+                                     bar_msg(tr(
+                                         'Check log file for derails. If the problem persists, '
                                          'contact developers')))
 
     def register_database(self, db_conn_name: str, plan_sting: str) -> None:

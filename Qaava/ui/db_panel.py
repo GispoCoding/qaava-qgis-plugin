@@ -136,8 +136,16 @@ class DbPanel(BasePanel):
 
     @log_if_fails
     def promote(self):
-        self.initializer.promote_database()
-        LOGGER.info(tr(f'Database promoted', ),
-                    extra=bar_msg(tr('Promoted from version {} to version {}', self.dlg.db_l_curr_version.text(),
-                                     self.dlg.db_l_new_version.text()), success=True))
-        self.set_versions(*self.initializer.get_versions())
+        should_continue = self.dlg.ask_confirmation(tr('This action might result to QGIS project loss'),
+                                                    tr('This action will delete all QGIS projects saved in the '
+                                                       'database. If you want to save your current project, please '
+                                                       'press "Cancel" and save the project to disk '
+                                                       'before continuing.'))
+        if should_continue:
+            self.initializer.promote_database()
+            LOGGER.info(tr(f'Database promoted', ),
+                        extra=bar_msg(tr('Promoted from version {} to version {}', self.dlg.db_l_curr_version.text(),
+                                         self.dlg.db_l_new_version.text()), success=True))
+            self.set_versions(*self.initializer.get_versions())
+        else:
+            LOGGER.debug('Cancelled promotion')
