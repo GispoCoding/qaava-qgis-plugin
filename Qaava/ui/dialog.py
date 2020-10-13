@@ -20,7 +20,7 @@
 import logging
 
 from PyQt5 import QtGui
-from PyQt5.QtWidgets import QDialog, QMessageBox
+from PyQt5.QtWidgets import QDialog, QMessageBox, QDesktopWidget
 
 from .about_panel import AboutPanel
 from .db_panel import DbPanel
@@ -89,6 +89,15 @@ class Dialog(QDialog, FORM_CLASS):
 
         # The first panel is shown initially
         self.menu_widget.setCurrentRow(0)
+
+    def _set_window_location(self):
+        ag = QDesktopWidget().availableGeometry()
+        sg = QDesktopWidget().screenGeometry()
+
+        widget = self.geometry()
+        x = (ag.width() - widget.width()) / 1.5
+        y = 2 * ag.height() - sg.height() - 1.2 * widget.height()
+        self.move(x, y)
 
     def ask_confirmation(self, title: str, msg: str) -> bool:
         """
