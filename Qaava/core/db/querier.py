@@ -136,9 +136,14 @@ class Querier:
                     val = int(val)
                 elif field.type == QVariant.Double:
                     val = float(val)
+
         if isinstance(field, IsForeignNullFieldWrapper):
             operation = Operation.IS_NOT if value else Operation.IS
             val = None
+
+        if (operation in [Operation.IS, Operation.IS_NOT, Operation.EQ, Operation.UNEQ] and
+            field.type == QVariant.DateTime and value.split(' ')[1] == '00:00:00'):
+            val = value.split(' ')[0]
 
         return self.qr.add_and_condition(field, operation, val)
 

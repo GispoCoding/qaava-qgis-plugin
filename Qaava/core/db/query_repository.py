@@ -20,6 +20,7 @@
 import logging
 from typing import List, Dict, Optional, Union
 
+from PyQt5.QtCore import QVariant
 from psycopg2.sql import SQL, Composable
 
 from .database import Database
@@ -74,9 +75,15 @@ class QueryRepository(Database):
                                                                   m_b=field.m_b, b_pk=field.b_pk)
             )
 
-        self.where_parts.append(
-            SQL('{fld}' + operation.value + '%(' + field.field_with_table + ')s').format(fld=field.field)
-        )
+        if field.type == QVariant.DateTime and ':' not in value:
+            self.where_parts.append(
+                SQL("DATE({fld})" + operation.value + '%(' + field.field_with_table + ')s').format(
+                    fld=field.field)
+            )
+        else:
+            self.where_parts.append(
+                SQL('{fld}' + operation.value + '%(' + field.field_with_table + ')s').format(fld=field.field)
+            )
 
         self.vars[field.field_with_table] = value
 
