@@ -254,12 +254,15 @@ Helper functions
 def clean_schema(raw_schema: str) -> str:
     schema_lines = []
     for line in raw_schema.split("\n"):
-        if (line.startswith("-- DROP ") or line.startswith("-- ALTER")) and "EXTENSION" not in line:
+        if (line.startswith("-- DROP ") or line.startswith(
+            "-- ALTER")) and "EXTENSION" not in line and "DATABASE" not in line:
             line = line.replace("-- ", "")
         if "OWNER TO postgres" in line:
             line = "-- " + line
         if line.startswith("CREATE EXTENSION"):
             line = line.replace("CREATE EXTENSION", "CREATE EXTENSION IF NOT EXISTS")
+        elif line.startswith("CREATE DATABASE"):
+            line = line.replace("CREATE DATABASE", "-- CREATE DATABASE")
 
         schema_lines.append(line)
     return "\n".join(schema_lines)
@@ -341,6 +344,7 @@ def initialize_auth_manager():
 
 def remove_db_settings():
     s = QSettings()
+    s.remove("Qaava/plan_for_project")
     s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/host")
     s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/port")
     s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/database")

@@ -56,6 +56,24 @@ def set_qaava_connection(plan: LandUsePlanEnum, conn_name: str) -> None:
     set_setting(plan.value.key, conn_name, internal=False)
 
 
+def set_qaava_plan(plan: LandUsePlanEnum) -> None:
+    """
+    Set plan to be used as in the project
+    :param plan:
+    """
+    set_setting('plan_for_project', plan.name)
+
+
+def get_qaava_plan() -> LandUsePlanEnum:
+    """
+    :return: Plan for the current project
+    """
+    value = get_setting('plan_for_project', "", str)
+    if value == "":
+        raise QaavaDatabaseNotSetException()
+    return LandUsePlanEnum[value]
+
+
 def get_qaava_connection_name(plan: LandUsePlanEnum) -> str:
     """
     :return: Name of the PostGIS connection that will be used by the plugin

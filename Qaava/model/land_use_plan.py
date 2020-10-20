@@ -102,12 +102,15 @@ class LandUsePlan:
         """
         schema_lines = []
         for line in script.split("\n"):
-            if (line.startswith("-- DROP ") or line.startswith("-- ALTER")) and "EXTENSION" not in line:
+            if (line.startswith("-- DROP ") or line.startswith(
+                "-- ALTER")) and "EXTENSION" not in line and "DATABASE" not in line:
                 line = line.replace("-- ", "")
             if "OWNER TO postgres" in line:
                 line = "-- " + line
             if line.startswith("CREATE EXTENSION"):
                 line = line.replace("CREATE EXTENSION", "CREATE EXTENSION IF NOT EXISTS")
+            elif line.startswith("CREATE DATABASE"):
+                line = line.replace("CREATE DATABASE", "-- CREATE DATABASE")
 
             schema_lines.append(line)
         return "\n".join(schema_lines)

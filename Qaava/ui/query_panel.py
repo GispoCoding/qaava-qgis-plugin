@@ -28,12 +28,12 @@ from qgis.core import QgsApplication, QgsVectorLayer, QgsCoordinateReferenceSyst
 from qgis.gui import QgsMapCanvas, QgsExtentGroupBox
 
 from .base_panel import BasePanel
+from ..core.db.db_utils import get_qaava_plan
 from ..core.db.querier import Querier
 from ..core.exceptions import QaavaLayerError
 from ..core.wrappers.field_wrapper import FieldWrapper
 from ..definitions.db import Operation
 from ..definitions.qui import Panels, Settings
-from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
 from ..qgis_plugin_tools.tools.decorations import log_if_fails
 from ..qgis_plugin_tools.tools.fields import widget_for_field, value_for_widget
@@ -75,6 +75,9 @@ class QueryPanel(BasePanel):
         if self.dlg.q_combo_box_layer.currentLayer() is not None:
             self.change_layer()
 
+        # noinspection PyArgumentList
+        self._updated_map_layers(QgsProject.instance().mapLayers().values())
+
     @log_if_fails
     def teardown_panel(self):
         self._clear_filter()
@@ -98,11 +101,8 @@ class QueryPanel(BasePanel):
         for row_id in list(self.rows.keys()):
             self._remove_row(row_id)
 
-        # noinspection PyArgumentList
-        self._updated_map_layers(QgsProject.instance().mapLayers().values())
-
     def _updated_map_layers(self, map_layers: List[QgsVectorLayer], bypass_running: bool = False):
-        if self.is_active() and (not self.dlg.is_running or bypass_running):
+        if not self.dlg.is_running or bypass_running:
             excepted_layers = []
             excepted_strings = get_setting(Settings.layer_should_not_contain_string.name,
                                            Settings.layer_should_not_contain_string.value,
@@ -112,6 +112,7 @@ class QueryPanel(BasePanel):
                 if any(x in layer.name() for x in excepted_strings):
                     excepted_layers.append(layer)
             self.dlg.q_combo_box_layer.setExceptedLayerList(excepted_layers)
+            self.dlg.q_combo_box_layer.setCurrentIndex(-1)
 
     def change_layer(self, *args):
         if self.is_active() and not self.dlg.is_running:
@@ -125,10 +126,8 @@ class QueryPanel(BasePanel):
         if layer is not None:
             # Set extent disabled if layer has no geometry
             self.dlg.q_extent.setEnabled(layer.geometryType() != 4)
-
             try:
-                # TODO: get the plan from elsewhere
-                self.querier = Querier(LandUsePlanEnum.general.name, layer,
+                self.querier = Querier(get_qaava_plan().name, layer,
                                        limit_for_unique=int(
                                            get_setting(Settings.number_of_query_choices.name,
                                                        Settings.number_of_query_choices.value,

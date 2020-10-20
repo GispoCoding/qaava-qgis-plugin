@@ -46,6 +46,33 @@ def test_query_repository_initialization(general_db, layer):
     assert query == 'SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" '
 
 
+def test_querier_datetime_midnight(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
+    querier.add_condition(querier.fields['luomispvm'], Operation.EQ, '2020-09-04 00:00:00')
+    query = querier.show_query()
+    assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" WHERE '
+                     'DATE("yleiskaava"."luomispvm")=\'2020-09-04\'')
+    assert len(querier.run()) == 3
+
+
+def test_querier_datetime_midnight_gt(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
+    querier.add_condition(querier.fields['luomispvm'], Operation.GT, '2020-09-04 00:00:00')
+    query = querier.show_query()
+    assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" WHERE '
+                     '"yleiskaava"."luomispvm">\'2020-09-04 00:00:00\'')
+    assert len(querier.run()) == 4
+
+
+def test_querier_datetime_empty(general_db, layer):
+    querier = Querier(LandUsePlanEnum.general.name, layer)
+    querier.add_condition(querier.fields['luomispvm'], Operation.GT, '')
+    query = querier.show_query()
+    assert query == ('SELECT "yleiskaava"."uuid" FROM "yleiskaava"."yleiskaava" WHERE '
+                     '"yleiskaava"."luomispvm" IS NULL')
+    assert len(querier.run()) == 0
+
+
 def test_querier_extent(general_db, layer):
     extent = QgsRectangle(23456138, 6695226, 23456935, 6695726)
     querier = Querier(LandUsePlanEnum.general.name, layer)
