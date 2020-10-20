@@ -25,7 +25,7 @@ from PyQt5.QtCore import QCoreApplication
 from PyQt5.QtWidgets import QDialog
 
 from .database import Database
-from .db_utils import (set_qaava_connection, get_db_connection_params, set_auth_cfg)
+from .db_utils import (set_qaava_connection, get_db_connection_params, set_auth_cfg, set_qaava_plan)
 from ...core.exceptions import QaavaInitializationCancelled, QaavaDatabaseError
 from ...model.land_use_plan import LandUsePlanEnum, LandUsePlan
 from ...qgis_plugin_tools.tools.custom_logging import bar_msg
@@ -103,6 +103,7 @@ class DatabaseInitializer:
         self.plan: LandUsePlan = self.plan_enum.value()  # intance of plan class because of ()
 
         set_qaava_connection(self.plan_enum, db_conn_name)
+        set_qaava_plan(self.plan_enum)
         self.conn_params = get_db_connection_params(self.plan_enum)
 
         # Ask username and password if needed

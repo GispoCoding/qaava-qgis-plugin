@@ -344,6 +344,7 @@ def initialize_auth_manager():
 
 def remove_db_settings():
     s = QSettings()
+    s.remove("Qaava/plan_for_project")
     s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/host")
     s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/port")
     s.remove(f"{PG_CONNECTIONS}/{CONN_NAME}/database")
