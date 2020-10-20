@@ -16,4 +16,15 @@
 * Improved tests
 * <a href="https://github.com/GispoCoding/qaava-qgis-plugin/compare/v0.0.1...v0.0.2">Full Changelog</a>
 
+### 0.1.0 - 20/10/2020
+
+* Add Transifex support for translations
+* Add proper Qaava icons and logo
+* Add Qaava-panel for easier initialization
+* Fix database promotion
+* Improve query tool
+* Minor bug fixes
+* Improved tests
+* <a href="https://github.com/GispoCoding/qaava-qgis-plugin/compare/v0.0.2...0.1.0">Full Changelog</a>
+
 ##
