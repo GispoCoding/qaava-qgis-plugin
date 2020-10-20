@@ -75,7 +75,7 @@ class QueryRepository(Database):
                                                                   m_b=field.m_b, b_pk=field.b_pk)
             )
 
-        if field.type == QVariant.DateTime and ':' not in value:
+        if field.type == QVariant.DateTime and value is not None and ':' not in value:
             self.where_parts.append(
                 SQL("DATE({fld})" + operation.value + '%(' + field.field_with_table + ')s').format(
                     fld=field.field)

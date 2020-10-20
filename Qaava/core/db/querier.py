@@ -142,8 +142,10 @@ class Querier:
             val = None
 
         if (operation in [Operation.IS, Operation.IS_NOT, Operation.EQ, Operation.UNEQ] and
-            field.type == QVariant.DateTime and value.split(' ')[1] == '00:00:00'):
-            val = value.split(' ')[0]
+            field.type == QVariant.DateTime):
+            parts = value.split(' ')
+            if len(parts) == 2 and parts[1] == '00:00:00':
+                val = parts[0]
 
         return self.qr.add_and_condition(field, operation, val)
 
