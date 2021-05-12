@@ -17,9 +17,9 @@
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
-from ..conftest import set_settings, CONN_NAME, IFACE, QGIS_APP
 from ...core.db.database import Database
 from ...core.db.db_initializer import DatabaseInitializer
+from ..conftest import CONN_NAME, IFACE, QGIS_APP, set_settings
 
 
 # noinspection SqlNoDataSourceInspection
@@ -29,7 +29,7 @@ def test_database_select(db):
     rows = db1.execute_select("SELECT * FROM test_table")
     assert rows == [(1,)]
     rows = db1.execute_select("SELECT * FROM test_table", ret_dict=True)
-    assert rows[0] == {'?column?': 1}
+    assert rows[0] == {"?column?": 1}
 
 
 # noinspection SqlNoDataSourceInspection
@@ -40,7 +40,7 @@ def test_db_initializer_with_detailed_plan(new_project, db):
     initializer = DatabaseInitializer(IFACE, QGIS_APP)
     initializer.initialize_database(CONN_NAME, "detailed")
     rows = db1.execute_select("SELECT nspname FROM pg_catalog.pg_namespace;")
-    expected_schemas = {('asemakaavat',), ('koodistot',), ('kaavan_lisatiedot',)}
+    expected_schemas = {("asemakaavat",), ("koodistot",), ("kaavan_lisatiedot",)}
     assert set(rows).intersection(expected_schemas) == expected_schemas
 
 
@@ -52,14 +52,14 @@ def test_db_initializer_with_general_plan(new_project, db):
     initializer = DatabaseInitializer(IFACE, QGIS_APP)
     initializer.initialize_database(CONN_NAME, "general")
     rows = db1.execute_select("SELECT nspname FROM pg_catalog.pg_namespace;")
-    expected_schemas = {('yleiskaava',), ('koodistot',), ('kaavan_lisatiedot',)}
+    expected_schemas = {("yleiskaava",), ("koodistot",), ("kaavan_lisatiedot",)}
     assert set(rows).intersection(expected_schemas) == expected_schemas
     available_projects = initializer.get_available_projects()
-    assert available_projects == ['qaava-yleiskaava']
+    assert available_projects == ["qaava-yleiskaava"]
 
 
 def test_fixture_order_1(db):
-    db1 = Database(db['general'])
+    db1 = Database(db["general"])
     rows = db1.execute_select("SELECT count(*) FROM yleiskaava.yleiskaava")
     assert rows == [(0,)]
 

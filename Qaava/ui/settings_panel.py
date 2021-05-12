@@ -20,11 +20,15 @@
 import logging
 import webbrowser
 
-from .base_panel import BasePanel
 from ..definitions.qui import Panels, Settings
-from ..qgis_plugin_tools.tools.custom_logging import get_log_level_key, LogTarget, get_log_level_name
+from ..qgis_plugin_tools.tools.custom_logging import (
+    LogTarget,
+    get_log_level_key,
+    get_log_level_name,
+)
 from ..qgis_plugin_tools.tools.resources import plugin_name, plugin_path
-from ..qgis_plugin_tools.tools.settings import set_setting, get_setting
+from ..qgis_plugin_tools.tools.settings import get_setting, set_setting
+from .base_panel import BasePanel
 
 LOGGER = logging.getLogger(plugin_name())
 
@@ -32,7 +36,6 @@ LOGGING_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 
 
 class SettingsPanel(BasePanel):
-
     def __init__(self, dialog):
         super().__init__(dialog)
         self.panel = Panels.Database
@@ -41,18 +44,35 @@ class SettingsPanel(BasePanel):
         self.dlg.combo_box_log_level_file.clear()
         self.dlg.combo_box_log_level_console.clear()
         self.dlg.s_sb_choices.setValue(
-            int(get_setting(Settings.number_of_query_choices.name, Settings.number_of_query_choices.value, int)))
-        self.dlg.s_sb_choices.valueChanged.connect(lambda v: set_setting(Settings.number_of_query_choices.name, v))
+            int(
+                get_setting(
+                    Settings.number_of_query_choices.name,
+                    Settings.number_of_query_choices.value,
+                    int,
+                )
+            )
+        )
+        self.dlg.s_sb_choices.valueChanged.connect(
+            lambda v: set_setting(Settings.number_of_query_choices.name, v)
+        )
 
         self.dlg.combo_box_log_level_file.addItems(LOGGING_LEVELS)
         self.dlg.combo_box_log_level_console.addItems(LOGGING_LEVELS)
-        self.dlg.combo_box_log_level_file.setCurrentText(get_log_level_name(LogTarget.FILE))
-        self.dlg.combo_box_log_level_console.setCurrentText(get_log_level_name(LogTarget.STREAM))
+        self.dlg.combo_box_log_level_file.setCurrentText(
+            get_log_level_name(LogTarget.FILE)
+        )
+        self.dlg.combo_box_log_level_console.setCurrentText(
+            get_log_level_name(LogTarget.STREAM)
+        )
 
         self.dlg.combo_box_log_level_file.currentTextChanged.connect(
-            lambda level: set_setting(get_log_level_key(LogTarget.FILE), level))
+            lambda level: set_setting(get_log_level_key(LogTarget.FILE), level)
+        )
 
         self.dlg.combo_box_log_level_console.currentTextChanged.connect(
-            lambda level: set_setting(get_log_level_key(LogTarget.STREAM), level))
+            lambda level: set_setting(get_log_level_key(LogTarget.STREAM), level)
+        )
 
-        self.dlg.btn_open_log.clicked.connect(lambda _: webbrowser.open(plugin_path("logs", f"{plugin_name()}.log")))
+        self.dlg.btn_open_log.clicked.connect(
+            lambda _: webbrowser.open(plugin_path("logs", f"{plugin_name()}.log"))
+        )

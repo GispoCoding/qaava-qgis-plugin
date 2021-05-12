@@ -28,10 +28,17 @@ import timeit
 import psycopg2
 import pytest
 from PyQt5.QtCore import QSettings
-from qgis.core import (QgsProject, QgsApplication, QgsVectorLayer, QgsDataSourceUri, QgsRelation, QgsRelationManager)
+from qgis.core import (
+    QgsApplication,
+    QgsDataSourceUri,
+    QgsProject,
+    QgsRelation,
+    QgsRelationManager,
+    QgsVectorLayer,
+)
 
 from ..core.db.database import Database
-from ..core.db.db_utils import set_qaava_connection, set_auth_cfg
+from ..core.db.db_utils import set_auth_cfg, set_qaava_connection
 from ..definitions.constants import PG_CONNECTIONS
 from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.testing.utilities import get_qgis_app, is_running_inside_ci
@@ -44,33 +51,33 @@ QGIS_INSTANCE = QgsProject.instance()
 CONN_NAME = "test_qaava_conn"
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def new_project() -> None:
     """Initializes new iface project"""
     remove_db_settings()
     yield IFACE.newProject()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def initialize_db_settings(database_params) -> str:
     set_settings(database_params)
     yield CONN_NAME
     remove_db_settings()
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def general_connection_set(initialize_db_settings):
     set_qaava_connection(LandUsePlanEnum.general, CONN_NAME)
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def initialize_db_settings2(database_params):
     set_settings(database_params, has_pwd=False)
     yield CONN_NAME
     remove_db_settings()
 
 
-'''
+"""
 For integration tests
 
 Database remains the same during tests, use db fixture in tests that run before general_db.
@@ -93,23 +100,30 @@ test_a.py
 test_b.py
     def test_1(db):
         ...
-'''
+"""
 
 
 @pytest.fixture(scope="session")
 def docker_compose_file(pytestconfig) -> str:
-    """ Points to test docker-compose file"""
+    """Points to test docker-compose file"""
     return os.path.join(str(pytestconfig.rootdir), "docker-compose.yml")
 
 
 @pytest.fixture(scope="session")
 def database_params() -> {str: str}:
-    params = {"dbname": "qaavadb1", "user": "postgres", "host": "localhost", "password": "postgres", "port": "5439"}
+    params = {
+        "dbname": "qaavadb1",
+        "user": "postgres",
+        "host": "localhost",
+        "password": "postgres",
+        "port": "5439",
+    }
     return params
 
 
 if not is_running_inside_ci():
-    @pytest.fixture(scope='session')
+
+    @pytest.fixture(scope="session")
     def db(docker_ip, docker_services, database_params) -> {str: {str: str}}:
         """
 
@@ -132,10 +146,13 @@ if not is_running_inside_ci():
             "detailed": params_for_detailed,
             "general": params_for_general,
             "general_old": params_for_general_old,
-            "detailed_old": params_for_detailed_old
+            "detailed_old": params_for_detailed_old,
         }
+
+
 else:
-    @pytest.fixture(scope='session')
+
+    @pytest.fixture(scope="session")
     def db(database_params) -> {str: {str: str}}:
         """
         database paramse fixture using database running in CI environment
@@ -155,22 +172,22 @@ else:
             "detailed": params_for_detailed,
             "general": params_for_general,
             "general_old": params_for_general_old,
-            "detailed_old": params_for_detailed_old
+            "detailed_old": params_for_detailed_old,
         }
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def general_db(db):
-    params = db['general']
-    insert_sql(params, 'general_plan_0.2.0.sql')
-    insert_sql(params, 'general_data_0.2.0.sql')
+    params = db["general"]
+    insert_sql(params, "general_plan_0.2.0.sql")
+    insert_sql(params, "general_data_0.2.0.sql")
 
     # Set settings and auth config
     set_settings(params, has_pwd=False, auth_cfg=CONN_NAME)
     set_qaava_connection(LandUsePlanEnum.general, CONN_NAME)
 
     initialize_auth_manager()
-    set_auth_cfg(LandUsePlanEnum.general, CONN_NAME, params['user'], params['password'])
+    set_auth_cfg(LandUsePlanEnum.general, CONN_NAME, params["user"], params["password"])
 
     # Add project to db
     # # Commented out because tests can not use it at the moment
@@ -184,33 +201,55 @@ def general_db(db):
     # Feel free to add more layers and relations. Easiest way to get the source string is QgsVectorLayer.source()
     layers = {
         # geometry layers
-        'Yleiskaava': f'{common_uri} key=\'uuid\' srid=3877 type=MultiPolygonZ checkPrimaryKeyUnicity=\'1\' table="yleiskaava"."yleiskaava" (geom)',
-        'Maankäyttöalue': f'{common_uri} key=\'uuid\' srid=3877 type=MultiPolygonZ checkPrimaryKeyUnicity=\'1\' table="yleiskaava"."maankayttoalue" (geom)',
-
+        "Yleiskaava": f"{common_uri} key='uuid' srid=3877 type=MultiPolygonZ checkPrimaryKeyUnicity='1' table=\"yleiskaava\".\"yleiskaava\" (geom)",
+        "Maankäyttöalue": f"{common_uri} key='uuid' srid=3877 type=MultiPolygonZ checkPrimaryKeyUnicity='1' table=\"yleiskaava\".\"maankayttoalue\" (geom)",
         # table layers
-        'Vaihetieto': f'{common_uri} key=\'gid\' checkPrimaryKeyUnicity=\'1\' table="koodistot"."vaihetieto"',
-        'Dokumentti': f'{common_uri} key=\'gid\' checkPrimaryKeyUnicity=\'1\' table="kaavan_lisatiedot"."dokumentti"',
-        'Kaavamääräys': f'{common_uri} key=\'uuid\' checkPrimaryKeyUnicity=\'1\' table="koodistot"."kaavamaarays"',
-
+        "Vaihetieto": f"{common_uri} key='gid' checkPrimaryKeyUnicity='1' table=\"koodistot\".\"vaihetieto\"",
+        "Dokumentti": f"{common_uri} key='gid' checkPrimaryKeyUnicity='1' table=\"kaavan_lisatiedot\".\"dokumentti\"",
+        "Kaavamääräys": f"{common_uri} key='uuid' checkPrimaryKeyUnicity='1' table=\"koodistot\".\"kaavamaarays\"",
         # relation layers
-        'many_dokumentti_has_many_yleiskaava': f'{common_uri} key=\'gid_dokumentti,uuid_yleiskaava\' checkPrimaryKeyUnicity=\'1\' table="kaavan_lisatiedot"."many_dokumentti_has_many_yleiskaava"',
-        'many_yleiskaava_has_many_kaavamaarays': f'{common_uri} key=\'uuid_yleiskaava,uuid_kaavamaarays\' checkPrimaryKeyUnicity=\'1\' table="yleiskaava"."many_yleiskaava_has_many_kaavamaarays"',
+        "many_dokumentti_has_many_yleiskaava": f"{common_uri} key='gid_dokumentti,uuid_yleiskaava' checkPrimaryKeyUnicity='1' table=\"kaavan_lisatiedot\".\"many_dokumentti_has_many_yleiskaava\"",
+        "many_yleiskaava_has_many_kaavamaarays": f"{common_uri} key='uuid_yleiskaava,uuid_kaavamaarays' checkPrimaryKeyUnicity='1' table=\"yleiskaava\".\"many_yleiskaava_has_many_kaavamaarays\"",
     }
 
     relations = {
-        'vaihetieto_fk': ('Vaihetieto', 'gid', 'Yleiskaava', 'gid_vaihetieto'),
-        'Yleiskaavan maankäyttöalueet': ('Yleiskaava', 'uuid', 'Maankäyttöalue', 'uuid_yleiskaava'),
-        'Yleiskaavan dokumentit': ('Yleiskaava', 'uuid', 'many_dokumentti_has_many_yleiskaava', 'uuid_yleiskaava'),
-        'Dokumentin kaavat': ('Dokumentti', 'gid', 'many_dokumentti_has_many_yleiskaava', 'gid_dokumentti'),
-        'Yleiskaavan kaavamääräykset': (
-            'Yleiskaava', 'uuid', 'many_yleiskaava_has_many_kaavamaarays', 'uuid_yleiskaava'),
-        'kaavamaarays_yleis': ('Kaavamääräys', 'uuid', 'many_yleiskaava_has_many_kaavamaarays', 'uuid_kaavamaarays'),
+        "vaihetieto_fk": ("Vaihetieto", "gid", "Yleiskaava", "gid_vaihetieto"),
+        "Yleiskaavan maankäyttöalueet": (
+            "Yleiskaava",
+            "uuid",
+            "Maankäyttöalue",
+            "uuid_yleiskaava",
+        ),
+        "Yleiskaavan dokumentit": (
+            "Yleiskaava",
+            "uuid",
+            "many_dokumentti_has_many_yleiskaava",
+            "uuid_yleiskaava",
+        ),
+        "Dokumentin kaavat": (
+            "Dokumentti",
+            "gid",
+            "many_dokumentti_has_many_yleiskaava",
+            "gid_dokumentti",
+        ),
+        "Yleiskaavan kaavamääräykset": (
+            "Yleiskaava",
+            "uuid",
+            "many_yleiskaava_has_many_kaavamaarays",
+            "uuid_yleiskaava",
+        ),
+        "kaavamaarays_yleis": (
+            "Kaavamääräys",
+            "uuid",
+            "many_yleiskaava_has_many_kaavamaarays",
+            "uuid_kaavamaarays",
+        ),
     }
 
     inserted_ids = {}
 
     for name, uri in layers.items():
-        layer = QgsVectorLayer(QgsDataSourceUri(uri).uri(False), name, 'postgres')
+        layer = QgsVectorLayer(QgsDataSourceUri(uri).uri(False), name, "postgres")
         assert layer.isValid()
         inserted_ids[name] = layer.id()
         QGIS_INSTANCE.addMapLayer(layer)
@@ -230,32 +269,35 @@ def general_db(db):
     remove_db_settings()
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def detailed_db(db):
-    params = db['detailed']
-    insert_sql(params, 'detailed_plan_0.2.0.sql')
+    params = db["detailed"]
+    insert_sql(params, "detailed_plan_0.2.0.sql")
     return params
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope="session")
 def detailed_db_old(db):
-    params = db['detailed_old']
-    insert_sql(params, 'detailed_plan_0.1.0.sql')
+    params = db["detailed_old"]
+    insert_sql(params, "detailed_plan_0.1.0.sql")
     return params
 
 
-'''
+"""
 ####################
 Helper functions
 ###################
-'''
+"""
 
 
 def clean_schema(raw_schema: str) -> str:
     schema_lines = []
     for line in raw_schema.split("\n"):
-        if (line.startswith("-- DROP ") or line.startswith(
-            "-- ALTER")) and "EXTENSION" not in line and "DATABASE" not in line:
+        if (
+            (line.startswith("-- DROP ") or line.startswith("-- ALTER"))
+            and "EXTENSION" not in line
+            and "DATABASE" not in line
+        ):
             line = line.replace("-- ", "")
         if "OWNER TO postgres" in line:
             line = "-- " + line
@@ -288,7 +330,7 @@ def wait_until_responsive(check, timeout, pause, clock=timeit.default_timer):
 def is_responsive(params):
     succeeds = False
     try:
-        with(psycopg2.connect(**params)) as conn:
+        with (psycopg2.connect(**params)) as conn:
             succeeds = True
     except psycopg2.OperationalError as e:
         pass
@@ -302,8 +344,12 @@ def set_settings(prms, has_pwd=True, auth_cfg="NULL"):
     s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/database", prms["dbname"])
     s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/username", prms["user"])
     s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/password", prms["password"])
-    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/savePassword", "true" if has_pwd else "false")
-    s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/saveUsername", "true" if has_pwd else "false")
+    s.setValue(
+        f"{PG_CONNECTIONS}/{CONN_NAME}/savePassword", "true" if has_pwd else "false"
+    )
+    s.setValue(
+        f"{PG_CONNECTIONS}/{CONN_NAME}/saveUsername", "true" if has_pwd else "false"
+    )
     s.setValue(f"{PG_CONNECTIONS}/{CONN_NAME}/authcfg", auth_cfg)
 
 
@@ -318,28 +364,33 @@ def initialize_auth_manager():
 
     # noinspection PyArgumentList
     authMgr = QgsApplication.authManager()
+    print(authMgr)
 
     if authMgr.authenticationDatabasePath():
+        print(authMgr.authenticationDatabasePath())
         # already initilised => we are inside a QGIS app.
         if authMgr.masterPasswordIsSet():
-            msg = 'Authentication master password not recognized'
+            msg = "Authentication master password not recognized"
             assert authMgr.masterPasswordSame("salasana"), msg
         else:
-            msg = 'Master password could not be set'
+            msg = "Master password could not be set"
             # The verify parameter check if the hash of the password was
             # already saved in the authentication db
             assert authMgr.setMasterPassword("salasana", verify=True), msg
     else:
         # outside qgis, e.g. in a testing environment => setup env var before
         # db init
-        os.environ['QGIS_AUTH_DB_DIR_PATH'] = get_test_resource('test_data', 'qgis-auth.db')
+        os.environ["QGIS_AUTH_DB_DIR_PATH"] = get_test_resource(
+            "test_data", "qgis-auth.db"
+        )
+        print(os.environ["QGIS_AUTH_DB_DIR_PATH"])
         if not authMgr.masterPasswordIsSet():
-            msg = 'Master password could not be set'
+            msg = "Master password could not be set"
             assert authMgr.setMasterPassword("salasana", True), msg
         else:
-            msg = 'Authentication master password not recognized'
+            msg = "Authentication master password not recognized"
             assert authMgr.masterPasswordSame("salasana"), msg
-        authMgr.init(get_test_resource('test_data', 'qgis-auth.db'))
+        authMgr.init(get_test_resource("test_data", "qgis-auth.db"))
 
 
 def remove_db_settings():
@@ -362,13 +413,13 @@ def remove_db_settings():
 
 
 def get_test_resource(*args: str) -> str:
-    return plugin_path('test', *args)
+    return plugin_path("test", *args)
 
 
 def insert_sql(params, sql_file=None, sql_content=None):
     db = Database(params)
     if sql_file is not None:
-        with open(get_test_resource('db_fixtures', sql_file)) as f:
+        with open(get_test_resource("db_fixtures", sql_file)) as f:
             sql = f.read()
             db.execute_insert(clean_schema(sql))
     if sql_content is not None:

@@ -21,15 +21,15 @@ import io
 import logging
 import re
 import zipfile
-from typing import List, Dict
+from typing import Dict, List
 from zipfile import ZipFile
 
-from qgis.core import (QgsProject)
+from qgis.core import QgsProject
 
-from .db_utils import get_db_connection_pg_uri
-from ..exceptions import QaavaProjectNotLoadedException, QaavaProjectInInvalidFormat
 from ...model.land_use_plan import LandUsePlanEnum
 from ...qgis_plugin_tools.tools.resources import plugin_name
+from ..exceptions import QaavaProjectInInvalidFormat, QaavaProjectNotLoadedException
+from .db_utils import get_db_connection_pg_uri
 
 LOGGER = logging.getLogger(plugin_name())
 
@@ -58,17 +58,23 @@ def fix_project(auth_cfg_id, conn_params, content):
     :return: list of binary QGIS project zip files with correct data sources
     """
     # noinspection SqlResolve
-    proj_bytes = [line.split(',')[5][4:-3] for line in content.split('\n') if
-                  line.startswith('INSERT INTO public.qgis_projects')]
+    proj_bytes = [
+        line.split(",")[5][4:-3]
+        for line in content.split("\n")
+        if line.startswith("INSERT INTO public.qgis_projects")
+    ]
     byts = [bytes.fromhex(b) for b in proj_bytes]
-    ret_vals = fix_data_sources_from_binary_projects(conn_params, auth_cfg_id=auth_cfg_id, contents=byts)
+    ret_vals = fix_data_sources_from_binary_projects(
+        conn_params, auth_cfg_id=auth_cfg_id, contents=byts
+    )
     for i in range(len(proj_bytes)):
-        content = content.replace(proj_bytes[i], ret_vals[i].decode('utf-8'))
+        content = content.replace(proj_bytes[i], ret_vals[i].decode("utf-8"))
     return content
 
 
-def fix_data_sources_from_binary_projects(conn_params: Dict[str, str], auth_cfg_id: str, contents: List[bytes],
-                                          _test=False):
+def fix_data_sources_from_binary_projects(
+    conn_params: Dict[str, str], auth_cfg_id: str, contents: List[bytes], _test=False
+):
     """
     Fix data sources from binary representation of zipped QGIS project
     :param conn_params: connection parameters of the db connection
@@ -77,9 +83,9 @@ def fix_data_sources_from_binary_projects(conn_params: Dict[str, str], auth_cfg_
     :param _test: whether method is run inside test or not
     :return: list of binary QGIS project zip files with correct data sources
     """
-    host = conn_params['host']
-    port = conn_params['port']
-    dbname = conn_params['dbname']
+    host = conn_params["host"]
+    port = conn_params["port"]
+    dbname = conn_params["dbname"]
     ret_vals = []
     conn_string = f"dbname='{dbname}' host={host} port={port} sslmode=disable authcfg={auth_cfg_id} key="
     for i, content in enumerate(contents):
@@ -87,18 +93,20 @@ def fix_data_sources_from_binary_projects(conn_params: Dict[str, str], auth_cfg_
         z.write(content)
         files = extract_zip(z)
         assert len(files) == 2
-        qgs_f_key = [f for f in files.keys() if f.endswith('.qgs')][0]
-        qgs_proj_content = files[qgs_f_key].decode('utf-8')
+        qgs_f_key = [f for f in files.keys() if f.endswith(".qgs")][0]
+        qgs_proj_content = files[qgs_f_key].decode("utf-8")
 
         # Replace all connection string from layers with the db specific connection string
-        qgs_proj_content = re.sub(r'dbname=.*host=.*port=\d{4}.*key=', conn_string, qgs_proj_content)
+        qgs_proj_content = re.sub(
+            r"dbname=.*host=.*port=\d{4}.*key=", conn_string, qgs_proj_content
+        )
         if _test:
             ret_vals.append(qgs_proj_content)
             continue
 
         if conn_string not in qgs_proj_content:
             raise QaavaProjectInInvalidFormat()
-        files[qgs_f_key] = bytes(qgs_proj_content, 'utf-8')
+        files[qgs_f_key] = bytes(qgs_proj_content, "utf-8")
         ret_vals.append(create_in_memory_zip(files))
     return ret_vals
 

@@ -2,3 +2,9 @@ Qaava/.coverage
 Qaava/test/db_fixtures/.*.lock
 Qaava/Qaava.zip
 Qaava/i18n/
+venv/
+.venv/
+start_ide.bat
+.vscode
+*/.pytest_cache
+__pycache__

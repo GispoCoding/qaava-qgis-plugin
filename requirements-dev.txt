@@ -1,0 +1,4 @@
+# Only for development purposes
+pre-commit>=2.12.1
+pytest~=6.2.4
+pytest-docker~=0.10.0

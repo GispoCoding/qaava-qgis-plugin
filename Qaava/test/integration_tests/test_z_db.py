@@ -16,14 +16,14 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-from ..conftest import set_settings, IFACE, QGIS_APP, CONN_NAME, remove_db_settings
 from ...core.db.database import Database
 from ...core.db.db_initializer import DatabaseInitializer
 from ...qgis_plugin_tools.tools.version import version_from_string
+from ..conftest import CONN_NAME, IFACE, QGIS_APP, remove_db_settings, set_settings
 
-'''
+"""
 Add here integration tests that should be run last
-'''
+"""
 
 
 def test_migrations_for_detailed(new_project, detailed_db_old):
@@ -31,14 +31,14 @@ def test_migrations_for_detailed(new_project, detailed_db_old):
     set_settings(prms)
     try:
         db = Database(prms)
-        rows = db.execute_select('SELECT versio FROM koodistot.tietomalli_metatiedot')
-        assert rows == [('0.1.0',)]
+        rows = db.execute_select("SELECT versio FROM koodistot.tietomalli_metatiedot")
+        assert rows == [("0.1.0",)]
         initializer = DatabaseInitializer(IFACE, QGIS_APP)
         initializer.register_database(CONN_NAME, "detailed")
         current_version, newest_version = initializer.get_versions()
-        assert current_version == '0.1.0'
+        assert current_version == "0.1.0"
         initializer.promote_database()
-        rows = db.execute_select('SELECT versio FROM koodistot.tietomalli_metatiedot')
+        rows = db.execute_select("SELECT versio FROM koodistot.tietomalli_metatiedot")
         assert version_from_string(rows[0][0]) >= (0, 2, 0)
     finally:
         remove_db_settings()

@@ -19,7 +19,7 @@
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
-from qgis.PyQt.QtCore import QTranslator, QCoreApplication
+from qgis.PyQt.QtCore import QCoreApplication, QTranslator
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction
 
@@ -57,7 +57,7 @@ class Qaava:
 
         # Declare instance attributes
         self.actions = []
-        self.menu = tr(u'&Qaava')
+        self.menu = tr(u"&Qaava")
 
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
@@ -76,7 +76,8 @@ class Qaava:
         add_to_toolbar=True,
         status_tip=None,
         whats_this=None,
-        parent=None):
+        parent=None,
+    ):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -133,9 +134,7 @@ class Qaava:
             self.iface.addToolBarIcon(action)
 
         if add_to_menu:
-            self.iface.addPluginToMenu(
-                self.menu,
-                action)
+            self.iface.addPluginToMenu(self.menu, action)
 
         self.actions.append(action)
 
@@ -145,11 +144,11 @@ class Qaava:
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
         self.add_action(
-            resources_path('icons', 'icon.png'),
-            text=tr(u'Qaava'),
+            resources_path("icons", "icon.png"),
+            text=tr(u"Qaava"),
             callback=self.run,
             parent=self.iface.mainWindow(),
-            add_to_toolbar=True
+            add_to_toolbar=True,
         )
 
         # will be set False in run()
@@ -174,9 +173,7 @@ class Qaava:
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
-            self.iface.removePluginMenu(
-                tr(u'&Qaava'),
-                action)
+            self.iface.removePluginMenu(tr(u"&Qaava"), action)
             self.iface.removeToolBarIcon(action)
 
     def run(self):

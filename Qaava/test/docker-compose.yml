@@ -2,6 +2,7 @@ version: "3.7"
 
 services:
   qaava-test-db:
+    # you have to build this image yourself for M1
     image: kartoza/postgis:12.0
     volumes:
       # Add more fixtures here

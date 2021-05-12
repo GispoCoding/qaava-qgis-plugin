@@ -20,30 +20,38 @@
 import pytest
 from qgis.core import QgsProject
 
-from ..conftest import get_test_resource, IFACE
-from ...core.db.qgis_project_utils import (fix_project, load_project, fix_data_sources_from_binary_projects)
+from ...core.db.qgis_project_utils import (
+    fix_data_sources_from_binary_projects,
+    fix_project,
+    load_project,
+)
 from ...model.land_use_plan import LandUsePlanEnum
+from ..conftest import IFACE, get_test_resource
 
 
 def test_fix_project(database_params):
-    with open(get_test_resource('db_fixtures', 'general_plan_project_0.2.0.sql')) as f:
+    with open(get_test_resource("db_fixtures", "general_plan_project_0.2.0.sql")) as f:
         orig = f.read()
-        fixed = fix_project('test_auth_cfg', database_params, orig)
+        fixed = fix_project("test_auth_cfg", database_params, orig)
         assert fixed != orig
 
 
 def test_fix_data_sources_from_binary_projects(database_params):
     conn_string = "dbname='qaavadb1' host=localhost port=5439 sslmode=disable authcfg=test_auth_cfg"
-    with open(get_test_resource('test_data', 'general_project.qgz'), 'rb') as f:
+    with open(get_test_resource("test_data", "general_project.qgz"), "rb") as f:
         content = f.read()
-    fixed = fix_data_sources_from_binary_projects(database_params, 'test_auth_cfg', [content], _test=True)[0]
+    fixed = fix_data_sources_from_binary_projects(
+        database_params, "test_auth_cfg", [content], _test=True
+    )[0]
     assert fixed.count(conn_string) == 241
 
 
-@pytest.mark.skip('opening any project fails in test environment... Is there a solution for this?')
+@pytest.mark.skip(
+    "opening any project fails in test environment... Is there a solution for this?"
+)
 def test_loading_project(general_db):
     IFACE.newProject()
-    load_project('qaava-yleiskaava', LandUsePlanEnum.general)
+    load_project("qaava-yleiskaava", LandUsePlanEnum.general)
     # noinspection PyArgumentList
     layers = QgsProject.instance().mapLayers()
     assert len(layers) > 3

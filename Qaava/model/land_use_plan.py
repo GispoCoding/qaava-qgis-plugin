@@ -19,15 +19,22 @@
 
 import enum
 import logging
-from typing import Union, Dict, Tuple, Optional, List
+from typing import Dict, List, Optional, Tuple, Union
 
-from ..definitions.constants import (QAAVA_DB_NAME, GENERAL_PLAN_URL,
-                                     GENERAL_PLAN_MODEL_FILE_NAME, GENERAL_PLAN_PROJECT_FILE_NAME, DETAILED_PLAN_URL,
-                                     DETAILED_PLAN_MODEL_FILE_NAME, VERSIONS_FILE_NAME, MIGRATION_FILE_NAME,
-                                     DETAILED_PLAN_PROJECT_FILE_NAME)
+from ..definitions.constants import (
+    DETAILED_PLAN_MODEL_FILE_NAME,
+    DETAILED_PLAN_PROJECT_FILE_NAME,
+    DETAILED_PLAN_URL,
+    GENERAL_PLAN_MODEL_FILE_NAME,
+    GENERAL_PLAN_PROJECT_FILE_NAME,
+    GENERAL_PLAN_URL,
+    MIGRATION_FILE_NAME,
+    QAAVA_DB_NAME,
+    VERSIONS_FILE_NAME,
+)
 from ..qgis_plugin_tools.tools.network import fetch
 from ..qgis_plugin_tools.tools.resources import plugin_name
-from ..qgis_plugin_tools.tools.version import version_from_string, string_from_version
+from ..qgis_plugin_tools.tools.version import string_from_version, version_from_string
 
 LOGGER = logging.getLogger(plugin_name())
 
@@ -38,9 +45,9 @@ class LandUsePlan:
     schema_url = ""
     versions_file = VERSIONS_FILE_NAME
     migration_file = MIGRATION_FILE_NAME
-    url = ''
-    file_name = ''
-    project_file = ''
+    url = ""
+    file_name = ""
+    project_file = ""
 
     def __init__(self):
         self.raw_schema: Optional[str] = None
@@ -55,11 +62,14 @@ class LandUsePlan:
         """
         Fetch version information of the model
         """
-        self.available_versions = [version_from_string(v) for v in
-                                   fetch(f"{self.url}/{self.versions_file}").strip().split('\n')]
+        self.available_versions = [
+            version_from_string(v)
+            for v in fetch(f"{self.url}/{self.versions_file}").strip().split("\n")
+        ]
         self.newest_version = max(self.available_versions)
         LOGGER.debug(
-            f'Newest version {self.newest_version}, available versions {self.available_versions}')
+            f"Newest version {self.newest_version}, available versions {self.available_versions}"
+        )
 
     def create_migration_script(self, current_version: Tuple[int, int, int]):
         """
@@ -67,12 +77,14 @@ class LandUsePlan:
         :param current_version: current version of the schema
         :return: schema sql
         """
-        migration_script = ''
+        migration_script = ""
         versions = [v for v in self.available_versions if v > current_version]
         for version in versions:
-            migration_script += f'-- For version {string_from_version(version)}'
-            migration_script += fetch(f"{self.url}/{string_from_version(version)}/{self.migration_file}")
-            migration_script += '\n\n'
+            migration_script += f"-- For version {string_from_version(version)}"
+            migration_script += fetch(
+                f"{self.url}/{string_from_version(version)}/{self.migration_file}"
+            )
+            migration_script += "\n\n"
         return migration_script
 
     def fetch_schema(self) -> str:
@@ -80,7 +92,9 @@ class LandUsePlan:
         Fetch schema from the schema_url
         :return: schema sql
         """
-        self.raw_schema = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.file_name}")
+        self.raw_schema = fetch(
+            f"{self.url}/{string_from_version(self.newest_version)}/{self.file_name}"
+        )
         self.schema = self.alter_schema(self.raw_schema)
         return self.schema
 
@@ -91,7 +105,10 @@ class LandUsePlan:
         """
         # Import here in order to avoid circular import problem in tests
         from ..core.db.qgis_project_utils import fix_project
-        content = fetch(f"{self.url}/{string_from_version(self.newest_version)}/{self.project_file}")
+
+        content = fetch(
+            f"{self.url}/{string_from_version(self.newest_version)}/{self.project_file}"
+        )
         return fix_project(auth_cfg_id, conn_params, content)
 
     @staticmethod
@@ -102,13 +119,18 @@ class LandUsePlan:
         """
         schema_lines = []
         for line in script.split("\n"):
-            if (line.startswith("-- DROP ") or line.startswith(
-                "-- ALTER")) and "EXTENSION" not in line and "DATABASE" not in line:
+            if (
+                (line.startswith("-- DROP ") or line.startswith("-- ALTER"))
+                and "EXTENSION" not in line
+                and "DATABASE" not in line
+            ):
                 line = line.replace("-- ", "")
             if "OWNER TO postgres" in line:
                 line = "-- " + line
             if line.startswith("CREATE EXTENSION"):
-                line = line.replace("CREATE EXTENSION", "CREATE EXTENSION IF NOT EXISTS")
+                line = line.replace(
+                    "CREATE EXTENSION", "CREATE EXTENSION IF NOT EXISTS"
+                )
             elif line.startswith("CREATE DATABASE"):
                 line = line.replace("CREATE DATABASE", "-- CREATE DATABASE")
 

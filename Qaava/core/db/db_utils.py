@@ -21,15 +21,20 @@ import logging
 from typing import Dict
 
 from PyQt5.QtCore import QSettings
-from qgis.core import QgsAuthMethodConfig, QgsApplication, QgsAuthManager, QgsDataSourceUri
+from qgis.core import (
+    QgsApplication,
+    QgsAuthManager,
+    QgsAuthMethodConfig,
+    QgsDataSourceUri,
+)
 
-from ...core.exceptions import QaavaDatabaseNotSetException, QaavaAuthConfigException
-from ...definitions.constants import (PG_CONNECTIONS, QGS_SETTINGS_PSYCOPG2_PARAM_MAP)
+from ...core.exceptions import QaavaAuthConfigException, QaavaDatabaseNotSetException
+from ...definitions.constants import PG_CONNECTIONS, QGS_SETTINGS_PSYCOPG2_PARAM_MAP
 from ...model.land_use_plan import LandUsePlanEnum
 from ...qgis_plugin_tools.tools.custom_logging import bar_msg
 from ...qgis_plugin_tools.tools.i18n import tr
 from ...qgis_plugin_tools.tools.resources import plugin_name
-from ...qgis_plugin_tools.tools.settings import parse_value, set_setting, get_setting
+from ...qgis_plugin_tools.tools.settings import get_setting, parse_value, set_setting
 
 LOGGER = logging.getLogger(plugin_name())
 
@@ -42,7 +47,7 @@ def get_existing_database_connections() -> {str}:
     s.beginGroup(PG_CONNECTIONS)
     keys = s.allKeys()
     s.endGroup()
-    connections = {key.split('/')[0] for key in keys if '/' in key}
+    connections = {key.split("/")[0] for key in keys if "/" in key}
     LOGGER.debug(f"Connections: {connections}")
     return connections
 
@@ -61,14 +66,14 @@ def set_qaava_plan(plan: LandUsePlanEnum) -> None:
     Set plan to be used as in the project
     :param plan:
     """
-    set_setting('plan_for_project', plan.name)
+    set_setting("plan_for_project", plan.name)
 
 
 def get_qaava_plan() -> LandUsePlanEnum:
     """
     :return: Plan for the current project
     """
-    value = get_setting('plan_for_project', "", str)
+    value = get_setting("plan_for_project", "", str)
     if value == "":
         raise QaavaDatabaseNotSetException()
     return LandUsePlanEnum[value]
@@ -84,7 +89,9 @@ def get_qaava_connection_name(plan: LandUsePlanEnum) -> str:
     return value
 
 
-def set_auth_cfg(plan: LandUsePlanEnum, auth_cfg_id: str, username: str, password: str) -> None:
+def set_auth_cfg(
+    plan: LandUsePlanEnum, auth_cfg_id: str, username: str, password: str
+) -> None:
     """
     Set auth config id to be used as Qaava connection
 
@@ -98,20 +105,20 @@ def set_auth_cfg(plan: LandUsePlanEnum, auth_cfg_id: str, username: str, passwor
     if auth_cfg_id in auth_mgr.availableAuthMethodConfigs().keys():
         config = QgsAuthMethodConfig()
         auth_mgr.loadAuthenticationConfig(auth_cfg_id, config, True)
-        config.setConfig('username', username)
-        config.setConfig('password', password)
+        config.setConfig("username", username)
+        config.setConfig("password", password)
         if not config.isValid():
-            raise QaavaAuthConfigException('Invalid username or password')
+            raise QaavaAuthConfigException("Invalid username or password")
         auth_mgr.updateAuthenticationConfig(config)
     else:
         config = QgsAuthMethodConfig()
         config.setId(auth_cfg_id)
         config.setName(auth_cfg_id)
-        config.setMethod('Basic')
-        config.setConfig('username', username)
-        config.setConfig('password', password)
+        config.setMethod("Basic")
+        config.setConfig("username", username)
+        config.setConfig("password", password)
         if not config.isValid():
-            raise QaavaAuthConfigException('Invalid username or password')
+            raise QaavaAuthConfigException("Invalid username or password")
         auth_mgr.storeAuthenticationConfig(config)
 
     set_setting(plan.value.auth_cfg_key, auth_cfg_id, internal=False)
@@ -137,15 +144,17 @@ def get_db_connection_uri(plan: LandUsePlanEnum) -> QgsDataSourceUri:
     """
     conn_params = get_db_connection_params(plan)
     uri = QgsDataSourceUri()
-    uri.setConnection(conn_params['host'], conn_params['port'], conn_params['dbname'])
+    uri.setConnection(conn_params["host"], conn_params["port"], conn_params["dbname"])
     return uri
 
 
 def get_db_connection_pg_uri(plan: LandUsePlanEnum, project_name: str) -> str:
     # postgresql://postgres:postgres@localhost:5438?sslmode=disable&dbname=qaavadb1&schema=public&project=qaava-asemakaava
     conn_params = get_db_connection_params(plan)
-    uri = f'postgresql://{conn_params["user"]}:{conn_params["password"]}@{conn_params["host"]}:{conn_params["port"]}?' \
-          f'sslmode=disable&dbname={conn_params["dbname"]}&schema=public&project={project_name}'
+    uri = (
+        f'postgresql://{conn_params["user"]}:{conn_params["password"]}@{conn_params["host"]}:{conn_params["port"]}?'
+        f'sslmode=disable&dbname={conn_params["dbname"]}&schema=public&project={project_name}'
+    )
     return uri
 
 
@@ -178,14 +187,19 @@ def get_db_connection_params(plan: LandUsePlanEnum) -> Dict[str, str]:
         # Auth config is being used to store the username and password
         auth_config = QgsAuthMethodConfig()
         # noinspection PyArgumentList
-        QgsApplication.authManager().loadAuthenticationConfig(auth_cfg_id, auth_config, True)
+        QgsApplication.authManager().loadAuthenticationConfig(
+            auth_cfg_id, auth_config, True
+        )
 
         if auth_config.isValid():
             params["user"] = auth_config.configMap().get("username")
             params["password"] = auth_config.configMap().get("password")
         else:
             raise QaavaAuthConfigException(
-                tr("Auth config error occurred while fetching database connection parameters"),
-                bar_msg=bar_msg(tr(f"Check auth config with id: {auth_cfg_id}")))
+                tr(
+                    "Auth config error occurred while fetching database connection parameters"
+                ),
+                bar_msg=bar_msg(tr(f"Check auth config with id: {auth_cfg_id}")),
+            )
 
     return params
