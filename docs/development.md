@@ -52,6 +52,13 @@ cd <plugin_name>
 python -m pytest test
 ```
 
+Ensure that you have docker installed, as the integration tests use pytest-docker.
+In case you are running on more exotic platforms, such as M1 Macs, and the integration tests fail,
+you will have to build the postgis image used by integration tests first with
+```shell script
+docker build -t kartoza/postgis git://github.com/kartoza/docker-postgis
+```
+
 #### Translating with transifex
 
 Fill in `transifex_coordinator` (Transifex username) and `transifex_organization`
