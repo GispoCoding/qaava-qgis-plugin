@@ -1,9 +1,19 @@
 Development of Qaava plugin
 ===========================
 
+This project uses [qgis_plugin_tools](https://github.com/GispoCoding/qgis_plugin_tools) submodule, so when cloning
+use `--recurse-submodules` like so:
+`git clone --recurse-submodules <url>/<organization>/<repo>.git`
+
+When pulling from existing repo:
+```sh
+git submodule init
+git submodule update
+```
+
 The code for the plugin is in the [Qaava](../Qaava) folder. Make sure you have required tools, such as
 Qt with Qt Editor and Qt Linquist installed by following this 
-[tutorial](https://www.qgistutorials.com/en/docs/3/building_a_python_plugin.html#get-the-tools). 
+[tutorial](https://www.qgistutorials.com/en/docs/3/building_a_python_plugin.html#get-the-tools).
 
 For building the plugin use platform independent [build.py](../Qaava/build.py) script. 
 
@@ -34,11 +44,12 @@ After deploying and restarting QGIS you should see the plugin in the QGIS instal
 where you have to activate it.
 
 #### Testing
-Install Docker, docker-compose and python packages listed in [requirements.txt](requirements.txt) 
+Install python packages listed in [requirements-dev.txt](../requirements-dev.txt)
 to run tests with:
 
 ```shell script
-python build.py test
+cd <plugin_name>
+python -m pytest test
 ```
 
 #### Translating with transifex
@@ -65,8 +76,19 @@ You can however pull manually to test the process.
 Follow these steps to create a release
 * Add changelog information to [CHANGELOG.md](../CHANGELOG.md) using this
 [format](https://raw.githubusercontent.com/opengisch/qgis-plugin-ci/master/CHANGELOG.md)
-* Make a new commit. (`git add -A && git commit -m "Release v0.1.0"`)
-* Create new tag for it (`git tag -a v0.1.0 -m "Version 0.1.0"`)
+* Make a new commit. (`git add -A && git commit -m "Release 0.1.0"`)
+* Create new tag for it (`git tag -a 0.1.0 -m "Version 0.1.0"`)
 * Push tag to Github using `git push --follow-tags`
 * Create Github release
 * [qgis-plugin-ci](https://github.com/opengisch/qgis-plugin-ci) adds release zip automatically as an asset
+
+Modify [release](../.github/workflows/release.yml) workflow according to its comments if you want to upload the
+plugin to QGIS plugin repository.
+
+### Local release
+
+For local release install [qgis-plugin-ci](https://github.com/opengisch/qgis-plugin-ci) and follow these steps:
+```shell
+cd <repo>
+qgis-plugin-ci package  --disable-submodule-update 0.1.0
+```
