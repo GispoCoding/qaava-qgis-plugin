@@ -21,18 +21,18 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from typing import Optional, Dict, List, Tuple, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from PyQt5.QtCore import QVariant
 from qgis.core import QgsRectangle, QgsVectorLayer
 
-from .db_utils import get_db_connection_params
-from .query_repository import QueryRepository
+from ...definitions.db import Operation
+from ...model.land_use_plan import LandUsePlan, LandUsePlanEnum
+from ...qgis_plugin_tools.tools.resources import plugin_name
 from ..wrappers.field_wrapper import FieldWrapper, IsForeignNullFieldWrapper
 from ..wrappers.layer_wrapper import LayerWrapper
-from ...definitions.db import Operation
-from ...model.land_use_plan import LandUsePlanEnum, LandUsePlan
-from ...qgis_plugin_tools.tools.resources import plugin_name
+from .db_utils import get_db_connection_params
+from .query_repository import QueryRepository
 
 LOGGER = logging.getLogger(plugin_name())
 
@@ -42,7 +42,9 @@ class Querier:
     Abstraction of query_repository for query_panel
     """
 
-    def __init__(self, plan_enum_str: str, layer: QgsVectorLayer, limit_for_unique: int = 0):
+    def __init__(
+        self, plan_enum_str: str, layer: QgsVectorLayer, limit_for_unique: int = 0
+    ):
         self.plan_enum = LandUsePlanEnum[plan_enum_str]
         self.plan: LandUsePlan = self.plan_enum.value
         self.layer_wrapper = LayerWrapper.from_qgs_layer(layer)
@@ -112,7 +114,12 @@ class Querier:
         unique_values = [val for val in field.unique_values if val != null]
         return unique_values, field.type == QVariant.String
 
-    def add_condition(self, field: FieldWrapper, operation: Operation, value: Union[str, bool, int, float]):
+    def add_condition(
+        self,
+        field: FieldWrapper,
+        operation: Operation,
+        value: Union[str, bool, int, float],
+    ):
         """
         Add condition for the query
 
@@ -123,15 +130,21 @@ class Querier:
         """
         val = value
         if isinstance(value, str):
-            val = None if not len(value) or value.lower() in ['null', 'none', 'tyhjä'] else value
+            val = (
+                None
+                if not len(value) or value.lower() in ["null", "none", "tyhjä"]
+                else value
+            )
             if val is None:
-                operation = Operation.IS if operation != Operation.IS_NOT else Operation.IS_NOT
+                operation = (
+                    Operation.IS if operation != Operation.IS_NOT else Operation.IS_NOT
+                )
             else:
                 if field.type in [
                     QVariant.Int,
                     QVariant.UInt,
                     QVariant.LongLong,
-                    QVariant.ULongLong
+                    QVariant.ULongLong,
                 ]:
                     val = int(val)
                 elif field.type == QVariant.Double:
@@ -141,10 +154,12 @@ class Querier:
             operation = Operation.IS_NOT if value else Operation.IS
             val = None
 
-        if (operation in [Operation.IS, Operation.IS_NOT, Operation.EQ, Operation.UNEQ] and
-            field.type == QVariant.DateTime):
-            parts = value.split(' ')
-            if len(parts) == 2 and parts[1] == '00:00:00':
+        if (
+            operation in [Operation.IS, Operation.IS_NOT, Operation.EQ, Operation.UNEQ]
+            and field.type == QVariant.DateTime
+        ):
+            parts = value.split(" ")
+            if len(parts) == 2 and parts[1] == "00:00:00":
                 val = parts[0]
 
         return self.qr.add_and_condition(field, operation, val)
@@ -163,5 +178,5 @@ class Querier:
             rnd(extent.yMinimum()),
             rnd(extent.xMaximum()),
             rnd(extent.yMaximum()),
-            srid=self.layer_wrapper.get_layer().crs().srsid()
+            srid=self.layer_wrapper.get_layer().crs().srsid(),
         )

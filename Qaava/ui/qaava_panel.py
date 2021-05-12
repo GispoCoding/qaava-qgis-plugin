@@ -19,8 +19,6 @@
 
 import logging
 
-from .base_panel import BasePanel, process
-from .db_panel import DbPanel
 from ..core.db.db_utils import get_qaava_connection_name
 from ..core.exceptions import QaavaDatabaseNotSetException
 from ..definitions.qui import Panels
@@ -28,12 +26,13 @@ from ..model.land_use_plan import LandUsePlanEnum
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
 from ..qgis_plugin_tools.tools.i18n import tr
 from ..qgis_plugin_tools.tools.resources import plugin_name
+from .base_panel import BasePanel, process
+from .db_panel import DbPanel
 
 LOGGER = logging.getLogger(plugin_name())
 
 
 class QaavaPanel(BasePanel):
-
     def __init__(self, dialog, db_panel: DbPanel):
         super().__init__(dialog)
         self.db_panel = db_panel
@@ -41,12 +40,16 @@ class QaavaPanel(BasePanel):
         self.plan_enum: LandUsePlanEnum = LandUsePlanEnum.general
 
     def setup_panel(self):
-        self.dlg.btn_qaava_general.clicked.connect(lambda: self._start_qaava_session(LandUsePlanEnum.general))
-        self.dlg.btn_qaava_detailed.clicked.connect(lambda: self._start_qaava_session(LandUsePlanEnum.detailed))
+        self.dlg.btn_qaava_general.clicked.connect(
+            lambda: self._start_qaava_session(LandUsePlanEnum.general)
+        )
+        self.dlg.btn_qaava_detailed.clicked.connect(
+            lambda: self._start_qaava_session(LandUsePlanEnum.detailed)
+        )
 
     @process
     def _start_qaava_session(self, plan_enum: LandUsePlanEnum):
-        LOGGER.debug(f'Initializing session with {plan_enum.name} plan')
+        LOGGER.debug(f"Initializing session with {plan_enum.name} plan")
         self.plan_enum = plan_enum
 
         try:
@@ -58,14 +61,29 @@ class QaavaPanel(BasePanel):
             self.db_panel.register()
             self.db_panel.open_project()
 
-            LOGGER.info(tr('Qaava session initialized'),
-                        extra=bar_msg(tr('Qaava initialized successfully with plan {}', plan_enum.name),
-                                      success=True))
+            LOGGER.info(
+                tr("Qaava session initialized"),
+                extra=bar_msg(
+                    tr("Qaava initialized successfully with plan {}", plan_enum.name),
+                    success=True,
+                ),
+            )
         except QaavaDatabaseNotSetException:
-            LOGGER.warning(tr('Cancelling Qaava session'),
-                           extra=bar_msg(tr('No database initialized or registered for plan {}', plan_enum.name)))
-            self.dlg.display_window(tr('No database initialized'),
-                                    tr('There is no database initialized or registered for plan {}. '
-                                       'Please initialize a database '
-                                       'to be used for editing land use plans with Qaava using Database panel.',
-                                       plan_enum.name))
+            LOGGER.warning(
+                tr("Cancelling Qaava session"),
+                extra=bar_msg(
+                    tr(
+                        "No database initialized or registered for plan {}",
+                        plan_enum.name,
+                    )
+                ),
+            )
+            self.dlg.display_window(
+                tr("No database initialized"),
+                tr(
+                    "There is no database initialized or registered for plan {}. "
+                    "Please initialize a database "
+                    "to be used for editing land use plans with Qaava using Database panel.",
+                    plan_enum.name,
+                ),
+            )

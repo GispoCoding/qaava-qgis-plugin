@@ -39,7 +39,7 @@ from qgis.PyQt import QtWidgets
 
 from ..qgis_plugin_tools.tools.resources import load_ui
 
-FORM_CLASS = load_ui('db_tools_ask_credentials_dialog.ui')
+FORM_CLASS = load_ui("db_tools_ask_credentials_dialog.ui")
 
 
 class DbAskCredentialsDialog(QtWidgets.QDialog, FORM_CLASS):

@@ -19,15 +19,19 @@
 
 import logging
 import uuid
-from typing import Dict, Optional, List
+from typing import Dict, List, Optional
 
 from PyQt5.QtCore import QVariant
-from PyQt5.QtWidgets import QGridLayout, QComboBox, QPushButton, QCheckBox
-from qgis.core import QgsApplication, QgsVectorLayer, QgsCoordinateReferenceSystem, \
-    QgsProviderRegistry, QgsProject
-from qgis.gui import QgsMapCanvas, QgsExtentGroupBox
+from PyQt5.QtWidgets import QCheckBox, QComboBox, QGridLayout, QPushButton
+from qgis.core import (
+    QgsApplication,
+    QgsCoordinateReferenceSystem,
+    QgsProject,
+    QgsProviderRegistry,
+    QgsVectorLayer,
+)
+from qgis.gui import QgsExtentGroupBox, QgsMapCanvas
 
-from .base_panel import BasePanel
 from ..core.db.db_utils import get_qaava_plan
 from ..core.db.querier import Querier
 from ..core.exceptions import QaavaLayerError
@@ -36,16 +40,16 @@ from ..definitions.db import Operation
 from ..definitions.qui import Panels, Settings
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
 from ..qgis_plugin_tools.tools.decorations import log_if_fails
-from ..qgis_plugin_tools.tools.fields import widget_for_field, value_for_widget
+from ..qgis_plugin_tools.tools.fields import value_for_widget, widget_for_field
 from ..qgis_plugin_tools.tools.i18n import tr
 from ..qgis_plugin_tools.tools.resources import plugin_name
 from ..qgis_plugin_tools.tools.settings import get_setting
+from .base_panel import BasePanel
 
 LOGGER = logging.getLogger(plugin_name())
 
 
 class QueryPanel(BasePanel):
-
     def __init__(self, dialog):
         super().__init__(dialog)
         self.panel = Panels.About
@@ -55,15 +59,26 @@ class QueryPanel(BasePanel):
 
     def setup_panel(self):
         # noinspection PyCallByClass,PyArgumentList
-        self.dlg.q_push_button_add_row.setIcon(QgsApplication.getThemeIcon('/mActionAdd.svg'))
-        self.dlg.q_push_button_add_row.clicked.connect(lambda _: self._add_row(len(self.rows) + 1))
-        self.dlg.q_push_button_show_query.clicked.connect(lambda _: self.run('_show_query'))
+        self.dlg.q_push_button_add_row.setIcon(
+            QgsApplication.getThemeIcon("/mActionAdd.svg")
+        )
+        self.dlg.q_push_button_add_row.clicked.connect(
+            lambda _: self._add_row(len(self.rows) + 1)
+        )
+        self.dlg.q_push_button_show_query.clicked.connect(
+            lambda _: self.run("_show_query")
+        )
         self.dlg.q_push_button_run_query.clicked.connect(self.run)
         self.dlg.q_push_button_clear_filter.clicked.connect(self._clear_filter)
 
         # noinspection PyArgumentList
         self.dlg.q_combo_box_layer.setExcludedProviders(
-            [p for p in QgsProviderRegistry.instance().providerList() if p != 'postgres'])
+            [
+                p
+                for p in QgsProviderRegistry.instance().providerList()
+                if p != "postgres"
+            ]
+        )
 
         # noinspection PyArgumentList
         QgsProject.instance().layersAdded.connect(self._updated_map_layers)
@@ -85,7 +100,9 @@ class QueryPanel(BasePanel):
     @log_if_fails
     def on_update_map_layers(self):
         # noinspection PyArgumentList
-        self._updated_map_layers(QgsProject.instance().mapLayers().values(), bypass_running=True)
+        self._updated_map_layers(
+            QgsProject.instance().mapLayers().values(), bypass_running=True
+        )
 
     @log_if_fails
     def _initialize(self, crs: Optional[QgsCoordinateReferenceSystem] = None):
@@ -101,12 +118,16 @@ class QueryPanel(BasePanel):
         for row_id in list(self.rows.keys()):
             self._remove_row(row_id)
 
-    def _updated_map_layers(self, map_layers: List[QgsVectorLayer], bypass_running: bool = False):
+    def _updated_map_layers(
+        self, map_layers: List[QgsVectorLayer], bypass_running: bool = False
+    ):
         if not self.dlg.is_running or bypass_running:
             excepted_layers = []
-            excepted_strings = get_setting(Settings.layer_should_not_contain_string.name,
-                                           Settings.layer_should_not_contain_string.value,
-                                           str).split(',')
+            excepted_strings = get_setting(
+                Settings.layer_should_not_contain_string.name,
+                Settings.layer_should_not_contain_string.value,
+                str,
+            ).split(",")
 
             for layer in map_layers:
                 if any(x in layer.name() for x in excepted_strings):
@@ -120,18 +141,24 @@ class QueryPanel(BasePanel):
 
     @log_if_fails
     def _change_layer(self, layer: Optional[QgsVectorLayer]):
-        self.dlg.q_text_browser_sql.setText('')
+        self.dlg.q_text_browser_sql.setText("")
         self.dlg.q_gb_sql.setCollapsed(True)
         self._clear_filter()
         if layer is not None:
             # Set extent disabled if layer has no geometry
             self.dlg.q_extent.setEnabled(layer.geometryType() != 4)
             try:
-                self.querier = Querier(get_qaava_plan().name, layer,
-                                       limit_for_unique=int(
-                                           get_setting(Settings.number_of_query_choices.name,
-                                                       Settings.number_of_query_choices.value,
-                                                       int)))
+                self.querier = Querier(
+                    get_qaava_plan().name,
+                    layer,
+                    limit_for_unique=int(
+                        get_setting(
+                            Settings.number_of_query_choices.name,
+                            Settings.number_of_query_choices.value,
+                            int,
+                        )
+                    ),
+                )
             except QaavaLayerError as e:
                 LOGGER.error(str(e), extra=e.bar_msg)
             self._initialize(crs=layer.crs())
@@ -140,14 +167,21 @@ class QueryPanel(BasePanel):
         self._generate_query()
         relevant_ids = self.querier.run()
         if len(relevant_ids):
-            LOGGER.info(tr('Filtering layer {}', self.querier.layer_wrapper.layer_name),
-                        extra=bar_msg(tr(
-                            'Showing {} features. Keep this window open to see filtered, close the dialog '
-                            'of press Clear to clear filter.',
-                            len(relevant_ids)), duration=8, success=True))
+            LOGGER.info(
+                tr("Filtering layer {}", self.querier.layer_wrapper.layer_name),
+                extra=bar_msg(
+                    tr(
+                        "Showing {} features. Keep this window open to see filtered, close the dialog "
+                        "of press Clear to clear filter.",
+                        len(relevant_ids),
+                    ),
+                    duration=8,
+                    success=True,
+                ),
+            )
             self.querier.set_filter(relevant_ids)
         else:
-            LOGGER.info(tr('The query did not result any features'), extra=bar_msg())
+            LOGGER.info(tr("The query did not result any features"), extra=bar_msg())
 
     def _show_query(self):
         self._generate_query()
@@ -157,18 +191,18 @@ class QueryPanel(BasePanel):
 
     def _clear_filter(self):
         if self.querier is not None:
-            LOGGER.debug('Clearing filter')
+            LOGGER.debug("Clearing filter")
             try:
                 self.querier.clear_filter()
             except QaavaLayerError:
-                LOGGER.debug('Layer not available')
+                LOGGER.debug("Layer not available")
 
     def _generate_query(self):
         self.querier.clear()
         for row in self.rows.values():
-            field = self.querier.fields[row['field'].currentText()]
-            operation = Operation(row['operation'].currentText())
-            value = value_for_widget(row['value'])
+            field = self.querier.fields[row["field"].currentText()]
+            operation = Operation(row["operation"].currentText())
+            value = value_for_widget(row["value"])
 
             self.querier.add_condition(field, operation, value)
 
@@ -191,9 +225,9 @@ class QueryPanel(BasePanel):
 
         row_uuid = str(uuid.uuid4())
         row = {
-            'field': bx_field,
-            'operation': bx_operation,
-            'value': bx_value,
+            "field": bx_field,
+            "operation": bx_operation,
+            "value": bx_value,
         }
         self.rows[row_uuid] = row
         self.grid.addWidget(bx_field, row_index, 1)
@@ -201,16 +235,20 @@ class QueryPanel(BasePanel):
         self.grid.addWidget(bx_value, row_index, 3)
 
         # noinspection PyUnresolvedReferences
-        bx_field.currentTextChanged.connect(lambda field: self._field_changed(self.querier.fields[field], row_uuid))
+        bx_field.currentTextChanged.connect(
+            lambda field: self._field_changed(self.querier.fields[field], row_uuid)
+        )
         bx_field.addItems(list(self.querier.fields.keys()))
         bx_field.setCurrentText(list(self.querier.fields.keys())[0])
 
         # noinspection PyCallByClass,PyArgumentList
-        b_rm = QPushButton(text='', icon=QgsApplication.getThemeIcon('/mActionRemove.svg'))
-        b_rm.setToolTip(tr('Remove row'))
+        b_rm = QPushButton(
+            text="", icon=QgsApplication.getThemeIcon("/mActionRemove.svg")
+        )
+        b_rm.setToolTip(tr("Remove row"))
         # noinspection PyUnresolvedReferences
         b_rm.clicked.connect(lambda _: self._remove_row(row_uuid))
-        self.rows[row_uuid]['rm'] = b_rm
+        self.rows[row_uuid]["rm"] = b_rm
         self.grid.addWidget(b_rm, row_index, 0)
 
     def _field_changed(self, field: FieldWrapper, row_uuid: str):
@@ -219,8 +257,8 @@ class QueryPanel(BasePanel):
             return
 
         self._replace_value_widget(row_uuid, field.type)
-        w_value = row['value']
-        bx_operation = row['operation']
+        w_value = row["value"]
+        bx_operation = row["operation"]
         if not isinstance(w_value, QCheckBox):
             w_value.clear()
 
@@ -231,7 +269,12 @@ class QueryPanel(BasePanel):
 
         bx_operation.clear()
         bx_operation.addItems(
-            [op.value for op in Operation if string or op not in [Operation.LIKE, Operation.ILIKE]])
+            [
+                op.value
+                for op in Operation
+                if string or op not in [Operation.LIKE, Operation.ILIKE]
+            ]
+        )
 
     def _remove_row(self, row_uuid: str):
         row = self.rows.pop(row_uuid)
@@ -243,7 +286,7 @@ class QueryPanel(BasePanel):
 
     def _replace_value_widget(self, row_uuid: str, field_type: QVariant):
         row = self.rows[row_uuid]
-        old_widget = row['value']
+        old_widget = row["value"]
         new_widget = widget_for_field(field_type)
         self.grid.replaceWidget(old_widget, new_widget)
 
@@ -251,5 +294,5 @@ class QueryPanel(BasePanel):
         old_widget.setParent(None)
         old_widget = None
 
-        row['value'] = new_widget
+        row["value"] = new_widget
         return new_widget

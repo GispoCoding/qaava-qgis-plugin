@@ -28,16 +28,17 @@ from ..qgis_plugin_tools.tools.resources import resources_path
 
 class Panels(enum.Enum):
     """Panels in the Dialog"""
-    Qaava = {'icon': 'icon.png'}
-    Query = {'icon': '/search.svg'}
-    Database = {'icon': '/dbmanager.svg'}
-    Settings = {'icon': '/mActionMapSettings.svg'}
-    About = {'icon': '/mActionHelpContents.svg'}
+
+    Qaava = {"icon": "icon.png"}
+    Query = {"icon": "/search.svg"}
+    Database = {"icon": "/dbmanager.svg"}
+    Settings = {"icon": "/mActionMapSettings.svg"}
+    About = {"icon": "/mActionHelpContents.svg"}
 
     # noinspection PyCallByClass,PyArgumentList
     @property
     def icon(self) -> QIcon:
-        _icon: str = self.value['icon']
+        _icon: str = self.value["icon"]
 
         # QGIS icons
         # https://github.com/qgis/QGIS/tree/master/images/themes/default
@@ -45,12 +46,12 @@ class Panels(enum.Enum):
             return QgsApplication.getThemeIcon(_icon)
         else:
             # Internal icons
-            return QIcon(resources_path('icons', _icon))
+            return QIcon(resources_path("icons", _icon))
 
 
 # TODO: add all to settings_panel
 @enum.unique
 class Settings(enum.Enum):
     number_of_query_choices = 10
-    layer_should_not_contain_string = 'many_,tyyppi'
-    field_name_should_not_start_with = 'gid_,gid,uuid'
+    layer_should_not_contain_string = "many_,tyyppi"
+    field_name_should_not_start_with = "gid_,gid,uuid"

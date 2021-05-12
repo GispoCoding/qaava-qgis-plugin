@@ -48,7 +48,9 @@ def test_general_plan_fetch_versions(new_project):
 
 def test_project_fetch(new_project, database_params):
     plan = GeneralLandUsePlan()
-    project_sql = plan.fetch_project(conn_params=database_params, auth_cfg_id='test-auth-cfg')
+    project_sql = plan.fetch_project(
+        conn_params=database_params, auth_cfg_id="test-auth-cfg"
+    )
     assert len(project_sql) > 1000
 
 

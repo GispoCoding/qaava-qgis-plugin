@@ -22,42 +22,44 @@ from ..qgis_plugin_tools.tools.settings import setting_key
 # Urls
 QAAVA_GITHUB_URL = "https://raw.githubusercontent.com/GispoCoding/qaava/master"
 
-DETAILED_PLAN_DATA_MODEL_URL = f'{QAAVA_GITHUB_URL}/asemakaavan-tietomalli/tietomalli_luonnos.sql'
-GENERAL_PLAN_URL = f'{QAAVA_GITHUB_URL}/yleiskaavan-tietomalli'
-GENERAL_PLAN_MODEL_FILE_NAME = 'yleiskaavan-tietomalli.sql'
-GENERAL_PLAN_PROJECT_FILE_NAME = 'yleiskaava-projekti.sql'
+DETAILED_PLAN_DATA_MODEL_URL = (
+    f"{QAAVA_GITHUB_URL}/asemakaavan-tietomalli/tietomalli_luonnos.sql"
+)
+GENERAL_PLAN_URL = f"{QAAVA_GITHUB_URL}/yleiskaavan-tietomalli"
+GENERAL_PLAN_MODEL_FILE_NAME = "yleiskaavan-tietomalli.sql"
+GENERAL_PLAN_PROJECT_FILE_NAME = "yleiskaava-projekti.sql"
 
-DETAILED_PLAN_URL = f'{QAAVA_GITHUB_URL}/asemakaavan-tietomalli'
-DETAILED_PLAN_MODEL_FILE_NAME = 'asemakaavan-tietomalli.sql'
-DETAILED_PLAN_PROJECT_FILE_NAME = 'asemakaava-projekti.sql'
+DETAILED_PLAN_URL = f"{QAAVA_GITHUB_URL}/asemakaavan-tietomalli"
+DETAILED_PLAN_MODEL_FILE_NAME = "asemakaavan-tietomalli.sql"
+DETAILED_PLAN_PROJECT_FILE_NAME = "asemakaava-projekti.sql"
 
-VERSIONS_FILE_NAME = 'versions.txt'
-MIGRATION_FILE_NAME = 'migraatio.sql'
+VERSIONS_FILE_NAME = "versions.txt"
+MIGRATION_FILE_NAME = "migraatio.sql"
 
 # Database
 PG_CONNECTIONS = "PostgreSQL/connections"
 QAAVA_DB_NAME = setting_key("postgresqlConnectionName")
 
 QGS_SETTINGS_PSYCOPG2_PARAM_MAP = {
-    'database': 'dbname',
-    'host': 'host',
-    'password': 'password',
-    'port': 'port',
-    'username': 'user'
+    "database": "dbname",
+    "host": "host",
+    "password": "password",
+    "port": "port",
+    "username": "user",
 }
 
 QGS_DEFAULT_DB_SETTINGS = {
-    'allowGeometrylessTables': 'false',
-    'authcfg': '',
-    'dontResolveType': 'false',
-    'estimatedMetadata': 'false',
-    'geometryColumnsOnly': 'false',
-    'projectsInDatabase': 'false',
-    'publicOnly': 'false',
-    'savePassword': 'true',
-    'saveUsername': 'true',
-    'service': '',
-    'sslmode': 'SslDisable',
+    "allowGeometrylessTables": "false",
+    "authcfg": "",
+    "dontResolveType": "false",
+    "estimatedMetadata": "false",
+    "geometryColumnsOnly": "false",
+    "projectsInDatabase": "false",
+    "publicOnly": "false",
+    "savePassword": "true",
+    "saveUsername": "true",
+    "service": "",
+    "sslmode": "SslDisable",
 }
 
 # Misc

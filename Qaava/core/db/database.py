@@ -34,7 +34,7 @@
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
 
 import logging
-from typing import Union, List, Optional, Dict
+from typing import Dict, List, Optional, Union
 
 import psycopg2
 from psycopg2.extras import RealDictCursor
@@ -46,10 +46,10 @@ LOGGER = logging.getLogger(plugin_name())
 
 
 class Database:
-    sql_space = SQL(' ')
-    sql_empty: Composable = SQL('')
-    sql_and = SQL('AND ')
-    sql_where = SQL('WHERE')
+    sql_space = SQL(" ")
+    sql_empty: Composable = SQL("")
+    sql_and = SQL("AND ")
+    sql_where = SQL("WHERE")
 
     def __init__(self, conn_params: {str: str}):
         self.conn_params = conn_params
@@ -61,13 +61,15 @@ class Database:
         """
         succeeds = False
         try:
-            with(psycopg2.connect(**self.conn_params)) as conn:
+            with (psycopg2.connect(**self.conn_params)) as conn:
                 succeeds = True
         except psycopg2.OperationalError:
             pass
         return succeeds
 
-    def execute_insert(self, query: Union[str, Composable], vars: Optional[Dict] = None) -> None:
+    def execute_insert(
+        self, query: Union[str, Composable], vars: Optional[Dict] = None
+    ) -> None:
         """
         Execute insert, drop, delete or update queries
         :param query: query string or psycopg2 Composed
@@ -80,8 +82,12 @@ class Database:
             with conn.cursor() as cur:
                 cur.execute(query, vars=vars)
 
-    def execute_select(self, query: Union[str, Composable], vars: Optional[Dict] = None,
-                       ret_dict: object = False) -> List:
+    def execute_select(
+        self,
+        query: Union[str, Composable],
+        vars: Optional[Dict] = None,
+        ret_dict: object = False,
+    ) -> List:
         """
         Execute select query and return fetched results
 
@@ -93,11 +99,15 @@ class Database:
 
         LOGGER.debug(self.mogrify_query(query, vars))
         with psycopg2.connect(**self.conn_params) as conn:
-            with conn.cursor(cursor_factory=RealDictCursor if ret_dict else None) as cur:
+            with conn.cursor(
+                cursor_factory=RealDictCursor if ret_dict else None
+            ) as cur:
                 cur.execute(query, vars=vars)
                 return cur.fetchall()
 
-    def mogrify_query(self, query: Union[str, Composable], vars: Optional[Dict] = None) -> str:
+    def mogrify_query(
+        self, query: Union[str, Composable], vars: Optional[Dict] = None
+    ) -> str:
         """
         Returns query as string
         :param query:
@@ -124,4 +134,6 @@ class Database:
         :param query_parts: list of Composable
         :return:
         """
-        return self.sql_where + self.sql_and.join(query_parts) if len(query_parts) else []
+        return (
+            self.sql_where + self.sql_and.join(query_parts) if len(query_parts) else []
+        )

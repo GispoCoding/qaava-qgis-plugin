@@ -19,11 +19,15 @@
 
 import pytest
 
-from ..conftest import (remove_db_settings, CONN_NAME)
-from ...core.db.db_utils import (get_existing_database_connections, set_qaava_connection,
-                                 get_db_connection_params, get_qaava_connection_name)
+from ...core.db.db_utils import (
+    get_db_connection_params,
+    get_existing_database_connections,
+    get_qaava_connection_name,
+    set_qaava_connection,
+)
 from ...core.exceptions import QaavaDatabaseNotSetException
 from ...model.land_use_plan import LandUsePlanEnum
+from ..conftest import CONN_NAME, remove_db_settings
 
 
 def test_get_existing_database_connections_empty():
@@ -56,7 +60,9 @@ def test_qaava_connection_params(initialize_db_settings, database_params):
     assert params == database_params
 
 
-def test_qaava_connection_params_without_saving_username_and_pwd(initialize_db_settings2, database_params):
+def test_qaava_connection_params_without_saving_username_and_pwd(
+    initialize_db_settings2, database_params
+):
     set_qaava_connection(LandUsePlanEnum.detailed, CONN_NAME)
     params = get_db_connection_params(LandUsePlanEnum.detailed)
     expected_params = {**database_params, **{"user": None, "password": None}}

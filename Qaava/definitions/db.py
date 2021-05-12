@@ -41,13 +41,13 @@ class Operation(Enum):
     Operations allowed in queries
     """
 
-    EQ = '='
-    UNEQ = '<>'
-    LT = '<'
-    LTE = '<='
-    GT = '>'
-    GTE = '>='
-    LIKE = ' LIKE '
-    ILIKE = ' ILIKE '
-    IS = ' IS '
-    IS_NOT = ' IS NOT '
+    EQ = "="
+    UNEQ = "<>"
+    LT = "<"
+    LTE = "<="
+    GT = ">"
+    GTE = ">="
+    LIKE = " LIKE "
+    ILIKE = " ILIKE "
+    IS = " IS "
+    IS_NOT = " IS NOT "

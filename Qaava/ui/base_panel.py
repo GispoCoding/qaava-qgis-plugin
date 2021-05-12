@@ -25,7 +25,10 @@ from PyQt5.QtWidgets import QDialog
 
 from ..definitions.qui import Panels
 from ..qgis_plugin_tools.tools.custom_logging import bar_msg
-from ..qgis_plugin_tools.tools.exceptions import QgsPluginException, QgsPluginNotImplementedException
+from ..qgis_plugin_tools.tools.exceptions import (
+    QgsPluginException,
+    QgsPluginNotImplementedException,
+)
 from ..qgis_plugin_tools.tools.i18n import tr
 from ..qgis_plugin_tools.tools.resources import plugin_name
 
@@ -54,7 +57,7 @@ def process(fn):
         except QgsPluginException as e:
             LOGGER.exception(str(e), extra=e.bar_msg)
         except Exception as e:
-            LOGGER.exception(tr('Unhandled exception occurred'), extra=bar_msg(e))
+            LOGGER.exception(tr("Unhandled exception occurred"), extra=bar_msg(e))
         finally:
             self._end_process()
 
@@ -85,8 +88,7 @@ class BasePanel:
 
     @property
     def dlg(self) -> QDialog:
-        """Return the dialog.
-        """
+        """Return the dialog."""
         return self._dialog
 
     def setup_panel(self):
@@ -100,23 +102,23 @@ class BasePanel:
         """Occurs when map layers are updated"""
 
     def is_active(self):
-        """ Is the panel currently active (selected)"""
+        """Is the panel currently active (selected)"""
         curr_panel = list(self.dlg.panels.keys())[self.dlg.menu_widget.currentRow()]
         return curr_panel == self.panel
 
-    def run(self, method='_run'):
+    def run(self, method="_run"):
         if not method:
-            method = '_run'
+            method = "_run"
         self._start_process()
         try:
             # use dispatch pattern to invoke method with same name
             if not hasattr(self, method):
-                raise QgsPluginException(f'Class does not have a method {method}')
+                raise QgsPluginException(f"Class does not have a method {method}")
             getattr(self, method)()
         except QgsPluginException as e:
             LOGGER.exception(str(e), extra=e.bar_msg)
         except Exception as e:
-            LOGGER.exception(tr('Unhandled exception occurred'), extra=bar_msg(e))
+            LOGGER.exception(tr("Unhandled exception occurred"), extra=bar_msg(e))
         finally:
             self._end_process()
 

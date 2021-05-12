@@ -22,7 +22,6 @@ from typing import List, Optional
 
 from qgis.core import QgsApplication
 
-from .base_panel import BasePanel, process
 from ..core.db.db_initializer import DatabaseInitializer
 from ..core.db.db_utils import get_existing_database_connections
 from ..core.db.qgis_project_utils import load_project
@@ -32,12 +31,12 @@ from ..qgis_plugin_tools.tools.custom_logging import bar_msg
 from ..qgis_plugin_tools.tools.decorations import log_if_fails
 from ..qgis_plugin_tools.tools.i18n import tr
 from ..qgis_plugin_tools.tools.resources import plugin_name
+from .base_panel import BasePanel, process
 
 LOGGER = logging.getLogger(plugin_name())
 
 
 class DbPanel(BasePanel):
-
     def __init__(self, dialog):
         super().__init__(dialog)
         self.panel = Panels.Database
@@ -52,7 +51,10 @@ class DbPanel(BasePanel):
         self.dlg.dbComboBox.currentTextChanged.connect(lambda _: self._reset_gui())
         self.dlg.dmComboBox.currentTextChanged.connect(lambda _: self._reset_gui())
         self.dlg.cb_projects.currentTextChanged.connect(
-            lambda _: self.dlg.btn_db_open_project.setEnabled(len(self.dlg.cb_projects.currentText()) > 0))
+            lambda _: self.dlg.btn_db_open_project.setEnabled(
+                len(self.dlg.cb_projects.currentText()) > 0
+            )
+        )
 
         # Run connections
         self.dlg.btn_db_initialize.clicked.connect(self.run)
@@ -93,7 +95,7 @@ class DbPanel(BasePanel):
         self.dlg.cb_projects.clear()
         self.dlg.cb_projects.addItems(projects)
 
-    def set_versions(self, curr_version: str = '', newest_version: str = ''):
+    def set_versions(self, curr_version: str = "", newest_version: str = ""):
         self.dlg.db_l_curr_version.setText(curr_version)
         self.dlg.db_l_new_version.setText(newest_version)
         self.dlg.db_btn_promote.setEnabled(curr_version != newest_version)
@@ -108,10 +110,17 @@ class DbPanel(BasePanel):
         # noinspection PyArgumentList
         self.initializer = DatabaseInitializer(self.dlg, QgsApplication.instance())
         self.initializer.initialize_database(self.get_db(), self.get_plan())
-        LOGGER.info(tr('Database Initialized'),
-                    extra=bar_msg(
-                        tr('Database {} initialized succesfully with plan {}', self.get_db(), self.get_plan()),
-                        success=True))
+        LOGGER.info(
+            tr("Database Initialized"),
+            extra=bar_msg(
+                tr(
+                    "Database {} initialized succesfully with plan {}",
+                    self.get_db(),
+                    self.get_plan(),
+                ),
+                success=True,
+            ),
+        )
         projects = self.initializer.get_available_projects()
         self.set_available_projects(projects)
         self.set_versions(*self.initializer.get_versions())
@@ -129,23 +138,39 @@ class DbPanel(BasePanel):
         # noinspection PyArgumentList
         self.initializer = DatabaseInitializer(self.dlg, QgsApplication.instance())
         self.initializer.register_database(self.get_db(), self.get_plan())
-        LOGGER.info(tr(f'Database registered'), extra=bar_msg(self.get_db(), success=True))
+        LOGGER.info(
+            tr(f"Database registered"), extra=bar_msg(self.get_db(), success=True)
+        )
         projects = self.initializer.get_available_projects()
         self.set_available_projects(projects)
         self.set_versions(*self.initializer.get_versions())
 
     @log_if_fails
     def promote(self):
-        should_continue = self.dlg.ask_confirmation(tr('This action might result to QGIS project loss'),
-                                                    tr('This action will delete all QGIS projects saved in the '
-                                                       'database. If you want to save your current project, please '
-                                                       'press "Cancel" and save the project to disk '
-                                                       'before continuing.'))
+        should_continue = self.dlg.ask_confirmation(
+            tr("This action might result to QGIS project loss"),
+            tr(
+                "This action will delete all QGIS projects saved in the "
+                "database. If you want to save your current project, please "
+                'press "Cancel" and save the project to disk '
+                "before continuing."
+            ),
+        )
         if should_continue:
             self.initializer.promote_database()
-            LOGGER.info(tr(f'Database promoted', ),
-                        extra=bar_msg(tr('Promoted from version {} to version {}', self.dlg.db_l_curr_version.text(),
-                                         self.dlg.db_l_new_version.text()), success=True))
+            LOGGER.info(
+                tr(
+                    f"Database promoted",
+                ),
+                extra=bar_msg(
+                    tr(
+                        "Promoted from version {} to version {}",
+                        self.dlg.db_l_curr_version.text(),
+                        self.dlg.db_l_new_version.text(),
+                    ),
+                    success=True,
+                ),
+            )
             self.set_versions(*self.initializer.get_versions())
         else:
-            LOGGER.debug('Cancelled promotion')
+            LOGGER.debug("Cancelled promotion")

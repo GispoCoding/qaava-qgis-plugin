@@ -16,11 +16,11 @@
 #
 #  You should have received a copy of the GNU General Public License
 #  along with Qaava-qgis-plugin.  If not, see <https://www.gnu.org/licenses/>.
-from typing import Set, Optional
+from typing import Optional, Set
 
-from PyQt5.QtCore import QVariant
 from psycopg2 import sql
 from psycopg2.sql import Composable
+from PyQt5.QtCore import QVariant
 from qgis.core import QgsField
 
 from ...definitions.qui import Settings
@@ -29,10 +29,15 @@ from ...qgis_plugin_tools.tools.settings import get_setting
 
 
 class FieldWrapper:
-
-    def __init__(self, layer_wrapper, field: QgsField, values: Set, pk_name: Optional[str] = None,
-                 ) -> None:
+    def __init__(
+        self,
+        layer_wrapper,
+        field: QgsField,
+        values: Set,
+        pk_name: Optional[str] = None,
+    ) -> None:
         from .layer_wrapper import LayerWrapper
+
         self.layer_wrapper: LayerWrapper = layer_wrapper
         self.name = field.name()
         self._alias = field.alias()
@@ -41,15 +46,18 @@ class FieldWrapper:
         self.pk_name = pk_name
 
     @staticmethod
-    def from_layer_wrapper(lw, field: QgsField, values: Set,
-                           pk_name: str) -> 'FieldWrapper':
+    def from_layer_wrapper(
+        lw, field: QgsField, values: Set, pk_name: str
+    ) -> "FieldWrapper":
         return FieldWrapper(lw, field, values, pk_name)
 
     @staticmethod
     def is_proper_field(field_name: str, pk_field: Optional[str] = None) -> bool:
-        should_not_start_with = get_setting(Settings.field_name_should_not_start_with.name,
-                                            Settings.field_name_should_not_start_with.value,
-                                            str).split(',')
+        should_not_start_with = get_setting(
+            Settings.field_name_should_not_start_with.name,
+            Settings.field_name_should_not_start_with.value,
+            str,
+        ).split(",")
         if pk_field:
             should_not_start_with.append(pk_field)
 
@@ -57,7 +65,9 @@ class FieldWrapper:
 
     @property
     def has_parent(self) -> bool:
-        return (self.layer_wrapper.parent_layer is not None) and not self.is_many_to_many
+        return (
+            self.layer_wrapper.parent_layer is not None
+        ) and not self.is_many_to_many
 
     @property
     def is_many_to_many(self) -> bool:
@@ -76,7 +86,7 @@ class FieldWrapper:
     @property
     def field_with_table(self) -> str:
         uri = self.layer_wrapper.uri
-        return '_'.join((uri.schema(), uri.table(), self.name))
+        return "_".join((uri.schema(), uri.table(), self.name))
 
     @property
     def pk(self) -> Composable:
@@ -89,32 +99,50 @@ class FieldWrapper:
 
     @property
     def alias(self) -> str:
-        alias = self._alias if self._alias != '' else self.name
+        alias = self._alias if self._alias != "" else self.name
         if self.has_parent or self.is_many_to_many:
-            return f'{self.layer_wrapper.layer_name}.{alias}'
+            return f"{self.layer_wrapper.layer_name}.{alias}"
         else:
             return alias
 
     def get_field(self):
-        return [f for f in self.layer_wrapper.get_layer().fields().toList() if f.name() == self.name][0]
+        return [
+            f
+            for f in self.layer_wrapper.get_layer().fields().toList()
+            if f.name() == self.name
+        ][0]
 
     def __str__(self) -> str:
-        return f'{self.alias} ({self.name})'
+        return f"{self.alias} ({self.name})"
 
 
 class IsForeignNullFieldWrapper(FieldWrapper):
-
-    def __init__(self, layer_wrapper, field: QgsField, values: Set, pk_name: str, other_layer_name: str,
-                 f_pk: Optional[FieldWrapper] = None) -> None:
+    def __init__(
+        self,
+        layer_wrapper,
+        field: QgsField,
+        values: Set,
+        pk_name: str,
+        other_layer_name: str,
+        f_pk: Optional[FieldWrapper] = None,
+    ) -> None:
         super().__init__(layer_wrapper, field, values, pk_name)
         self.type = QVariant.Bool
         self.other_layer_name = other_layer_name
         self.f_pk: Optional[FieldWrapper] = f_pk
 
     @staticmethod
-    def create(lw, field: QgsField, values: Set, pk_name: str, other_layer_name: str,
-               f_pk: Optional[FieldWrapper] = None):
-        return IsForeignNullFieldWrapper(lw, field, values, pk_name, other_layer_name, f_pk)
+    def create(
+        lw,
+        field: QgsField,
+        values: Set,
+        pk_name: str,
+        other_layer_name: str,
+        f_pk: Optional[FieldWrapper] = None,
+    ):
+        return IsForeignNullFieldWrapper(
+            lw, field, values, pk_name, other_layer_name, f_pk
+        )
 
     @property
     def pk(self) -> Composable:
@@ -125,20 +153,23 @@ class IsForeignNullFieldWrapper(FieldWrapper):
 
     @property
     def alias(self) -> str:
-        return tr('Has {}', self.other_layer_name)
+        return tr("Has {}", self.other_layer_name)
 
 
 class RelationalFieldWrapper(FieldWrapper):
-
-    def __init__(self, rel_layer_wrapper, layer_wrapper, field: QgsField, values: Set) -> None:
+    def __init__(
+        self, rel_layer_wrapper, layer_wrapper, field: QgsField, values: Set
+    ) -> None:
         from .layer_wrapper import RelationalLayerWrapper
+
         super().__init__(layer_wrapper, field, values)
 
         self.rel_layer_wrapper: RelationalLayerWrapper = rel_layer_wrapper
 
     @staticmethod
-    def from_relation_wrapper(rlw, lw, field: QgsField,
-                              values: set) -> 'RelationalFieldWrapper':
+    def from_relation_wrapper(
+        rlw, lw, field: QgsField, values: set
+    ) -> "RelationalFieldWrapper":
         return RelationalFieldWrapper(rlw, lw, field, values)
 
     @property
