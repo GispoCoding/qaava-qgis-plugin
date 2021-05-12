@@ -29,6 +29,12 @@ jobs:
       - name: Pull qgis
         run: docker pull qgis/qgis:${{ matrix.docker_tags }}
 
+      - name: Pull PostGIS image
+        run: docker pull kartoza/postgis:12.0
+
+      - name: Set up PostGIS databases
+        run: docker-compose -f Qaava/test/docker-compose.yml up -d
+
       # Runs all tests
       - name: Run tests
         run: docker run --rm --net=host --volume `pwd`:/app -w=/app -e QGIS_PLUGIN_IN_CI=1 qgis/qgis:${{ matrix.docker_tags }} sh -c "pip3 install -q pytest && xvfb-run -s '+extension GLX -screen 0 1024x768x24' pytest -v"
@@ -43,6 +49,12 @@ jobs:
 
       - name: Pull qgis LTR image
         run: docker pull qgis/qgis:release-3_16
+
+      - name: Pull PostGIS image
+        run: docker pull kartoza/postgis:12.0
+
+      - name: Set up PostGIS databases
+        run: docker-compose -f Qaava/test/docker-compose.yml up -d
 
       # Runs all tests
       - name: Run tests (LTR)
@@ -69,6 +81,12 @@ jobs:
         uses: crazy-max/ghaction-chocolatey@v1
         with:
           args: install qgis-ltr -y
+
+      - name: Pull PostGIS image
+        run: docker pull kartoza/postgis:12.0
+
+      - name: Set up PostGIS databases
+        run: docker-compose -f Qaava/test/docker-compose.yml up -d
 
       - name: Run tests
         shell: pwsh
