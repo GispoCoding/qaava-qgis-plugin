@@ -1,14 +1,24 @@
-name: Release
+name: Pre-release
 
 on:
-  release:
-    types: released
+  pull_request:
+    branches:
+      - master
+      - main
 
 jobs:
-  plugin_dst:
-    runs-on: ubuntu-latest
+  pre-release:
+    name: "Pre Release"
+    runs-on: "ubuntu-latest"
 
     steps:
+      - uses: "marvinpinto/action-automatic-releases@latest"
+        with:
+          repo_token: "${{ secrets.GITHUB_TOKEN }}"
+          automatic_release_tag: "dev"
+          prerelease: true
+          title: "Development Build made for PR #${{ github.event.number }}"
+
       - uses: actions/checkout@v2
         with:
           submodules: true
@@ -25,7 +35,6 @@ jobs:
       - name: Install qgis-plugin-ci
         run: pip3 install qgis-plugin-ci
 
-      # When osgeo upload is wanted: --osgeo-username usrname --osgeo-password ${{ secrets.OSGEO_PASSWORD }}
       # When Transifex is wanted: --transifex-token ${{ secrets.TRANSIFEX_TOKEN }}
       - name: Deploy plugin
-        run: qgis-plugin-ci release ${GITHUB_REF/refs\/tags\//} --github-token ${{ secrets.GITHUB_TOKEN }} --osgeo-username usrname --osgeo-password ${{ secrets.OSGEO_PASSWORD }} --transifex-token ${{ secrets.TRANSIFEX_TOKEN }} --disable-submodule-update
+        run: qgis-plugin-ci release dev --github-token ${{ secrets.GITHUB_TOKEN }} --disable-submodule-update
